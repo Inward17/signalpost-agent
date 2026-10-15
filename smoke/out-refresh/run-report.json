@@ -1,0 +1,80 @@
+{
+  "run": {
+    "run_id": "smoke-002-refresh",
+    "agent_version": "1.0.0",
+    "started_at": "2026-10-15T20:50:50Z",
+    "completed_at": "2026-10-15T20:58:53Z",
+    "terminal_status": "completed"
+  },
+  "input_rows": 100,
+  "envelopes": 100,
+  "one_envelope_per_input": true,
+  "envelope_states": {
+    "available": 100
+  },
+  "section_states": {
+    "identity": {
+      "available": 100
+    },
+    "financials": {
+      "available": 100
+    },
+    "leadership": {
+      "available": 100
+    },
+    "locations": {
+      "available": 100
+    },
+    "website": {
+      "ambiguous": 39,
+      "not_available": 46,
+      "available": 13,
+      "blocked": 2
+    },
+    "social_profiles": {
+      "not_available": 95,
+      "available": 5
+    },
+    "contact": {
+      "not_available": 55,
+      "available": 45
+    },
+    "jobs": {
+      "not_available": 100
+    },
+    "public_activity": {
+      "available": 100
+    }
+  },
+  "claims_total": 4621,
+  "changes_total": 0,
+  "runtime_s": 483.2,
+  "operations": {
+    "requests": 870,
+    "max_requests": 2000,
+    "bytes": 73125036,
+    "requests_by_host_top": {
+      "data.brreg.no": 500,
+      "pam-stilling-feed.nav.no": 96,
+      "parteewear.no": 6,
+      "www.sea-tex.no": 5,
+      "medium.no": 4,
+      "www.duroc.com": 4,
+      "www.artec-aqua.no": 4,
+      "jmc-holding.com": 4,
+      "fagtrykkide.no": 4,
+      "independentliving.com": 4,
+      "www.elektrikergruppen.no": 3,
+      "smartdialog.com": 3,
+      "rgcrane.com": 3,
+      "xcsports.no": 3,
+      "aktivveiledning.no": 3
+    },
+    "p50_ms": 793,
+    "p95_ms": 10969,
+    "third_party_cost_usd": 0.0,
+    "nav_feed_pages": 95,
+    "nav_feed_entries": 30512
+  },
+  "per_company_requests": 7
+}
