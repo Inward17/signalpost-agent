@@ -1,0 +1,108 @@
+{
+  "run": {
+    "run_id": "R12",
+    "agent_version": "1.0.0",
+    "started_at": "2026-10-16T05:57:44Z",
+    "completed_at": "2026-10-16T06:05:29Z",
+    "terminal_status": "completed"
+  },
+  "input_rows": 100,
+  "envelopes": 100,
+  "one_envelope_per_input": true,
+  "envelope_states": {
+    "available": 100
+  },
+  "section_states": {
+    "identity": {
+      "available": 100
+    },
+    "financials": {
+      "available": 100
+    },
+    "leadership": {
+      "available": 99,
+      "not_available": 1
+    },
+    "locations": {
+      "available": 98,
+      "not_available": 2
+    },
+    "website": {
+      "available": 10,
+      "not_available": 60,
+      "ambiguous": 29,
+      "blocked": 1
+    },
+    "social_profiles": {
+      "available": 7,
+      "not_available": 93
+    },
+    "contact": {
+      "available": 36,
+      "not_available": 64
+    },
+    "jobs": {
+      "not_available": 100
+    },
+    "public_activity": {
+      "available": 100
+    }
+  },
+  "claims_total": 4597,
+  "changes_total": 0,
+  "runtime_s": 465.0,
+  "operations": {
+    "requests": 839,
+    "max_requests": 2000,
+    "bytes": 69590684,
+    "requests_by_host_top": {
+      "data.brreg.no": 500,
+      "pam-stilling-feed.nav.no": 95,
+      "havsnurp.no": 5,
+      "www.autoguard.no": 5,
+      "atlaseiendom.no": 4,
+      "www.res-group.com": 4,
+      "northernfarmhouse.com": 4,
+      "safecomputing.no": 4,
+      "www.hugedomains.com": 4,
+      "introark.no": 4,
+      "arendalmarkiseservice.no": 4,
+      "www.espegard.no": 4,
+      "citysteinhus.no": 4,
+      "frakttjenesten.no": 3,
+      "alkare.no": 3
+    },
+    "p50_ms": 814,
+    "p95_ms": 7362,
+    "third_party_cost_usd": 0.0,
+    "nav_feed_pages": 94,
+    "nav_feed_entries": 29205
+  },
+  "source_yield": {
+    "brreg_registry": {
+      "requests": 500,
+      "claims": 4549,
+      "companies": 100,
+      "claims_per_request": 9.1
+    },
+    "company_websites": {
+      "requests": 244,
+      "claims": 48,
+      "companies": 10,
+      "claims_per_request": 0.2
+    },
+    "nav_job_feed": {
+      "requests": 95,
+      "claims": 0,
+      "companies": 0,
+      "claims_per_request": 0.0
+    },
+    "search_api": {
+      "requests": 0,
+      "claims": 0,
+      "companies": 0,
+      "claims_per_request": null
+    }
+  },
+  "per_company_requests": 7
+}

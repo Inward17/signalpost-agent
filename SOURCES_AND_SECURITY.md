@@ -23,7 +23,7 @@ authorised role endpoints exposing national identity numbers.
 The organisation number is the only identity anchor. Every website candidate (registry `hjemmeside`, NAV employer homepage
 or contact-email domain for an orgnr-matched ad, name-derived domain, optional search candidate) is fetched and assessed:
 
-1. **Exact (score 1.0)** — the organisation number (any of `810034882`, `810 034 882`, `810.034.882`, `NO 810 034 882 MVA`) appears on the homepage, contact or about page — unless that page also lists other organisation numbers on a non-matching domain (group/portfolio page → `ambiguous`).
+1. **Exact (score 1.0)** — the organisation number (any of `810034882`, `810 034 882`, `810.034.882`, `NO 810 034 882 MVA`) appears on the homepage, contact or about page — unless that page also lists other organisation numbers on a non-matching domain (group/portfolio page → `ambiguous`). A number found only in hidden markup (script data, attributes) counts only on a name-matching or officially declared domain, and never when the HTML lists ≥ 3 other valid (MOD11) organisation numbers: chain sites embed every member's number.
 2. **Rejected** — the site states a *different* labelled organisation number / VAT id → parent, sister, franchise or unrelated entity. This overrides every name signal.
 3. **Rejected** — parked / for-sale / placeholder page.
 4. **Exact (0.97)** — full registered legal name (legal-form suffix in capitals) *and* the registry phone number or registered street address + postcode appear on the site, on a name-matching or officially declared domain.

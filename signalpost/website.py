@@ -89,6 +89,15 @@ _ORG_LABELLED = re.compile(r"(?:org\.?\s*(?:nr|nummer|no)|organisasjons\s*(?:nr|
                            r"[^0-9]{0,25}(?:no\s*)?(\d{3}[\s. ]?\d{3}[\s. ]?\d{3})(?!\d)", re.I)
 
 
+def valid_orgnr(digits: str) -> bool:
+    """Norwegian organisation-number MOD11 check (weights 3,2,7,6,5,4,3,2)."""
+    if len(digits) != 9 or not digits.isdigit() or digits[0] not in "89":
+        return False
+    rest = sum(int(a) * w for a, w in zip(digits[:8], (3, 2, 7, 6, 5, 4, 3, 2))) % 11
+    check = 0 if rest == 0 else 11 - rest
+    return check != 10 and check == int(digits[8])
+
+
 def _phone_digits(value: str | None) -> str | None:
     digits = re.sub(r"\D", "", str(value or ""))
     if digits.startswith("47") and len(digits) == 10:
@@ -162,10 +171,14 @@ def assess_identity(d: Dossier, pages: list[Page], origin: str, domain: str) -> 
             return {"verdict": "rejected", "score": 0.05, "reason": f"parked / placeholder page at {page.resp.final_url}", "page": page.resp.final_url}
         labelled = {re.sub(r"\D", "", f) for f in _ORG_LABELLED.findall(text)}
         page_others = {x for x in labelled if x != org and x not in d.subunit_orgs}
-        m = org_re.search(text) or org_re.search(raw_html)
+        visible = org_re.search(text)
+        m = visible or org_re.search(raw_html)
         if m and not org_hit:
-            span = (text[max(0, m.start() - 80): m.end() + 40] if org_re.search(text) else m.group(0)).strip()
-            org_hit = {"page": page.resp.final_url, "span": span, "group_page": len(page_others) >= 1}
+            span = (text[max(0, m.start() - 80): m.end() + 40] if visible else m.group(0)).strip()
+            # hidden-markup hits (script data, attributes) are weaker: a chain site can embed every member's number
+            listed = {x for x in re.findall(r"(?<!\d)(\d{9})(?!\d)", raw_html) if x != org and x not in d.subunit_orgs and valid_orgnr(x)}
+            org_hit = {"page": page.resp.final_url, "span": span, "visible": bool(visible),
+                       "group_page": len(page_others) >= 1 or len(listed) >= 3}
         other_orgs |= page_others
         for node in walk_jsonld(page.jsonld, ORG_TYPES):
             for key in ("vatID", "taxID", "identifier", "leiCode"):
@@ -186,10 +199,12 @@ def assess_identity(d: Dossier, pages: list[Page], origin: str, domain: str) -> 
         elif street and postcode and f" {street} " in f" {norm_text} " and postcode in text:
             contact_hit = contact_hit or {"page": page.resp.final_url, "span": f"registered address '{' '.join(addr.get('adresse') or [])}, {postcode}' appears on page"}
     declared = origin in {"official_registry", "nav_employer_homepage", "nav_contact_email_domain"}
-    if org_hit and not (org_hit["group_page"] and not name_domain):
-        return {"verdict": "exact", "score": 1.0, "reason": "organisation number appears on company page", **org_hit}
+    strong_domain = name_domain or declared
+    if org_hit and not (org_hit["group_page"] and not name_domain) and (org_hit["visible"] or strong_domain):
+        return {"verdict": "exact", "score": 1.0, "reason": "organisation number appears on company page" +
+                ("" if org_hit["visible"] else " markup (name-matching or declared domain)"), **org_hit}
     if org_hit:
-        return {"verdict": "ambiguous", "score": 0.7, "reason": "organisation number listed on a page naming several entities (group/portfolio page)", **org_hit}
+        return {"verdict": "ambiguous", "score": 0.7, "reason": "organisation number only in hidden markup or on a page listing several entities (group/chain/portfolio page)", **org_hit}
     if other_orgs:
         return {"verdict": "rejected", "score": 0.1, "page": pages[0].resp.final_url,
                 "reason": f"site states a different organisation number ({', '.join(sorted(other_orgs))}): parent, sister or unrelated entity"}

@@ -92,6 +92,22 @@ def test_orgnr_on_group_listing_page_is_ambiguous():
     assert v["verdict"] == "ambiguous", v
 
 
+def test_orgnr_only_in_hidden_chain_data_is_not_exact():
+    # real case: a kindergarten chain homepage embedding every member's organisation number in script data
+    members = ["995695871", "923609016", "979543883", "810034882"]
+    d = dossier()
+    d.org = "995695871"
+    d.entity = {"navn": "NORLANDIA RATVIKA BARNEHAGE AS", "organisasjonsform": {"kode": "AS"}}
+    html = "<title>Norlandia barnehagene</title><body>Barnehager i hele Norge</body><script>var k=" + json.dumps(members) + "</script>"
+    v = assess_identity(d, [page(html, "https://norlandiabarnehagene.no/")], "name_derived_domain", "norlandiabarnehagene.no")
+    assert v["verdict"] == "ambiguous", v
+
+
+def test_orgnr_validity():
+    from signalpost.website import valid_orgnr
+    assert valid_orgnr("923609016") and valid_orgnr("979543883") and not valid_orgnr("923609017")
+
+
 def test_domain_guesses_skip_generic_names():
     assert domain_guesses("HOLDING AS") == []
     assert "sandneselektriske.no" in domain_guesses("SANDNES ELEKTRISKE AS")

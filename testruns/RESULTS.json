@@ -8,8 +8,8 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 781,
-    "runtime_s": 474.3,
+    "requests": 780,
+    "runtime_s": 470.5,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -94,8 +94,8 @@
     "jobs_published": 1,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 823,
-    "runtime_s": 442.9,
+    "requests": 822,
+    "runtime_s": 405.7,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -180,8 +180,8 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 826,
-    "runtime_s": 490.8,
+    "requests": 822,
+    "runtime_s": 437.2,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -261,7 +261,7 @@
     "stale_claims": 0,
     "changes": 0,
     "requests": 775,
-    "runtime_s": 438.2,
+    "runtime_s": 418.1,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -370,8 +370,8 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 821,
-    "runtime_s": 447.4,
+    "requests": 822,
+    "runtime_s": 410.8,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -474,14 +474,14 @@
   "R06": {
     "input_rows": 100,
     "envelopes": 100,
-    "claims": 5512,
-    "evidence": 5512,
-    "websites_published": 31,
+    "claims": 5509,
+    "evidence": 5509,
+    "websites_published": 30,
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 860,
-    "runtime_s": 506.5,
+    "requests": 864,
+    "runtime_s": 513.0,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -489,7 +489,7 @@
       "financials": 99,
       "leadership": 100,
       "locations": 100,
-      "website": 31,
+      "website": 30,
       "social_profiles": 21,
       "contact": 60,
       "jobs": 0,
@@ -505,12 +505,6 @@
         "SCHJØLBERG & TOMBRE AS",
         "https://schjolberg-tombre.no/",
         "organisation number appears on company page"
-      ],
-      [
-        "992463597",
-        "ÅSE OG OMEGN PRIVATSKOLELAG",
-        "https://www.aasemontessori.no/",
-        "exact legal name plus registry phone/address on site"
       ],
       [
         "991358919",
@@ -699,7 +693,7 @@
     "stale_claims": 0,
     "changes": 0,
     "requests": 943,
-    "runtime_s": 470.0,
+    "runtime_s": 415.9,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -995,7 +989,7 @@
     "stale_claims": 0,
     "changes": 0,
     "requests": 300,
-    "runtime_s": 39.9,
+    "runtime_s": 38.6,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -1026,8 +1020,8 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 539,
-    "runtime_s": 183.0,
+    "requests": 523,
+    "runtime_s": 135.9,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -1058,8 +1052,8 @@
     "jobs_published": 0,
     "stale_claims": 4,
     "changes": 0,
-    "requests": 784,
-    "runtime_s": 471.3,
+    "requests": 783,
+    "runtime_s": 469.2,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -1135,5 +1129,245 @@
     ],
     "real_changes": [],
     "purpose": "refresh of R01 with --previous (idempotency / change detection)"
+  },
+  "R11": {
+    "input_rows": 100,
+    "envelopes": 100,
+    "claims": 4462,
+    "evidence": 4462,
+    "websites_published": 7,
+    "jobs_published": 1,
+    "stale_claims": 0,
+    "changes": 0,
+    "requests": 835,
+    "runtime_s": 420.5,
+    "cost_usd": 0.0,
+    "spot_checked": 5,
+    "section_available": {
+      "identity": 100,
+      "financials": 100,
+      "leadership": 100,
+      "locations": 100,
+      "website": 7,
+      "social_profiles": 6,
+      "contact": 34,
+      "jobs": 1,
+      "public_activity": 100
+    },
+    "passed": true,
+    "failures": [],
+    "failure_count": 0,
+    "warnings": [],
+    "websites": [
+      [
+        "934958403",
+        "SUNDBERG PULVERLAKK AS",
+        "https://sundbergpulverlakk.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "982161002",
+        "ANGVIK AUTO AS",
+        "https://angvikauto.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "925822884",
+        "7 FJELL BIL VEST AS",
+        "https://www.7fjellbil.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "995695871",
+        "NORLANDIA RATVIKA BARNEHAGE AS",
+        "https://norlandiabarnehagene.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "992986417",
+        "BYGGFORVALTNING NORGE AS",
+        "https://www.byggforvaltningnorge.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "929218426",
+        "ANLEGGSGARTNER KRISTIAN SØRBY AS",
+        "https://kristiansorby.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "976578759",
+        "HELSET LEGESENTER AS",
+        "https://www.helsetlegesenter.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ]
+    ],
+    "purpose": "random 100, companies not used in any earlier run"
+  },
+  "R12": {
+    "input_rows": 100,
+    "envelopes": 100,
+    "claims": 4597,
+    "evidence": 4597,
+    "websites_published": 10,
+    "jobs_published": 0,
+    "stale_claims": 0,
+    "changes": 0,
+    "requests": 839,
+    "runtime_s": 465.0,
+    "cost_usd": 0.0,
+    "spot_checked": 5,
+    "section_available": {
+      "identity": 100,
+      "financials": 100,
+      "leadership": 99,
+      "locations": 98,
+      "website": 10,
+      "social_profiles": 7,
+      "contact": 36,
+      "jobs": 0,
+      "public_activity": 100
+    },
+    "passed": true,
+    "failures": [],
+    "failure_count": 0,
+    "warnings": [],
+    "websites": [
+      [
+        "921176317",
+        "ATLAS EIENDOM AS",
+        "https://atlaseiendom.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "997844866",
+        "MORTENSEN DENTAL AS",
+        "https://mortensendental.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "933190390",
+        "KOLNES EVENT AS",
+        "https://www.lilleeventhuset.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "913813693",
+        "CITY STEINHUS AS",
+        "https://citysteinhus.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "915198112",
+        "MØBELSNEKKER THOMAS SAASTAD AS",
+        "https://thomassaastad.com/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "871572232",
+        "ESPEGARD AS",
+        "https://www.espegard.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "818002912",
+        "HYTTEAVISEN AS",
+        "https://www.hytteavisen.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "996894630",
+        "NEW SHOP AS",
+        "https://www.newshop.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "970261354",
+        "NORSKE BILLEDKUNSTNERE",
+        "https://www.norskebilledkunstnere.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "987993286",
+        "LITTEXTRA AS",
+        "https://littextra.no/",
+        "exact legal name plus registry phone/address on site"
+      ]
+    ],
+    "purpose": "random 100, companies not used in any earlier run"
+  },
+  "R13": {
+    "input_rows": 100,
+    "envelopes": 100,
+    "claims": 4402,
+    "evidence": 4402,
+    "websites_published": 7,
+    "jobs_published": 0,
+    "stale_claims": 0,
+    "changes": 0,
+    "requests": 768,
+    "runtime_s": 446.7,
+    "cost_usd": 0.0,
+    "spot_checked": 5,
+    "section_available": {
+      "identity": 100,
+      "financials": 100,
+      "leadership": 99,
+      "locations": 99,
+      "website": 7,
+      "social_profiles": 3,
+      "contact": 39,
+      "jobs": 0,
+      "public_activity": 100
+    },
+    "passed": true,
+    "failures": [],
+    "failure_count": 0,
+    "warnings": [],
+    "websites": [
+      [
+        "985703167",
+        "BOREALIS",
+        "https://www.borealisfestival.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "935213657",
+        "AIKI AS",
+        "https://aikias.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "996859967",
+        "AURSFJORD BÅTHAVN OG KYSTKULTURSENTER AS",
+        "https://aursfjordbathavnogkystkultursenter.com/",
+        "organisation number appears on company page"
+      ],
+      [
+        "929601343",
+        "HAVILA FINANS AS",
+        "https://www.havilafinans.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "933571637",
+        "ABM KRAFT AS",
+        "https://abmkraft.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "916270097",
+        "VOSS DPS NKS BJØRKELI AS",
+        "https://www.bjorkeli.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "923586822",
+        "BIKERIET AS",
+        "https://www.bikeriet.no/",
+        "organisation number appears on company page"
+      ]
+    ],
+    "purpose": "random 100, companies not used in any earlier run"
   }
 }

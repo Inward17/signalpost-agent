@@ -115,7 +115,8 @@ At most about 8 requests per site.
 **Identity gate** (`assess_identity`), in priority order:
 
 1. The org number (in any separator format) on a page → **exact 1.0**, unless that page also lists other org numbers *and* the domain doesn't match
-   the name. That case is a group/portfolio page → `ambiguous`.
+   the name. That case is a group/portfolio page → `ambiguous`. A number found only in hidden markup needs a name-matching or declared
+   domain and a page that does not embed ≥ 3 other valid org numbers (chain sites list every member).
 2. A different labelled org number or VAT id on the site → **rejected** (parent, sister or unrelated entity).
 3. A parked, for-sale or placeholder page → **rejected**.
 4. The exact legal name *with its legal suffix in capitals* (`Sandnes Elektriske AS`, so the English word "as" can't satisfy it) plus the registry phone
