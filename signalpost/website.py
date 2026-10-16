@@ -173,7 +173,7 @@ def assess_identity(d: Dossier, pages: list[Page], origin: str, domain: str) -> 
         page_others = {x for x in labelled if x != org and x not in d.subunit_orgs}
         visible = org_re.search(text)
         m = visible or org_re.search(raw_html)
-        owned = bool(visible) and ownership_context(page, org_re)
+        owned = ownership_context(page, org_re)  # footer/address text, contact/about page text, or its JSON-LD Organization
         if m and (not org_hit or (owned and not org_hit["owned"])):
             span = (text[max(0, m.start() - 80): m.end() + 40] if visible else m.group(0)).strip()
             # hidden-markup hits (script data, attributes) are weaker: a chain site can embed every member's number
@@ -199,20 +199,24 @@ def assess_identity(d: Dossier, pages: list[Page], origin: str, domain: str) -> 
             contact_hit = contact_hit or {"page": page.resp.final_url, "span": f"registry phone {phone} appears on page"}
         elif street and postcode and f" {street} " in f" {norm_text} " and postcode in text:
             contact_hit = contact_hit or {"page": page.resp.final_url, "span": f"registered address '{' '.join(addr.get('adresse') or [])}, {postcode}' appears on page"}
-    declared = origin in {"official_registry", "nav_employer_homepage", "nav_contact_email_domain"}
-    strong_domain = name_domain or declared
+    # Declared = the company itself named this site to an official source (Brønnøysund, or the employer field of an ad whose
+    # orgnr is the company). A contact e-mail domain from an ad is NOT declared: it may belong to a recruiter.
+    declared = origin in {"official_registry", "nav_employer_homepage"}
     # Two questions: is the page about this company (org number present), and is the DOMAIN the company's own?
-    # On a domain not tied to the company by name or an official declaration, the number must sit where a site states its
-    # own identity (footer, contact/about page, its JSON-LD Organization) - not in an article or a client list.
+    # A domain that merely matches the name does not prove ownership (same-name companies exist), so outside declared sites
+    # the number must sit where the site states its OWN identity: footer/address, contact/about page, its JSON-LD Organization.
+    org_reason = None
     if org_hit and not (org_hit["group_page"] and not name_domain):
-        if strong_domain:
-            return {"verdict": "exact", "score": 1.0, "reason": "organisation number appears on company page" +
-                    ("" if org_hit["visible"] else " markup (name-matching or declared domain)"), **org_hit}
+        if declared:
+            return {"verdict": "exact", "score": 1.0, "reason": "organisation number on the site the company declared to an official source" +
+                    ("" if org_hit["visible"] else " (in page markup)"), **org_hit}
         if org_hit["owned"]:
             return {"verdict": "exact", "score": 1.0, "reason": "organisation number in the site's own identity block (footer, contact/about page or structured data)", **org_hit}
-        return {"verdict": "ambiguous", "score": 0.7, "reason": "organisation number mentioned on a page of an unconfirmed domain, outside the site's own identity block (article, client list or directory)", **org_hit}
-    if org_hit:
-        return {"verdict": "ambiguous", "score": 0.7, "reason": "organisation number only in hidden markup or on a page listing several entities (group/chain/portfolio page)", **org_hit}
+        org_reason = "organisation number mentioned on the site but outside its own identity block (article, client list or script data)"
+    elif org_hit:
+        org_reason = "organisation number only in hidden markup or on a page listing several entities (group/chain/portfolio page)"
+    if org_reason and other_orgs:  # the company's number among others: a group/listing page, not a different owner
+        return {"verdict": "ambiguous", "score": 0.7, "reason": "organisation number listed alongside other entities' numbers (group/portfolio page)", **org_hit}
     if other_orgs:
         return {"verdict": "rejected", "score": 0.1, "page": pages[0].resp.final_url,
                 "reason": f"site states a different organisation number ({', '.join(sorted(other_orgs))}): parent, sister or unrelated entity"}
@@ -221,6 +225,8 @@ def assess_identity(d: Dossier, pages: list[Page], origin: str, domain: str) -> 
     if declared and (name_hit or brand_hit):
         hit = name_hit or brand_hit
         return {"verdict": "exact", "score": 0.92, "reason": f"site declared by {origin.replace('_', ' ')} and its legal/brand name appears on page", **hit}
+    if org_reason:
+        return {"verdict": "ambiguous", "score": 0.7, "reason": org_reason, **org_hit}
     if name_hit or brand_hit or contact_hit:
         best = {"verdict": "ambiguous", "score": 0.6, "reason": "name or contact match only: possibly a related, group or same-name entity", **(name_hit or brand_hit or contact_hit)}
     return best
@@ -291,11 +297,12 @@ def try_site(client: Client, d: Dossier, candidate: dict[str, str]) -> tuple[dic
         resp = client.get("http://" + url[8:], accept="text/html,application/xhtml+xml")
     if not resp.ok or "html" not in resp.content_type.lower():
         return {"verdict": "unreachable", "reason": f"{url}: {resp.error or resp.content_type}", "page": url}, []
-    final_domain = registered_domain(resp.final_url)  # a cross-domain redirect is assessed on where it lands
+    final_domain = registered_domain(resp.final_url)  # a cross-domain redirect is assessed on where it lands...
+    origin = candidate["origin"] if final_domain == domain else "redirect_target"  # ...and does not inherit the candidate's trust
     home = parse_page("home", resp)
     pages = [home]
     links = _pick_links(home, final_domain)
-    verdict = assess_identity(d, pages, candidate["origin"], final_domain)
+    verdict = assess_identity(d, pages, origin, final_domain)
     for kind in ("contact", "about"):  # proof pages only while proof is missing
         if verdict["verdict"] == "exact" and verdict["score"] >= 0.97 or verdict["verdict"] == "rejected":
             break
@@ -303,7 +310,7 @@ def try_site(client: Client, d: Dossier, candidate: dict[str, str]) -> tuple[dic
             page = fetch_page(client, links[kind], kind, final_domain)
             if page:
                 pages.append(page)
-                verdict = assess_identity(d, pages, candidate["origin"], final_domain)
+                verdict = assess_identity(d, pages, origin, final_domain)
     verdict["domain"] = final_domain
     verdict["homepage"] = resp.final_url
     verdict["links"] = links
@@ -531,7 +538,7 @@ def research_website(client: Client, d: Dossier, allow_guessing: bool = True) ->
         if verdict["verdict"] == "ambiguous" and not ambiguous:
             ambiguous = verdict
         blocked = blocked or verdict["verdict"] == "blocked"
-        known = cand["origin"] in {"official_registry", "nav_employer_homepage", "nav_contact_email_domain"} or dom == d.previous_site_domain
+        known = cand["origin"] in {"official_registry", "nav_employer_homepage"} or dom == d.previous_site_domain
         plausible = known or (cand["origin"] == "name_derived_domain" and dom.endswith(".no"))  # a random .com bot wall says nothing
         if plausible and verdict["verdict"] == "unreachable" and re.search(r"HTTP (403|429)", verdict["reason"]):
             refused = refused or verdict["reason"]  # the likely company site refused us: "blocked", not "nothing there"

@@ -123,6 +123,33 @@ def test_orgnr_in_own_footer_on_brand_domain_is_exact():
     assert v["verdict"] == "exact", v
 
 
+def test_name_matching_domain_with_orgnr_only_in_article_is_ambiguous():
+    # a domain equal to the name does not prove ownership; the number must be in the site's own identity block
+    html = "<body><h1>Nyheter</h1><article>Vi har skrevet om Sandnes Elektriske AS (org.nr 810 034 882) i dag.</article></body>"
+    v = assess_identity(dossier(), [page(html, "https://sandneselektriske.no/")], "name_derived_domain", "sandneselektriske.no")
+    assert v["verdict"] == "ambiguous", v
+
+
+def test_recruiter_email_domain_is_not_declared_website():
+    html = "<body><h1>Rekrutteringsbyrå</h1><p>Vi rekrutterer for Sandnes Elektriske AS.</p></body>"
+    v = assess_identity(dossier(), [page(html, "https://recruiter-example.no/")], "nav_contact_email_domain", "recruiter-example.no")
+    assert v["verdict"] != "exact", v
+
+
+def test_declared_site_redirecting_to_other_domain_loses_trust():
+    from signalpost.http import Client
+    from signalpost.website import try_site
+    # registry declares oldbrand.no, which redirects to a parent's site that only mentions the company by name
+    routes = {"https://oldbrand.no/": (301, {"Location": "https://parentgroup.no/"}, b""),
+              "https://parentgroup.no/": (200, {}, "<title>Parent Group</title><body>Sandnes Elektriske AS er en del av konsernet.</body>".encode())}
+    web, restore = _with_fake_network(routes)
+    try:
+        verdict, _ = try_site(Client(), dossier(), {"url": "oldbrand.no", "origin": "official_registry"})
+        assert verdict["verdict"] != "exact", verdict
+    finally:
+        restore()
+
+
 def test_domain_guesses_skip_generic_names():
     assert domain_guesses("HOLDING AS") == []
     assert "sandneselektriske.no" in domain_guesses("SANDNES ELEKTRISKE AS")
@@ -247,6 +274,23 @@ def test_credentials_never_cross_origin_on_redirect():
         assert not ({"authorization", "x-subscription-token", "cookie"} & set(leaked)), leaked
         assert c.requests == 3 and c.by_host.get("attacker.example") == 1  # every hop counted, per destination host
     finally:
+        restore()
+
+
+def test_nav_pagination_https_downgrade_rejected():
+    import json as _json
+    import os
+    from signalpost.http import Client
+    from signalpost.jobs import FEED, JobIndex
+    page = {"items": [], "next_url": "http://pam-stilling-feed.nav.no/api/v1/feed/2"}
+    routes = {FEED + "/api/v1/feed": (200, {"content-type": "application/json"}, _json.dumps(page).encode())}
+    web, restore = _with_fake_network(routes)
+    os.environ["NAV_FEED_TOKEN"] = "TOKEN"
+    try:
+        JobIndex().build(Client(), 1, 5)
+        assert not [u for u, h in web.sent if u.startswith("http://")], web.sent  # nothing (and no token) sent over plain HTTP
+    finally:
+        os.environ.pop("NAV_FEED_TOKEN", None)
         restore()
 
 

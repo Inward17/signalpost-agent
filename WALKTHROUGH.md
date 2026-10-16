@@ -38,7 +38,7 @@ signalpost/jobs.py         NAV vacancy feed index + orgnr-verified matching
 signalpost/website.py      website discovery, identity gate, company-owned extraction
 signalpost/envelope.py     envelope assembly, refresh diff, cited synthesis
 signalpost/report.py       self-contained HTML viewer
-tests/test_agent.py        34 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats, no-zero-fill)
+tests/test_agent.py        38 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats, no-zero-fill)
 smoke/                     100-company batch, first run (out/), refresh run (out-refresh/), logs
 README.md  SOURCES_AND_SECURITY.md  SUBMISSION.md  WALKTHROUGH.md
 ```
@@ -123,11 +123,12 @@ At most about 8 requests per site.
 
 **Identity gate** (`assess_identity`), in priority order:
 
-1. The org number (in any separator format) on a page → **exact 1.0**, unless that page also lists other org numbers *and* the domain doesn't match
-   the name. That case is a group/portfolio page → `ambiguous`. On a domain that is neither name-matching nor officially declared, the
-   number must sit in the site's **own identity block**: footer/address, a contact or about page, or its JSON-LD Organization. A news
-   article or a client list naming the company on someone else's domain is `ambiguous`. A number found only in hidden markup needs a
-   name-matching or declared domain and a page that does not embed ≥ 3 other valid (MOD11) org numbers (chain sites list every member).
+1. The org number (in any separator format) → **exact 1.0** only when the domain's ownership is shown: either the company **declared** the
+   site to an official source (registry `hjemmeside`, or the employer homepage of a NAV ad whose orgnr is the company), or the number sits in
+   the site's **own identity block** (footer/address, a contact or about page, its JSON-LD Organization). A domain that merely matches the
+   name proves nothing on its own (same-name companies exist), and a NAV contact e-mail domain may be a recruiter's, so neither counts
+   as declared. An article, client list or script blob mentioning the number → `ambiguous`; the number listed among other companies'
+   numbers → `ambiguous` (group/portfolio page). A candidate that redirects to a different registered domain loses its declared status.
 2. A different labelled org number or VAT id on the site → **rejected** (parent, sister or unrelated entity).
 3. A parked, for-sale or placeholder page → **rejected**.
 4. The exact legal name *with its legal suffix in capitals* (`Sandnes Elektriske AS`, so the English word "as" can't satisfy it) plus the registry phone
@@ -201,7 +202,7 @@ The current `smoke/` folder holds the final-code run (R01): 4,376 claims, 781 re
 unchanged. Offline tests also cover real change, removal, and stale-carry.
 
 **Reproducibility**: fresh clone at the pinned commit, empty venv, `pip install -r requirements.txt`, run command → 3/3 envelopes (including
-one deliberately invalid input) and all offline tests pass (34 in the current suite).
+one deliberately invalid input) and all offline tests pass (38 in the current suite).
 
 ## 6. Plan checklist status
 

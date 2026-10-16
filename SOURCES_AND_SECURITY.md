@@ -23,11 +23,11 @@ authorised role endpoints exposing national identity numbers.
 The organisation number is the only identity anchor. Every website candidate (registry `hjemmeside`, NAV employer homepage
 or contact-email domain for an orgnr-matched ad, name-derived domain, optional search candidate) is fetched and assessed:
 
-1. **Exact (score 1.0)** — the organisation number (any of `810034882`, `810 034 882`, `810.034.882`, `NO 810 034 882 MVA`) appears on the homepage, contact or about page — unless that page also lists other organisation numbers on a non-matching domain (group/portfolio page → `ambiguous`). On a domain that is neither name-matching nor officially declared, the number must sit in the site's own identity block (footer/address, contact or about page, its JSON-LD Organization); a news article or client list mentioning the company on someone else's domain is `ambiguous`. A number found only in hidden markup (script data, attributes) counts only on a name-matching or officially declared domain, and never when the HTML lists ≥ 3 other valid (MOD11) organisation numbers: chain sites embed every member's number.
+1. **Exact (score 1.0)** — the organisation number (any of `810034882`, `810 034 882`, `810.034.882`, `NO 810 034 882 MVA`) appears on the homepage, contact or about page — unless that page also lists other organisation numbers on a non-matching domain (group/portfolio page → `ambiguous`). Outside sites the company declared to an official source (registry `hjemmeside`; employer homepage of an orgnr-matched NAV ad), the number must sit in the site's own identity block (footer/address, contact or about page, its JSON-LD Organization). A domain merely matching the name, or a NAV contact e-mail domain (possibly a recruiter's), is not proof of ownership; an article or client list mentioning the number is `ambiguous`; a declared candidate that redirects to another registered domain loses its declared status. A number found only in hidden markup (script data, attributes) counts only on a declared domain or inside the site's JSON-LD Organization, and never when the HTML lists ≥ 3 other valid (MOD11) organisation numbers: chain sites embed every member's number.
 2. **Rejected** — the site states a *different* labelled organisation number / VAT id → parent, sister, franchise or unrelated entity. This overrides every name signal.
 3. **Rejected** — parked / for-sale / placeholder page.
 4. **Exact (0.97)** — full registered legal name (legal-form suffix in capitals) *and* the registry phone number or registered street address + postcode appear on the site, on a name-matching or officially declared domain.
-5. **Exact (0.92)** — the site was declared by an official source (registry `hjemmeside`, or NAV ad whose `employer.orgnr` equals the company) *and* the legal or brand name appears on the page. A matching phone alone is not enough (shared phones point to related companies).
+5. **Exact (0.92)** — the site was declared by an official source (registry `hjemmeside`, or the employer homepage of a NAV ad whose `employer.orgnr` equals the company; not a contact e-mail domain) *and* the legal or brand name appears on the page. A matching phone alone is not enough (shared phones point to related companies).
 6. Anything else with a name hit → `ambiguous`, recorded with the reason, **not published**.
 
 Social profiles are published only when linked from the verified site *and* the handle matches the legal name/domain or the profile
@@ -54,7 +54,8 @@ This is an engineering description, not a legal opinion; a production deployment
   metadata addresses blocked); every redirect hop is re-validated; max 5 redirects; environment proxies are ignored.
 - **Redirects**: followed by the client hop by hop (max 5), never by urllib. Each hop is validated, budget-counted, rate-limited per destination
   host and robots-checked where applicable. Credentials (`Authorization`, `Cookie`, `X-Subscription-Token`, `X-API-Key`) are dropped on any
-  change of origin, and the NAV feed's pagination and entry URLs must stay on `pam-stilling-feed.nav.no`.
+  change of origin, and the NAV feed's pagination and entry URLs must be `https://pam-stilling-feed.nav.no` (exact host, default port,
+  no embedded credentials) or the walk stops, so the bearer token is never sent elsewhere or over plain HTTP.
 - **DNS-rebinding protection**: validation and connection use the *same* resolution. The custom HTTP(S) connection classes resolve once,
   check every returned address, and open the socket to that checked IP (TLS still verifies the real hostname via SNI), so a second DNS
   answer cannot steer the connection to an internal address.

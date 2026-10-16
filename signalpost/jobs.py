@@ -15,6 +15,16 @@ FEED = "https://pam-stilling-feed.nav.no"
 FREE_MAIL = {"gmail.com", "hotmail.com", "outlook.com", "online.no", "live.no", "yahoo.com", "icloud.com", "hotmail.no", "msn.com"}
 
 
+def on_feed_origin(url: str) -> bool:
+    """The bearer token may only go to https://pam-stilling-feed.nav.no (default port, no embedded credentials)."""
+    p, feed = urllib.parse.urlparse(url), urllib.parse.urlparse(FEED)
+    try:
+        port = p.port
+    except ValueError:
+        return False
+    return p.scheme == "https" and p.hostname == feed.hostname and port in (None, 443) and not p.username and not p.password
+
+
 def norm(name: str | None) -> str:
     return " ".join(re.findall(r"[^\W_]+", str(name or "").casefold()))  # unicode-aware: keeps ö, é, ü
 
@@ -59,8 +69,8 @@ class JobIndex:
                         self.entries[entry["uuid"]] = {**entry, "entry_url": FEED + item.get("url", "")}
                 next_url = body.get("next_url")
                 url = urllib.parse.urljoin(FEED, next_url) if next_url else None
-                if url and urllib.parse.urlparse(url).hostname != urllib.parse.urlparse(FEED).hostname:
-                    self.error = f"feed pagination pointed off the NAV feed host ({url[:80]}); stopped"  # never send the token elsewhere
+                if url and not on_feed_origin(url):
+                    self.error = f"feed pagination pointed off the NAV feed host or off https ({url[:80]}); stopped"  # never send the token elsewhere
                     url = None
                     break
             self.complete = url is None and not self.error
@@ -90,7 +100,7 @@ def collect_jobs(client: Client, d: Dossier, index: JobIndex, per_company: int =
     legal = norm(d.entity.get("navn"))
     accepted = 0
     for entry in index.candidates(d)[:per_company]:
-        if urllib.parse.urlparse(entry["entry_url"]).hostname != urllib.parse.urlparse(FEED).hostname:
+        if not on_feed_origin(entry["entry_url"]):
             continue  # entry URLs come from feed data: the bearer token only goes to the feed host
         resp = client.get(entry["entry_url"], headers={"Authorization": f"Bearer {index.token}"}, accept="application/json")
         if not resp.ok:
