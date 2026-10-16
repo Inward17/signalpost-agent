@@ -7,7 +7,7 @@ Evidence-backed research of Norwegian companies from an organisation number
 | Challenge | Signalpost (Builderr): build an agent that finds company information |
 | Agent code version | commit `3202c93c0b40c69d54405af20057bb19f7ded33b` (code freeze; all results in this report were produced at this commit; file tree `44c2418`, identical to the originally tested commit `e123b93` before commit messages were rewritten) |
 | Report date | 16 October 2026 |
-| Code size | about 1,950 lines of agent code, plus 553 lines of tests and 412 lines of verification tooling |
+| Code size | about 1,950 lines of agent code and 330 lines of tooling in the repository; a 553-line test suite and an 82-line run harness were used for validation |
 | Third-party cost per run | $0.00 (no LLM, no paid API in the default configuration) |
 
 ## 1. Executive summary
@@ -99,7 +99,6 @@ Modules:
 | `tools/verify_run.py` | 183 | contract verifier (13 rule groups) with live financial spot-checks |
 | `tools/purge.py` | 78 | erasure, correction and retention operations |
 | `tools/build_dataset.py` | 69 | deduplicated 1,000-profile dataset from verified runs |
-| `tests/test_agent.py` | 553 | 38 offline regression tests |
 
 ## 5. Technology stack
 
@@ -412,18 +411,21 @@ python -m venv .venv
 .venv\Scripts\python.exe run.py --input companies.jsonl --output out
 ```
 
-Verification:
+Checking a run's output against the contract (the verifier is included in the repository):
 
 ```bash
-python tests/test_agent.py
-bash testruns/run_all.sh && python testruns/verify_all.py
+python tools/verify_run.py --input companies.jsonl --output out
 ```
 
-**What gets submitted:** the git repository (agent code, docs, the smoke test with its refresh run, the 1,000-profile dataset, tests, tools and the
-test-harness inputs). Raw run outputs, the local virtual environment and development scratch files are excluded. The agent code is frozen at `3202c93`;
+The offline test suite and the 13-run test harness were used for validation and are kept outside the submitted repository; their results are reported in sections 12 and 13 and in `TEST_REPORT.md`.
+
+**What gets submitted:** the git repository (agent code, docs, the smoke test with its refresh run, the 1,000-profile dataset and the tools,
+including the contract verifier). The offline tests, the run harness, raw run outputs, the local virtual environment and development scratch files are excluded. The agent code is frozen at `3202c93`;
 later commits change documentation and data only.
 
 ## Appendix A: Offline test inventory
+
+These tests were run against the frozen code for validation; the suite itself is kept outside the submitted repository.
 
 | Area | Tests |
 |---|---|

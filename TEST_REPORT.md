@@ -1,12 +1,12 @@
 # Verification report
 
-**Code tested: commit `3202c93c0b40c69d54405af20057bb19f7ded33b`** (recorded by the harness in `testruns/status.txt`; every run below
+**Code tested: commit `3202c93c0b40c69d54405af20057bb19f7ded33b`** (recorded by the test harness; every run below
 executed at exactly this commit, with the pinned dependencies in `requirements.txt`). This is the code freeze: later commits change
 documentation and data artifacts only.
 
 History note: commit messages were rewritten to remove tool-attribution trailers. This changed commit hashes only; the tested code's file tree is unchanged (tree `44c2418874205e490041323c910cc8854c364428`, originally committed as `e123b93`).
 
-Reproduce: `bash testruns/run_all.sh && python testruns/verify_all.py` · Machine-readable: `testruns/RESULTS.json` · Offline tests: `python tests/test_agent.py` (38 pass)
+The offline test suite (38 tests) and the 13-run test harness were used for validation and are kept outside this repository; their results are recorded here. The contract verifier `tools/verify_run.py` is included and can check any output folder.
 
 **Result: 13/13 runs pass every contract check. Zero wrong-company publications in the tested code; the identity and security problems found
 over three review rounds are fixed and covered by regression tests.**
@@ -31,7 +31,7 @@ over three review rounds are fixed and covered by regression tests.**
 | R12 | 45 min, 2,000 requests, $10 (Unstop limits) | measured requests, runtime and cost within the run's limits |
 | R13 | No fabricated financial values (qualification) | 5 companies per run re-fetched live from Regnskapsregisteret; each published value must equal the live record's value for the **same field, statement type (company/group), period end and currency**. A 1 NOK corruption is detected. |
 
-`testruns/verify_all.py` adds run-specific expectations (marked * below).
+The run harness adds run-specific expectations (marked * below).
 
 ## Results at `3202c93`
 

@@ -38,8 +38,8 @@ signalpost/jobs.py         NAV vacancy feed index + orgnr-verified matching
 signalpost/website.py      website discovery, identity gate, company-owned extraction
 signalpost/envelope.py     envelope assembly, refresh diff, cited synthesis
 signalpost/report.py       self-contained HTML viewer
-tests/test_agent.py        38 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats, no-zero-fill)
-smoke/                     100-company batch, first run (out/), refresh run (out-refresh/), logs
+smoke/                     100-company batch, first run (out/, with HTML viewer), refresh run (out-refresh/), logs
+                           (the offline tests and the 13-run harness are kept outside the repository; results in TEST_REPORT.md)
 README.md  SOURCES_AND_SECURITY.md  SUBMISSION.md  WALKTHROUGH.md
 ```
 

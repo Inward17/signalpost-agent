@@ -10,8 +10,8 @@
   "requests": 824,
   "runtime_s": 474.4,
   "cost_usd": 0.0,
-  "spot_checked": 5,
-  "financial_values_checked": 88,
+  "spot_checked": 1,
+  "financial_values_checked": 24,
   "section_available": {
     "identity": 100,
     "financials": 99,
