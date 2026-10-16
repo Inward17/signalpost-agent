@@ -18,8 +18,11 @@ RUNS = {  # id: (input, purpose, verifier args)
     "R06": ("R06.jsonl", "100 companies with >=5 employees (website/jobs stress)", []),
     "R07": ("R07.jsonl", "4 known companies + 96 with registry website", []),
     "R08": ("R08.jsonl", "budget stress: --max-requests 300", ["--max-requests", "300"]),
-    "R09": ("R09.jsonl", "deadline stress: --deadline-minutes 3", ["--max-minutes", "3.5"]),
+    "R09": ("R09.jsonl", "deadline stress: --deadline-minutes 3", ["--max-minutes", "3"]),
     "R10": ("R01.jsonl", "refresh of R01 with --previous (idempotency / change detection)", []),
+    "R11": ("R11.jsonl", "random 100, companies not used in any earlier run", []),
+    "R12": ("R12.jsonl", "random 100, companies not used in any earlier run", []),
+    "R13": ("R13.jsonl", "random 100, companies not used in any earlier run", []),
 }
 
 
