@@ -4,7 +4,7 @@ Subject: Signalpost Round 1 submission
 
 - Agent name: Signalpost registry-anchored agent
 - Repository URL: <fill in after pushing>
-- Exact commit hash: <fill in after pushing: `git rev-parse HEAD`>. Agent code last changed and fully tested at `f48fc43`; later commits are docs/data only.
+- Exact commit hash: <fill in after pushing: `git rev-parse HEAD`>. Agent code last changed and fully tested at `e123b93` (code freeze); later commits are docs/data only.
 - 1,000 company profiles: `profiles/profiles.jsonl.gz` (+ `profiles-manifest.json`)
 - 100-company smoke-test result: `smoke/out/envelopes.jsonl`, `smoke/out/run-report.json`, `smoke/out/report.html` in the repository
 - One-command run instruction (after `python -m venv .venv && .venv/bin/pip install -r requirements.txt`):

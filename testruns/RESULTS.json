@@ -9,7 +9,7 @@
     "stale_claims": 0,
     "changes": 0,
     "requests": 824,
-    "runtime_s": 465.5,
+    "runtime_s": 474.4,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "financial_values_checked": 88,
@@ -39,13 +39,13 @@
         "927287463",
         "MARITIM MONTERING AS",
         "https://www.maritimmontering.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "924490896",
         "NM HEST OG RYTTER AS",
         "https://nmhestogrytter.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "999536468",
@@ -57,13 +57,13 @@
         "913211510",
         "OSLO ELEKTROINSTALLASJON AS",
         "https://osloelektroinstallasjon.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "928176991",
         "FAN PARKS INTERNATIONAL AS",
         "https://www.fanparks.com/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "928847276",
@@ -89,14 +89,14 @@
   "R02": {
     "input_rows": 100,
     "envelopes": 100,
-    "claims": 4571,
-    "evidence": 4571,
-    "websites_published": 9,
+    "claims": 4569,
+    "evidence": 4569,
+    "websites_published": 8,
     "jobs_published": 1,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 884,
-    "runtime_s": 364.7,
+    "requests": 890,
+    "runtime_s": 412.2,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "financial_values_checked": 114,
@@ -105,7 +105,7 @@
       "financials": 99,
       "leadership": 99,
       "locations": 99,
-      "website": 9,
+      "website": 8,
       "social_profiles": 3,
       "contact": 39,
       "jobs": 1,
@@ -120,7 +120,7 @@
         "932108097",
         "SORTLAND SORTLAND AS",
         "https://www.sortlandsortland.com/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "959002436",
@@ -147,28 +147,22 @@
         "exact legal name plus registry phone/address on site"
       ],
       [
-        "929022831",
-        "FLO-CODE AS",
-        "https://www.flo-code.no/",
-        "site declared by official registry and its legal/brand name appears on page"
-      ],
-      [
         "984591306",
         "OSLO VEDHANDEL AS",
         "https://www.oslovedhandel.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "935571308",
         "LOFOTEN GROWTH AS",
         "https://lofoten-growth.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "920732623",
         "SAKKI AS",
         "https://www.sakki.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ]
     ],
     "purpose": "random 100, plain-text input"
@@ -183,7 +177,7 @@
     "stale_claims": 0,
     "changes": 0,
     "requests": 865,
-    "runtime_s": 446.5,
+    "runtime_s": 427.9,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "financial_values_checked": 109,
@@ -213,43 +207,43 @@
         "921594666",
         "NAVY RACE AS",
         "https://www.navyrace.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "971538333",
         "STIFTELSEN DANVIK",
         "https://www.danvikfhs.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "931427458",
         "ROYA BEAUTY AS",
         "https://royabeauty.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "921800649",
         "SCANDIHALL AS",
         "https://scandihall.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "929274490",
         "BAREKNIPS AS",
         "https://www.bareknips.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "971117591",
         "FORKYNN ORDET STIFTELSE",
         "https://forkynnordet.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "933451550",
         "KYSTSKOLEN AS",
         "https://www.kystskolen.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ]
     ],
     "purpose": "random 100, JSON list input"
@@ -257,14 +251,14 @@
   "R04": {
     "input_rows": 100,
     "envelopes": 100,
-    "claims": 4548,
-    "evidence": 4548,
-    "websites_published": 12,
+    "claims": 4546,
+    "evidence": 4546,
+    "websites_published": 11,
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 814,
-    "runtime_s": 420.9,
+    "requests": 815,
+    "runtime_s": 419.9,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "financial_values_checked": 113,
@@ -273,7 +267,7 @@
       "financials": 100,
       "leadership": 100,
       "locations": 100,
-      "website": 12,
+      "website": 11,
       "social_profiles": 6,
       "contact": 35,
       "jobs": 0,
@@ -288,7 +282,7 @@
         "994473751",
         "ALVELAND AS",
         "https://alveland.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "998540038",
@@ -318,7 +312,7 @@
         "927437155",
         "FRITZØE NORDIC AS",
         "https://fritzoenordic.no/",
-        "organisation number appears on company page markup (name-matching or declared domain)"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "919065885",
@@ -336,7 +330,7 @@
         "833663542",
         "FRAM KOMPETANSE AS",
         "https://www.framkompetanse.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "913206797",
@@ -349,12 +343,6 @@
         "SODVIN AS",
         "https://www.sodvin.no/",
         "exact legal name plus registry phone/address on site"
-      ],
-      [
-        "936573444",
-        "GRANHOLT COACHING AS",
-        "https://www.granholtcoaching.no",
-        "organisation number appears on company page markup (name-matching or declared domain)"
       ]
     ],
     "purpose": "random 100, gzipped JSONL"
@@ -362,14 +350,14 @@
   "R05": {
     "input_rows": 102,
     "envelopes": 102,
-    "claims": 4511,
-    "evidence": 4511,
-    "websites_published": 13,
+    "claims": 4507,
+    "evidence": 4507,
+    "websites_published": 12,
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 878,
-    "runtime_s": 408.6,
+    "requests": 881,
+    "runtime_s": 411.4,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "financial_values_checked": 90,
@@ -378,9 +366,9 @@
       "financials": 100,
       "leadership": 100,
       "locations": 100,
-      "website": 13,
-      "social_profiles": 10,
-      "contact": 33,
+      "website": 12,
+      "social_profiles": 9,
+      "contact": 32,
       "jobs": 0,
       "public_activity": 99
     },
@@ -393,19 +381,13 @@
         "976541537",
         "LANDSFORBUNDET FOR MOTORHISTORISKE KJØRETØY",
         "https://www.lmk.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "918430954",
         "FOTOKNOFF AS",
         "https://www.fotoknoff.no/",
-        "organisation number appears on company page"
-      ],
-      [
-        "933472078",
-        "HAVER WALLIN AS",
-        "https://www.haverwallin.no/",
-        "organisation number appears on company page markup (name-matching or declared domain)"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "980901181",
@@ -417,13 +399,13 @@
         "976215834",
         "STIFTELSEN KUNSTSILO",
         "https://www.kunstsilo.no/no",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "925589950",
         "PARASOLLFIX AS",
         "https://smartfootoriginals.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "914380669",
@@ -447,25 +429,25 @@
         "980463230",
         "TB REGNSKAP AS",
         "https://tbregnskap.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "993276065",
         "ENVIRO BIL NESBRU AS",
         "https://envirobil.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "971652411",
         "DENTALIA AS",
         "https://dentalia.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "963722664",
         "LILLE GRENSEN SKO AS",
         "https://lillegrensensko.no/",
-        "organisation number appears on company page"
+        "exact legal name plus registry phone/address on site"
       ]
     ],
     "purpose": "random 100 + 2 duplicate rows + 2 invalid numbers"
@@ -473,14 +455,14 @@
   "R06": {
     "input_rows": 100,
     "envelopes": 100,
-    "claims": 5509,
-    "evidence": 5509,
-    "websites_published": 30,
+    "claims": 5512,
+    "evidence": 5512,
+    "websites_published": 31,
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 926,
-    "runtime_s": 501.0,
+    "requests": 922,
+    "runtime_s": 509.5,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "financial_values_checked": 104,
@@ -489,7 +471,7 @@
       "financials": 99,
       "leadership": 100,
       "locations": 100,
-      "website": 30,
+      "website": 31,
       "social_profiles": 21,
       "contact": 60,
       "jobs": 0,
@@ -504,13 +486,19 @@
         "936816703",
         "SCHJØLBERG & TOMBRE AS",
         "https://schjolberg-tombre.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
+      ],
+      [
+        "992463597",
+        "ÅSE OG OMEGN PRIVATSKOLELAG",
+        "https://www.aasemontessori.no/",
+        "exact legal name plus registry phone/address on site"
       ],
       [
         "991358919",
         "BYBERG AS",
         "https://www.byberg.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "921193068",
@@ -522,7 +510,7 @@
         "991603026",
         "MESTERBYGG MOSS AS",
         "https://www.mesterbyggmoss.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "932200759",
@@ -534,19 +522,19 @@
         "986596631",
         "EVENT PARTNER AS",
         "https://eventpartner.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "983847412",
         "ADCARE AS",
         "https://adcare.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "934482557",
         "BERGEN TAKMESTER AS",
         "https://www.bergentakmester.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "926861824",
@@ -558,7 +546,7 @@
         "895197742",
         "NYE MODENA AS",
         "https://nyemodena.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "916785887",
@@ -570,7 +558,7 @@
         "833269402",
         "KONSULENTPARTNER AS",
         "https://konsulentpartner.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "916923538",
@@ -582,7 +570,7 @@
         "920798462",
         "AREAL+ AS",
         "https://www.arealpluss.no/",
-        "organisation number appears on company page markup (name-matching or declared domain)"
+        "organisation number on the site the company declared to an official source (in page markup)"
       ],
       [
         "920209270",
@@ -600,19 +588,19 @@
         "915459420",
         "ROLFSEN AS",
         "https://rolfsen.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "925152706",
         "INAQ AS",
         "https://inaq.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "948120984",
         "AKTIV ØKONOMISERVICE AS",
         "https://okservice.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "924847417",
@@ -630,25 +618,25 @@
         "988187364",
         "SØRLANDSREKLAME AS",
         "https://sorlandsreklame.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "927177005",
         "BUD CAMPING AS",
         "https://budcamping.no/",
-        "organisation number appears on company page markup (name-matching or declared domain)"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "939773460",
         "VARIG FORSIKRING NORDMØRE OG ROMSDAL GJENSIDIG",
         "https://varignr.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "918714006",
         "ALVA INDUSTRIES AS",
         "https://www.alvaindustries.com/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "978632025",
@@ -660,13 +648,13 @@
         "930695424",
         "WASHPOINT AS",
         "https://washpoint.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "920196187",
         "VIKEN MUSIKK AS",
         "https://www.vikenmusikk.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "974692856",
@@ -678,7 +666,7 @@
         "927730014",
         "ANLEGGSDELER AS",
         "https://www.anleggsdeler.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ]
     ],
     "purpose": "100 companies with >=5 employees (website/jobs stress)"
@@ -686,14 +674,14 @@
   "R07": {
     "input_rows": 100,
     "envelopes": 100,
-    "claims": 5541,
-    "evidence": 5541,
-    "websites_published": 44,
+    "claims": 5533,
+    "evidence": 5533,
+    "websites_published": 43,
     "jobs_published": 2,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 1054,
-    "runtime_s": 391.6,
+    "requests": 1056,
+    "runtime_s": 429.0,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "financial_values_checked": 138,
@@ -702,8 +690,8 @@
       "financials": 99,
       "leadership": 100,
       "locations": 100,
-      "website": 44,
-      "social_profiles": 30,
+      "website": 43,
+      "social_profiles": 29,
       "contact": 84,
       "jobs": 2,
       "public_activity": 100
@@ -729,13 +717,13 @@
         "992155752",
         "SOGNDAL FJELLSPORT AS",
         "https://www.fjellsportfestivalen.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "980174085",
         "STEIN IVAR LUDVIGSEN TRANSPORT AS",
         "https://lflytting.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "916498128",
@@ -759,7 +747,7 @@
         "921680791",
         "POOD AS",
         "https://www.pood.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "929611640",
@@ -801,13 +789,13 @@
         "933326071",
         "BRÆKHUS ADVOKATFIRMA AS",
         "https://braekhus.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "913229169",
         "TEKNISK SENTER AS",
         "https://teknisksenter.no/",
-        "organisation number appears on company page markup (name-matching or declared domain)"
+        "organisation number on the site the company declared to an official source (in page markup)"
       ],
       [
         "979933045",
@@ -831,7 +819,7 @@
         "976846923",
         "IDEX BIOMETRICS ASA",
         "https://idexbiometrics.com/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "936994326",
@@ -843,7 +831,7 @@
         "975872378",
         "MASKE AS",
         "https://www.maske.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "941612474",
@@ -867,13 +855,13 @@
         "994263501",
         "ELEKTRIKERN BODØ AS",
         "https://elektrikernbodo.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "981315847",
         "DENTAL-DIRECT AS",
         "https://www.dental-direct.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "998845394",
@@ -906,16 +894,10 @@
         "exact legal name plus registry phone/address on site"
       ],
       [
-        "816269792",
-        "BULK DATA CENTERS AS",
-        "https://bulkinfrastructure.com/",
-        "site declared by official registry and its legal/brand name appears on page"
-      ],
-      [
         "971540028",
         "DNT NORD-TRØNDELAG",
         "https://www.dnt.no/nordtrondelag",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "994536850",
@@ -933,7 +915,7 @@
         "914912350",
         "ØSTLYNG & BJERKE AS",
         "https://www.ostlyngbjerke.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "987008695",
@@ -957,7 +939,7 @@
         "989213504",
         "OPPLÆRINGSKONTORET FOR TEKNOLOGIFAG PÅ HAUGALANDET SA",
         "https://www.opptek.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "998595207",
@@ -975,7 +957,7 @@
         "987675799",
         "ADVOKATENE CHRISTIAN WIIG & CO AS",
         "https://christianwiig.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ]
     ],
     "purpose": "4 known companies + 96 with registry website"
@@ -990,7 +972,7 @@
     "stale_claims": 0,
     "changes": 0,
     "requests": 300,
-    "runtime_s": 40.1,
+    "runtime_s": 38.9,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "financial_values_checked": 106,
@@ -1022,8 +1004,8 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 525,
-    "runtime_s": 135.3,
+    "requests": 524,
+    "runtime_s": 136.5,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "financial_values_checked": 97,
@@ -1055,8 +1037,8 @@
     "jobs_published": 0,
     "stale_claims": 4,
     "changes": 0,
-    "requests": 829,
-    "runtime_s": 462.4,
+    "requests": 831,
+    "runtime_s": 473.9,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "financial_values_checked": 88,
@@ -1086,13 +1068,13 @@
         "927287463",
         "MARITIM MONTERING AS",
         "https://www.maritimmontering.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "924490896",
         "NM HEST OG RYTTER AS",
         "https://nmhestogrytter.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "999536468",
@@ -1104,13 +1086,13 @@
         "913211510",
         "OSLO ELEKTROINSTALLASJON AS",
         "https://osloelektroinstallasjon.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "928176991",
         "FAN PARKS INTERNATIONAL AS",
         "https://www.fanparks.com/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "928847276",
@@ -1137,14 +1119,14 @@
   "R11": {
     "input_rows": 100,
     "envelopes": 100,
-    "claims": 4457,
-    "evidence": 4457,
-    "websites_published": 6,
+    "claims": 4451,
+    "evidence": 4451,
+    "websites_published": 5,
     "jobs_published": 1,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 890,
-    "runtime_s": 422.0,
+    "requests": 892,
+    "runtime_s": 419.4,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "financial_values_checked": 97,
@@ -1153,9 +1135,9 @@
       "financials": 100,
       "leadership": 100,
       "locations": 100,
-      "website": 6,
-      "social_profiles": 5,
-      "contact": 34,
+      "website": 5,
+      "social_profiles": 3,
+      "contact": 33,
       "jobs": 1,
       "public_activity": 100
     },
@@ -1177,22 +1159,16 @@
         "exact legal name plus registry phone/address on site"
       ],
       [
-        "925822884",
-        "7 FJELL BIL VEST AS",
-        "https://www.7fjellbil.no",
-        "organisation number appears on company page"
+        "993533203",
+        "MECHTRONIC AS",
+        "https://www.mechtronic.no/",
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "992986417",
         "BYGGFORVALTNING NORGE AS",
         "https://www.byggforvaltningnorge.no/",
-        "organisation number appears on company page"
-      ],
-      [
-        "929218426",
-        "ANLEGGSGARTNER KRISTIAN SØRBY AS",
-        "https://kristiansorby.no",
-        "exact legal name plus registry phone/address on site"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "976578759",
@@ -1206,14 +1182,14 @@
   "R12": {
     "input_rows": 100,
     "envelopes": 100,
-    "claims": 4597,
-    "evidence": 4597,
-    "websites_published": 10,
+    "claims": 4589,
+    "evidence": 4589,
+    "websites_published": 8,
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 901,
-    "runtime_s": 462.9,
+    "requests": 898,
+    "runtime_s": 463.6,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "financial_values_checked": 141,
@@ -1222,9 +1198,9 @@
       "financials": 100,
       "leadership": 99,
       "locations": 98,
-      "website": 10,
-      "social_profiles": 7,
-      "contact": 36,
+      "website": 8,
+      "social_profiles": 6,
+      "contact": 35,
       "jobs": 0,
       "public_activity": 100
     },
@@ -1237,13 +1213,7 @@
         "921176317",
         "ATLAS EIENDOM AS",
         "https://atlaseiendom.no/",
-        "organisation number appears on company page"
-      ],
-      [
-        "997844866",
-        "MORTENSEN DENTAL AS",
-        "https://mortensendental.no/",
-        "organisation number appears on company page"
+        "exact legal name plus registry phone/address on site"
       ],
       [
         "933190390",
@@ -1258,12 +1228,6 @@
         "site declared by official registry and its legal/brand name appears on page"
       ],
       [
-        "915198112",
-        "MØBELSNEKKER THOMAS SAASTAD AS",
-        "https://thomassaastad.com/",
-        "site declared by official registry and its legal/brand name appears on page"
-      ],
-      [
         "871572232",
         "ESPEGARD AS",
         "https://www.espegard.no/",
@@ -1273,7 +1237,7 @@
         "818002912",
         "HYTTEAVISEN AS",
         "https://www.hytteavisen.no",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "996894630",
@@ -1305,8 +1269,8 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 823,
-    "runtime_s": 431.9,
+    "requests": 821,
+    "runtime_s": 444.1,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "financial_values_checked": 115,
@@ -1336,37 +1300,37 @@
         "935213657",
         "AIKI AS",
         "https://aikias.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "996859967",
         "AURSFJORD BÅTHAVN OG KYSTKULTURSENTER AS",
         "https://aursfjordbathavnogkystkultursenter.com/",
-        "organisation number appears on company page"
+        "exact legal name plus registry phone/address on site"
       ],
       [
         "929601343",
         "HAVILA FINANS AS",
         "https://www.havilafinans.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "933571637",
         "ABM KRAFT AS",
         "https://abmkraft.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "916270097",
         "VOSS DPS NKS BJØRKELI AS",
         "https://www.bjorkeli.no/",
-        "organisation number appears on company page"
+        "organisation number on the site the company declared to an official source"
       ],
       [
         "923586822",
         "BIKERIET AS",
         "https://www.bikeriet.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ]
     ],
     "purpose": "random 100, companies not used in any earlier run"

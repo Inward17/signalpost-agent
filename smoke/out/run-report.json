@@ -2,8 +2,8 @@
   "run": {
     "run_id": "R01",
     "agent_version": "1.0.0",
-    "started_at": "2026-10-16T08:35:14Z",
-    "completed_at": "2026-10-16T08:43:00Z",
+    "started_at": "2026-10-16T11:54:40Z",
+    "completed_at": "2026-10-16T12:02:34Z",
     "terminal_status": "completed"
   },
   "input_rows": 100,
@@ -27,9 +27,9 @@
       "available": 100
     },
     "website": {
-      "not_available": 70,
+      "not_available": 71,
       "blocked": 2,
-      "ambiguous": 18,
+      "ambiguous": 17,
       "available": 9,
       "failed": 1
     },
@@ -51,11 +51,11 @@
   },
   "claims_total": 4376,
   "changes_total": 0,
-  "runtime_s": 465.5,
+  "runtime_s": 474.4,
   "operations": {
     "requests": 824,
     "max_requests": 2000,
-    "bytes": 55196633,
+    "bytes": 55154155,
     "requests_by_host_top": {
       "data.brreg.no": 501,
       "pam-stilling-feed.nav.no": 95,
@@ -73,11 +73,11 @@
       "www.lonepinecapital.com": 4,
       "blueline.com": 4
     },
-    "p50_ms": 1971,
-    "p95_ms": 3279,
+    "p50_ms": 2134,
+    "p95_ms": 3292,
     "third_party_cost_usd": 0.0,
     "nav_feed_pages": 94,
-    "nav_feed_entries": 29331
+    "nav_feed_entries": 29507
   },
   "source_yield": {
     "brreg_registry": {

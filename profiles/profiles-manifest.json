@@ -1,10 +1,10 @@
 {
   "profiles": 1000,
   "unique_organisation_numbers": 1000,
-  "claims": 46929,
-  "evidence_records": 46929,
-  "agent_commit": "f48fc43710fcf3f60f35254822c40edd1f07da53",
-  "content_sha256": "ed2cc3d26ed56ddc6f7e9ceee5544bb56188326fb3e638342b8939617c42c504",
+  "claims": 46902,
+  "evidence_records": 46902,
+  "agent_commit": "e123b93b06770ce2846c8eafe47f9017fd644a17",
+  "content_sha256": "33106fe9e7e40c57bb9e13ea1b0aa56c19f88c045b1dd2a20df4e5269cc75292",
   "source_runs": [
     {
       "run": "R01",
@@ -79,21 +79,21 @@
       "not_available": 5
     },
     "website": {
-      "not_available": 571,
-      "blocked": 38,
-      "ambiguous": 238,
-      "available": 147,
+      "not_available": 573,
+      "blocked": 35,
+      "ambiguous": 245,
+      "available": 141,
       "failed": 6
     },
     "social_profiles": {
-      "not_available": 894,
-      "available": 96,
+      "not_available": 901,
+      "available": 91,
       "failed": 6,
-      "blocked": 4
+      "blocked": 2
     },
     "contact": {
-      "available": 426,
-      "not_available": 574
+      "available": 423,
+      "not_available": 577
     },
     "jobs": {
       "not_available": 996,

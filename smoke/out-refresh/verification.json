@@ -7,8 +7,8 @@
   "jobs_published": 0,
   "stale_claims": 4,
   "changes": 0,
-  "requests": 829,
-  "runtime_s": 462.4,
+  "requests": 831,
+  "runtime_s": 473.9,
   "cost_usd": 0.0,
   "spot_checked": 5,
   "financial_values_checked": 88,
@@ -38,13 +38,13 @@
       "927287463",
       "MARITIM MONTERING AS",
       "https://www.maritimmontering.no/",
-      "organisation number appears on company page"
+      "organisation number in the site's own identity block (footer, contact/about page or structured data)"
     ],
     [
       "924490896",
       "NM HEST OG RYTTER AS",
       "https://nmhestogrytter.no/",
-      "organisation number appears on company page"
+      "organisation number in the site's own identity block (footer, contact/about page or structured data)"
     ],
     [
       "999536468",
@@ -56,13 +56,13 @@
       "913211510",
       "OSLO ELEKTROINSTALLASJON AS",
       "https://osloelektroinstallasjon.no/",
-      "organisation number appears on company page"
+      "organisation number on the site the company declared to an official source"
     ],
     [
       "928176991",
       "FAN PARKS INTERNATIONAL AS",
       "https://www.fanparks.com/",
-      "organisation number appears on company page"
+      "organisation number in the site's own identity block (footer, contact/about page or structured data)"
     ],
     [
       "928847276",

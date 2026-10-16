@@ -2,8 +2,8 @@
   "run": {
     "run_id": "R10",
     "agent_version": "1.0.0",
-    "started_at": "2026-10-16T08:43:00Z",
-    "completed_at": "2026-10-16T08:50:42Z",
+    "started_at": "2026-10-16T12:02:35Z",
+    "completed_at": "2026-10-16T12:10:29Z",
     "terminal_status": "completed"
   },
   "input_rows": 100,
@@ -27,9 +27,9 @@
       "available": 100
     },
     "website": {
-      "not_available": 69,
+      "not_available": 71,
       "blocked": 3,
-      "ambiguous": 19,
+      "ambiguous": 17,
       "available": 8,
       "failed": 1
     },
@@ -52,11 +52,11 @@
   },
   "claims_total": 4376,
   "changes_total": 0,
-  "runtime_s": 462.4,
+  "runtime_s": 473.9,
   "operations": {
-    "requests": 829,
+    "requests": 831,
     "max_requests": 2000,
-    "bytes": 54664220,
+    "bytes": 54777448,
     "requests_by_host_top": {
       "data.brreg.no": 501,
       "pam-stilling-feed.nav.no": 95,
@@ -71,14 +71,14 @@
       "www.nht-co.com": 5,
       "thi-holding.com": 4,
       "gjoviktannlegekontor.no": 4,
-      "vora.no": 4,
-      "www.gjoviktannlegekontor.no": 4
+      "www.gjoviktannlegekontor.no": 4,
+      "www.hugedomains.com": 4
     },
-    "p50_ms": 1895,
-    "p95_ms": 3301,
+    "p50_ms": 2105,
+    "p95_ms": 3296,
     "third_party_cost_usd": 0.0,
     "nav_feed_pages": 94,
-    "nav_feed_entries": 29334
+    "nav_feed_entries": 29520
   },
   "source_yield": {
     "brreg_registry": {
@@ -88,7 +88,7 @@
       "claims_per_request": 8.66
     },
     "company_websites": {
-      "requests": 233,
+      "requests": 235,
       "claims": 39,
       "companies": 9,
       "claims_per_request": 0.17
