@@ -1,0 +1,114 @@
+{
+  "input_rows": 100,
+  "envelopes": 100,
+  "claims": 4621,
+  "evidence": 4621,
+  "websites_published": 13,
+  "jobs_published": 0,
+  "stale_claims": 0,
+  "changes": 0,
+  "requests": 870,
+  "runtime_s": 481.7,
+  "cost_usd": 0.0,
+  "spot_checked": 5,
+  "section_available": {
+    "identity": 100,
+    "financials": 100,
+    "leadership": 100,
+    "locations": 100,
+    "website": 13,
+    "social_profiles": 5,
+    "contact": 45,
+    "jobs": 0,
+    "public_activity": 100
+  },
+  "passed": false,
+  "failures": [
+    "R5 [986652132] claim careers_page published while section jobs is not_available",
+    "R5 [813816342] claim careers_page published while section jobs is not_available",
+    "R5 [956346215] claim careers_page published while section jobs is not_available",
+    "R5 [984969872] claim careers_page published while section jobs is not_available"
+  ],
+  "failure_count": 4,
+  "warnings": [],
+  "websites": [
+    [
+      "931144928",
+      "ENSKE AS",
+      "https://enske.no/",
+      "organisation number appears on company page"
+    ],
+    [
+      "879899222",
+      "ELEKTRIKER GRUPPEN AS",
+      "https://www.elektrikergruppen.no/",
+      "organisation number appears on company page"
+    ],
+    [
+      "983980031",
+      "PROEL AS",
+      "https://proel.no/",
+      "organisation number appears on company page"
+    ],
+    [
+      "986652132",
+      "HELLAND RØR AS",
+      "https://www.hellandror.no/",
+      "exact legal name plus registry phone/address on site"
+    ],
+    [
+      "989724525",
+      "CONDELICA AS",
+      "https://www.condelica.no/home",
+      "organisation number appears on company page"
+    ],
+    [
+      "813816342",
+      "AKTIV VEILEDNING AS",
+      "https://aktivveiledning.no/",
+      "organisation number appears on company page"
+    ],
+    [
+      "956346215",
+      "DUROC MACHINE TOOL AS",
+      "https://www.durocmachinetool.no/",
+      "exact legal name plus registry phone/address on site"
+    ],
+    [
+      "984969872",
+      "ARTEC AQUA VAQ AS",
+      "https://www.artec-aqua.no/",
+      "exact legal name plus registry phone/address on site"
+    ],
+    [
+      "928261115",
+      "WULFFBERG AS",
+      "https://www.wulffbergas.no/",
+      "organisation number appears on company page"
+    ],
+    [
+      "828690132",
+      "CLEANNOR AS",
+      "https://www.cleannor.no/",
+      "organisation number appears on company page"
+    ],
+    [
+      "923354204",
+      "FJELLNETT AS",
+      "https://www.fjellnett.no/",
+      "organisation number appears on company page"
+    ],
+    [
+      "917126941",
+      "113FØRSTEHJELP AS",
+      "https://113hjelp.no/",
+      "organisation number appears on company page"
+    ],
+    [
+      "891381492",
+      "VIASCAN AS",
+      "https://www.viascan.no/",
+      "exact legal name plus registry phone/address on site"
+    ]
+  ]
+}

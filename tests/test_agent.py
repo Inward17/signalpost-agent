@@ -68,6 +68,16 @@ def test_english_as_does_not_satisfy_legal_suffix():
     assert v["verdict"] != "exact", v
 
 
+def test_same_name_other_company_on_matching_domain_is_not_exact():
+    # real case: SHARK AS (Sandefjord, freight) vs shark.no ("Shark AS", Kolbotn, property)
+    d = dossier()
+    d.entity = {"navn": "SHARK AS", "organisasjonsform": {"kode": "AS"},
+                "forretningsadresse": {"adresse": ["Klinestadmoen 4"], "postnummer": "3241"}}
+    html = "<body>Les mer om prosjektet Shark AS Kolbotnveien 38 1410 Kolbotn Tlf: 66 81 21 21</body>"
+    v = assess_identity(d, [page(html, "https://www.shark.no/")], "name_derived_domain", "shark.no")
+    assert v["verdict"] == "ambiguous", v
+
+
 def test_shared_phone_on_registry_site_is_not_exact():
     d = dossier()
     d.entity = {"navn": "VESTGARD INVEST AS", "organisasjonsform": {"kode": "AS"}, "telefon": "76158008"}
@@ -144,6 +154,31 @@ def test_refresh_idempotent_change_and_stale_carry():
     env = _envelope(blocked, first)
     stale = [c for c in env["claims"] if c.get("stale")]
     assert env["changes"] == [] and len(stale) == 1  # failed refresh keeps last value, flags it
+
+
+def test_rate_limited_site_keeps_site_facts_stale_not_removed():
+    d1 = dossier()
+    d1.section("identity", "available", "x")
+    d1.section("website", "available", "x")
+    d1.section("contact", "available", "x")
+    site_ev = d1.add_evidence(Response("https://s.no/", "https://s.no/", 200, b"<html>", "text/html"), "company_owned", "tel:51601122")
+    d1.claim("official_website", "website", {"url": "https://s.no/"}, [site_ev], key="official_website")
+    d1.claim("contact_phone", "contact", "+47 516 01 122", [site_ev], key="phone|51601122")
+    first = json.loads(json.dumps(_envelope(d1)))
+    d2 = dossier()
+    d2.section("identity", "available", "x")
+    d2.section("website", "blocked", "HTTP 429")
+    d2.section("contact", "available", "registry phone")
+    env = _envelope(d2, first)
+    assert env["changes"] == [], env["changes"]
+    assert {c["field"] for c in env["claims"] if c.get("stale")} == {"official_website", "contact_phone"}
+
+
+def test_site_pages_are_not_news():
+    from signalpost.website import is_news_item
+    assert not is_news_item("Hjem", "https://vizer.no/", "https://vizer.no/")
+    assert not is_news_item("Kontakt oss i dag for tilbud", "https://vizer.no/kontakt", "https://vizer.no/")
+    assert is_news_item("Vi åpner ny avdeling i Bergen", "https://x.no/nyheter/vi-apner-ny-avdeling-i-bergen", "https://x.no/nyheter")
 
 
 def test_missing_financials_never_zero():

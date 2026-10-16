@@ -93,9 +93,11 @@ def fetch_entity(client: Client, d: Dossier) -> None:
         add("share_capital", {"amount": cap.get("belop"), "currency": cap.get("valuta"), "type": cap.get("type")}, "kapital", effective_date=cap.get("innfortDato"))
     add("registered_activity", " ".join(body.get("aktivitet") or body.get("vedtektsfestetFormaal") or []).strip() or None, "aktivitet/vedtektsfestetFormaal")
     add("historical_names", [h.get("navn") for h in body.get("historiskeNavn") or [] if h.get("navn")], "historiskeNavn")
-    add("latest_submitted_accounts_year", body.get("sisteInnsendteAarsregnskap"), "sisteInnsendteAarsregnskap", section="financials")
+    add("latest_submitted_accounts_year", body.get("sisteInnsendteAarsregnskap"), "sisteInnsendteAarsregnskap")
     if body.get("hjemmeside"):
         d.website_candidates.append({"url": body["hjemmeside"], "origin": "official_registry"})
+    if d.values("registered_business_address"):
+        d.section("locations", "available", "registered business address")
     d.section("identity", "available", "live Brønnøysund entity record matched by exact organisation number")
 
 

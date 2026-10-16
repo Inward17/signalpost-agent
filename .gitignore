@@ -5,3 +5,7 @@ __pycache__/
 /out/
 smoke/state/
 *.tmp
+testruns/R0*/
+testruns/R10/
+testruns/*.log
+testruns/status.txt

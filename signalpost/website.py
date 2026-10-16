@@ -198,8 +198,6 @@ def assess_identity(d: Dossier, pages: list[Page], origin: str, domain: str) -> 
     if declared and (name_hit or brand_hit):
         hit = name_hit or brand_hit
         return {"verdict": "exact", "score": 0.92, "reason": f"site declared by {origin.replace('_', ' ')} and its legal/brand name appears on page", **hit}
-    if name_hit and name_domain and domain.endswith(".no"):
-        return {"verdict": "exact", "score": 0.9, "reason": "full registered legal name (with legal form) on the matching .no domain; no conflicting organisation number", **name_hit}
     if name_hit or brand_hit or contact_hit:
         best = {"verdict": "ambiguous", "score": 0.6, "reason": "name or contact match only: possibly a related, group or same-name entity", **(name_hit or brand_hit or contact_hit)}
     return best
@@ -408,7 +406,7 @@ def extract_site(client: Client, d: Dossier, verdict: dict[str, Any], pages: lis
             date = str(node.get("datePublished") or "")[:10]
             title = str(node.get("headline") or node.get("name") or "").strip()
             url = node.get("url") or page.resp.final_url
-            if date and title and isinstance(url, str) and url not in seen:
+            if date and isinstance(url, str) and url not in seen and is_news_item(title, url, page.resp.final_url):
                 seen.add(url)
                 ev = d.add_evidence(page.resp, "company_owned", f"{date} {title}")
                 d.claim("company_news", "public_activity", {"date": date, "title": title[:200], "url": url, "date_type": "published"},
@@ -423,7 +421,7 @@ def extract_site(client: Client, d: Dossier, verdict: dict[str, Any], pages: lis
                     continue
                 url = urllib.parse.urljoin(page.resp.final_url, link["href"])
                 title = link.get_text(" ", strip=True) or (container.find(["h2", "h3"]).get_text(" ", strip=True) if container.find(["h2", "h3"]) else "")
-                if url in seen or registered_domain(url) != domain or len(title) < 8:
+                if url in seen or registered_domain(url) != domain or not is_news_item(title, url, page.resp.final_url):
                     continue
                 seen.add(url)
                 ev = d.add_evidence(page.resp, "company_owned", f"{date} {title}")
@@ -432,17 +430,31 @@ def extract_site(client: Client, d: Dossier, verdict: dict[str, Any], pages: lis
                 activity += 1
         for node in walk_jsonld(page.jsonld, {"JobPosting"}):
             title = str(node.get("title") or "").strip()
-            if title:
+            expires = str(node.get("validThrough") or "")[:10] or None
+            if title and not (expires and expires < page.resp.retrieved_at[:10]):  # expired postings are not current hiring
                 ev = d.add_evidence(page.resp, "company_owned", f"JobPosting: {title}")
                 d.claim("job_posting", "jobs", {"title": title, "url": node.get("url") or page.resp.final_url,
-                        "published": str(node.get("datePosted") or "")[:10] or None, "expires": str(node.get("validThrough") or "")[:10] or None,
+                        "published": str(node.get("datePosted") or "")[:10] or None, "expires": expires,
                         "source": "company website"}, [ev], key=f"job|site|{node.get('url') or title}", method="jsonld_jobposting")
+                d.section("jobs", "available", "JobPosting markup on verified company site")
     careers = next((p for p in pages if p.kind == "careers"), None)
     if careers:
         ev = d.add_evidence(careers.resp, "company_owned", f"careers page: {careers.soup.title.get_text(' ', strip=True)[:120] if careers.soup.title else careers.resp.final_url}")
-        d.claim("careers_page", "jobs", careers.resp.final_url, [ev])
+        d.claim("careers_page", "website", careers.resp.final_url, [ev])
     if activity:
         d.section("public_activity", "available", f"{activity} dated item(s) from verified company site")
+
+
+NAV_WORDS = {"hjem", "home", "forside", "kontakt", "contact", "om oss", "about", "nyheter", "news", "aktuelt", "blogg", "blog", "les mer", "read more"}
+
+
+def is_news_item(title: str, url: str, page_url: str) -> bool:
+    """An article, not a site page that happens to carry Article markup ('Hjem', 'Kontakt', the homepage itself)."""
+    path = urllib.parse.urlparse(url).path.strip("/")
+    if len(title.strip()) < 15 or title.strip().casefold() in NAV_WORDS or not path:
+        return False
+    last = ascii_fold(path.split("/")[-1])
+    return not any(last == t or last.startswith(t + ".") for terms in PAGE_KINDS.values() for t in terms) and last.count("-") >= 1
 
 
 def research_website(client: Client, d: Dossier, allow_guessing: bool = True) -> None:
@@ -453,6 +465,7 @@ def research_website(client: Client, d: Dossier, allow_guessing: bool = True) ->
     outcomes: list[str] = []
     ambiguous: dict[str, Any] | None = None
     blocked = False
+    transient: str | None = None  # 429/403/5xx/timeout: we could not check, which is not the same as "not there"
 
     def candidates():
         yield from list(d.website_candidates)
@@ -480,12 +493,19 @@ def research_website(client: Client, d: Dossier, allow_guessing: bool = True) ->
         if verdict["verdict"] == "ambiguous" and not ambiguous:
             ambiguous = verdict
         blocked = blocked or verdict["verdict"] == "blocked"
+        if verdict["verdict"] == "unreachable" and "did not resolve" not in verdict["reason"] and not re.search(r"HTTP 40[45]|HTTP 410", verdict["reason"]):
+            transient = transient or verdict["reason"]
         if len(tried) >= 6:
             break
     if ambiguous:
         d.section("website", "ambiguous", f"candidate {ambiguous.get('homepage')} not published: {ambiguous['reason']}", candidates_checked=outcomes)
     elif blocked:
         d.section("website", "blocked", "candidate site disallows automated access (robots.txt)", candidates_checked=outcomes)
+    elif transient:
+        state = "blocked" if re.search(r"HTTP (403|429)", transient) else "failed"
+        d.section("website", state, f"candidate site could not be checked this run: {transient}", candidates_checked=outcomes)
+        d.section("social_profiles", state, "website could not be checked this run")
+        return
     else:
         d.section("website", "not_available", "no candidate domain resolved to this exact legal entity" if tried else
                   "no registry website and no name-derived domain resolved", candidates_checked=outcomes)

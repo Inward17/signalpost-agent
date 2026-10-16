@@ -68,6 +68,10 @@ def diff(d: Dossier, previous: dict[str, Any] | None, now: str) -> tuple[list[di
         if key in current_keys:
             continue
         state = d.sections.get(p.get("section"), {}).get("state")
+        if any(prev_evidence.get(i, {}).get("source_class") == "company_owned" for i in p.get("evidence_ids", [])):
+            site_state = d.sections.get("website", {}).get("state")
+            if site_state in ("blocked", "failed"):
+                state = site_state  # site facts are only as checked as the site itself
         if state in ("available", "not_available", "ambiguous"):  # source checked successfully this run
             if key.startswith(REMOVABLE) and not p.get("stale"):
                 change("removed", p, None)
@@ -142,7 +146,9 @@ def synthesize(d: Dossier, claims: list[dict], changes: list[dict], first_run: b
         say(f"{len(subs)} registered workplace(s){': ' + ', '.join(p.title() for p in places[:8]) if places else ''}.", *subs)
     site = one("official_website")
     if site:
-        say(f"Verified website: {site['value']['url']} ({site['value']['identity_method']}).", site)
+        how = site["value"].get("identity_method") or "identity verified"
+        when = f"; last verified {site.get('last_observed_at', '')[:10]}, site unreachable this run" if site.get("stale") else ""
+        say(f"Verified website: {site['value'].get('url')} ({how}{when}).", site)
     socials = by_field.get("social_profile", [])
     if socials:
         say("Company-linked profiles: " + ", ".join(c["value"]["platform"] for c in socials) + ".", *socials)

@@ -71,6 +71,18 @@ def load_previous(state_dir: Path, previous: Path | None) -> dict[str, dict]:
     return found
 
 
+def failed_envelope(org: str, run_meta: dict, stage: str, message: str, reason: str, requests: int = 0) -> dict[str, Any]:
+    """Contract-complete envelope for an input that could not be researched."""
+    return {"schema_version": "signalpost-envelope/1.0", "organisation_number": org, "state": "failed", "run": run_meta,
+            "legal_identity": {"organisation_number": org, "legal_name": None},
+            "public_brand": {"brand_names": [], "official_website": None, "social_profiles": []},
+            "sections": {s: {"state": "failed", "reason": reason} for s in SECTIONS},
+            "summary": {"headline": f"Organisation {org}: not researched ({reason}).", "points": [], "changes": [],
+                        "unknowns": [{"section": s, "state": "failed", "reason": reason} for s in SECTIONS], "method": "fallback"},
+            "claims": [], "evidence": [], "source_snapshots": [], "refresh": {}, "changes": [],
+            "errors": [{"stage": stage, "message": message}], "operations": {"requests": requests, "third_party_cost_usd": 0.0}}
+
+
 def atomic_write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -154,15 +166,10 @@ def main(argv: list[str] | None = None) -> int:
         try:
             envelopes.append(build(d, run=run_meta, previous=previous.get(org), now=completed_at))
         except Exception as exc:  # still exactly one terminal envelope
-            envelopes.append({"schema_version": "signalpost-envelope/1.0", "organisation_number": org, "state": "failed", "run": run_meta,
-                              "sections": {s: {"state": "failed", "reason": "envelope build error"} for s in SECTIONS},
-                              "claims": [], "evidence": [], "source_snapshots": [], "changes": [], "refresh": {},
-                              "errors": [{"stage": "build", "message": f"{type(exc).__name__}: {exc}"}], "operations": {"requests": d.requests}})
+            envelopes.append(failed_envelope(org, run_meta, "build", f"{type(exc).__name__}: {exc}", "envelope build error", d.requests))
     for bad in invalid:
-        envelopes.append({"schema_version": "signalpost-envelope/1.0", "organisation_number": bad["organisation_number"], "state": "failed",
-                          "run": run_meta, "sections": {s: {"state": "failed", "reason": "invalid organisation number input"} for s in SECTIONS},
-                          "claims": [], "evidence": [], "source_snapshots": [], "changes": [], "refresh": {},
-                          "errors": [{"stage": "input", "message": f"invalid organisation number: {bad['input']!r}"}], "operations": {"requests": 0}})
+        envelopes.append(failed_envelope(bad["organisation_number"], run_meta, "input", f"invalid organisation number: {bad['input']!r}",
+                                         "invalid organisation number input"))
 
     out = args.output
     atomic_write(out / "envelopes.jsonl", "".join(json.dumps(e, ensure_ascii=False, separators=(",", ":")) + "\n" for e in envelopes))

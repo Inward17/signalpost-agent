@@ -16,7 +16,7 @@ FREE_MAIL = {"gmail.com", "hotmail.com", "outlook.com", "online.no", "live.no", 
 
 
 def norm(name: str | None) -> str:
-    return " ".join(re.findall(r"[0-9a-zæøå]+", str(name or "").casefold()))
+    return " ".join(re.findall(r"[^\W_]+", str(name or "").casefold()))  # unicode-aware: keeps ö, é, ü
 
 
 class JobIndex:

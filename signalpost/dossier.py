@@ -88,6 +88,8 @@ class Dossier:
             current = self.sections.get(name)
             # an available result is never downgraded by a later, weaker source check
             if current and current["state"] == "available" and state != "available":
+                if reason not in current["reason"]:  # keep the gap visible without hiding facts already found
+                    current["reason"] += f"; partial - {state}: {reason}"
                 return
             if current and current["state"] == state == "available" and current["reason"] != reason:
                 reason = f"{current['reason']}; {reason}"
