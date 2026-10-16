@@ -11,9 +11,19 @@ Registry-anchored and deterministic: no LLM, no paid API, $0 third-party cost.
 
 Python 3.10+ (tested on 3.13).
 
+Linux / macOS:
+
 ```bash
-python -m venv .venv && .venv/bin/pip install -r requirements.txt     # Windows: .venv\Scripts\pip
+python -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python run.py --input companies.jsonl --output out
+```
+
+Windows (PowerShell or cmd):
+
+```bash
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe run.py --input companies.jsonl --output out
 ```
 
 `--input` accepts a JSONL file (one object per line with `organisation_number`, e.g. rows of the public universe file), a JSON list,
@@ -29,9 +39,9 @@ Outputs:
 | `state/<org>.json`, `state/history/<org>.jsonl` | refresh baseline and append-only evidence/change log |
 
 Useful flags: `--state-dir` (refresh baseline, default `state/`), `--previous envelopes.jsonl` (explicit previous snapshot),
-`--max-requests 2000`, `--deadline-minutes 42`, `--workers 16`, `--jobs-window-days 45`, `--no-domain-guessing`, `--run-id`.
+`--max-requests 2000`, `--deadline-minutes 42`, `--max-cost-usd 10`, `--workers 16`, `--jobs-window-days 45`, `--no-domain-guessing`, `--run-id`.
 
-Offline tests: `python tests/test_agent.py` (also runs under pytest).
+Offline tests: `python tests/test_agent.py` (32 tests; also runs under pytest).
 
 ## Envelope
 

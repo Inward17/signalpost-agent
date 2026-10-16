@@ -122,22 +122,40 @@ class _PinnedHTTPSHandler(urllib.request.HTTPSHandler):
         return self.do_open(_PinnedHTTPSConnection, req, context=self._context)
 
 
-class _SafeRedirect(urllib.request.HTTPRedirectHandler):
-    max_redirections = 5
+REDIRECT_CODES = {301, 302, 303, 307, 308}
+MAX_REDIRECTS = 5
+SENSITIVE_HEADERS = {"authorization", "proxy-authorization", "cookie", "x-subscription-token", "x-api-key"}
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """urllib must not follow redirects itself: Client.get follows them hop by hop so each one is validated,
+    counted against the budget, rate-limited per host, and stripped of credentials when the origin changes."""
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
-        assert_public_url(newurl)  # every hop is re-checked; the pinned connection re-checks again at connect time
-        return super().redirect_request(req, fp, code, msg, headers, newurl)
+        return None  # urllib then raises HTTPError(3xx), which Client.get handles
+
+
+def _origin(url: str) -> tuple[str, str, int]:
+    p = urllib.parse.urlparse(url)
+    return p.scheme, (p.hostname or "").lower(), p.port or (443 if p.scheme == "https" else 80)
+
+
+def redirect_headers(headers: dict[str, str], current: str, target: str) -> dict[str, str]:
+    """Headers for the next hop: credentials never cross to another origin (scheme, host or port)."""
+    if _origin(current) == _origin(target):
+        return dict(headers)
+    return {k: v for k, v in headers.items() if k.lower() not in SENSITIVE_HEADERS}
 
 
 # ProxyHandler({}) ignores environment proxies so the pinned socket is the real destination
-_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}), _PinnedHTTPHandler(), _PinnedHTTPSHandler(), _SafeRedirect())
+_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}), _PinnedHTTPHandler(), _PinnedHTTPSHandler(), _NoRedirect())
 
 
 class Client:
     """Every outbound request goes through here so budget and safety are enforced, not just reported."""
 
-    def __init__(self, max_requests: int = 2000, deadline_s: float = 45 * 60, timeout: float = 15.0, reserve_s: float = 0.0):
+    def __init__(self, max_requests: int = 2000, deadline_s: float = 45 * 60, timeout: float = 15.0, reserve_s: float = 0.0,
+                 max_cost_usd: float = 10.0):
         """reserve_s: tail of the deadline kept free for writing output; no request may start inside it."""
         self.max_requests = max_requests
         self.deadline = time.monotonic() + deadline_s - reserve_s
@@ -152,6 +170,7 @@ class Client:
         self._robots_lock = threading.Lock()
         self.local = threading.local()  # .dossier set by the runner to attribute requests per company
         self.third_party_cost_usd = 0.0
+        self.max_cost_usd = max_cost_usd
 
     # -- budget -----------------------------------------------------------
     def remaining(self) -> int:
@@ -172,6 +191,13 @@ class Client:
         if owner is not None:
             owner.requests += 1
 
+    def reserve_cost(self, usd: float) -> None:
+        """Called BEFORE any paid API request: refuses the call if it could push spend past the ceiling."""
+        with self._lock:
+            if self.third_party_cost_usd + usd > self.max_cost_usd:
+                raise BudgetExhausted(f"third-party cost ceiling ${self.max_cost_usd:.2f} reached")
+            self.third_party_cost_usd += usd
+
     def _host_slot(self, host: str) -> threading.Semaphore:
         with self._lock:
             if host not in self._host_locks:
@@ -182,41 +208,59 @@ class Client:
     # -- fetching -----------------------------------------------------------
     def get(self, url: str, *, headers: dict[str, str] | None = None, accept: str = "*/*", max_bytes: int = MAX_BYTES,
             check_robots: bool = False, retries: int = 1) -> Response:
-        try:
-            assert_public_url(url)
-        except ValueError as exc:
-            return Response(url, url, 0, error=f"blocked_url: {exc}")
+        hop_headers = {"User-Agent": USER_AGENT, "Accept": accept, **(headers or {})}
+        current = url
+        for _hop in range(MAX_REDIRECTS + 1):
+            try:
+                assert_public_url(current)
+            except ValueError as exc:
+                return Response(url, current, 0, error=f"blocked_url: {exc}")
+            if check_robots and not self.robots_allowed(current):
+                return Response(url, current, 0, error="blocked_robots")
+            resp, location = self._fetch_once(url, current, hop_headers, max_bytes, retries)
+            if location is None:
+                return resp
+            target = urllib.parse.urljoin(current, location)
+            hop_headers = redirect_headers(hop_headers, current, target)
+            current = target
+        return Response(url, current, 0, error=f"too many redirects (>{MAX_REDIRECTS})")
+
+    def _fetch_once(self, original: str, url: str, headers: dict[str, str], max_bytes: int, retries: int) -> tuple[Response, str | None]:
+        """One hop (with retries). Returns (response, redirect Location or None). Every attempt reserves budget."""
         host = urllib.parse.urlparse(url).hostname or ""
-        if check_robots and not self.robots_allowed(url):
-            return Response(url, url, 0, error="blocked_robots")
-        last = Response(url, url, 0, error="not attempted")
+        last = Response(original, url, 0, error="not attempted")
         for attempt in range(retries + 1):
             self._reserve(host)
             started = time.monotonic()
-            request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": accept, **(headers or {})})
+            request = urllib.request.Request(url, headers=headers)
+            location = None
             try:
                 with self._host_slot(host):
                     timeout = max(1.0, min(self.timeout, self.time_left()))
                     with _OPENER.open(request, timeout=timeout) as resp:
                         body = resp.read(max_bytes + 1)
-                        last = Response(url, resp.geturl(), resp.status, body[:max_bytes], resp.headers.get("content-type", ""),
+                        last = Response(original, resp.geturl(), resp.status, body[:max_bytes], resp.headers.get("content-type", ""),
                                         error="oversized" if len(body) > max_bytes else None,
                                         elapsed_ms=int((time.monotonic() - started) * 1000),
                                         headers={k.lower(): v for k, v in resp.headers.items()})
             except urllib.error.HTTPError as exc:
-                last = Response(url, url, exc.code, error=f"HTTP {exc.code}", elapsed_ms=int((time.monotonic() - started) * 1000))
-            except ValueError as exc:  # redirect to blocked address
-                return Response(url, url, 0, error=f"blocked_url: {exc}")
+                location = exc.headers.get("Location") if exc.code in REDIRECT_CODES and exc.headers else None
+                last = Response(original, url, exc.code, error=None if location else f"HTTP {exc.code}",
+                                elapsed_ms=int((time.monotonic() - started) * 1000))
+            except ValueError as exc:  # pinned connection refused a non-public address
+                return Response(original, url, 0, error=f"blocked_url: {exc}"), None
             except Exception as exc:  # timeouts, TLS, connection resets
-                last = Response(url, url, 0, error=f"{type(exc).__name__}: {str(exc)[:160]}", elapsed_ms=int((time.monotonic() - started) * 1000))
+                last = Response(original, url, 0, error=f"{type(exc).__name__}: {str(exc)[:160]}", elapsed_ms=int((time.monotonic() - started) * 1000))
             with self._lock:
                 self.bytes += len(last.body)
                 self.latencies.append(last.elapsed_ms)
+            if location:
+                return last, location
             if last.status in (429, 500, 502, 503, 504) and attempt < retries and self.time_left() > 30:
                 time.sleep(1.5 * (attempt + 1))
                 continue
-            return last
-        return last
+            return last, None
+        return last, None
 
     def robots_allowed(self, url: str) -> bool:
         parsed = urllib.parse.urlparse(url)

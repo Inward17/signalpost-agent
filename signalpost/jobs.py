@@ -59,7 +59,11 @@ class JobIndex:
                         self.entries[entry["uuid"]] = {**entry, "entry_url": FEED + item.get("url", "")}
                 next_url = body.get("next_url")
                 url = urllib.parse.urljoin(FEED, next_url) if next_url else None
-            self.complete = url is None
+                if url and urllib.parse.urlparse(url).hostname != urllib.parse.urlparse(FEED).hostname:
+                    self.error = f"feed pagination pointed off the NAV feed host ({url[:80]}); stopped"  # never send the token elsewhere
+                    url = None
+                    break
+            self.complete = url is None and not self.error
         except BudgetExhausted as exc:
             self.error = str(exc)
         # ponytail: index rebuilt per run; persist cursor in state dir if feed walking gets expensive
@@ -86,6 +90,8 @@ def collect_jobs(client: Client, d: Dossier, index: JobIndex, per_company: int =
     legal = norm(d.entity.get("navn"))
     accepted = 0
     for entry in index.candidates(d)[:per_company]:
+        if urllib.parse.urlparse(entry["entry_url"]).hostname != urllib.parse.urlparse(FEED).hostname:
+            continue  # entry URLs come from feed data: the bearer token only goes to the feed host
         resp = client.get(entry["entry_url"], headers={"Authorization": f"Bearer {index.token}"}, accept="application/json")
         if not resp.ok:
             continue

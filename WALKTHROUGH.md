@@ -38,7 +38,7 @@ signalpost/jobs.py         NAV vacancy feed index + orgnr-verified matching
 signalpost/website.py      website discovery, identity gate, company-owned extraction
 signalpost/envelope.py     envelope assembly, refresh diff, cited synthesis
 signalpost/report.py       self-contained HTML viewer
-tests/test_agent.py        15 offline tests (identity gate, refresh, SSRF, no-zero-fill)
+tests/test_agent.py        32 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats, no-zero-fill)
 smoke/                     100-company batch, first run (out/), refresh run (out-refresh/), logs
 README.md  SOURCES_AND_SECURITY.md  SUBMISSION.md  WALKTHROUGH.md
 ```
@@ -51,7 +51,7 @@ so no network call), plus their pinned transitive packages in `requirements.txt`
 `python run.py --input companies.jsonl --output out`
 
 ### 3.1 Input (`run.py: read_inputs`)
-The input can be JSONL rows (the universe format), a JSON list or object, or a plain text list, optionally gzipped. Each row is normalised to 9 digits.
+The input can be a JSON list or object (compact or pretty-printed: the whole file is tried as JSON first), JSONL rows (the universe format), or a plain text list (one per line, or comma-separated), optionally gzipped. Each row is normalised to 9 digits.
 Duplicates collapse to one envelope, and invalid values get their own `failed` envelope, so no input row ever disappears.
 Snapshot fields in the input row (name, website, municipality) are kept as a fallback identity if the live registry fails.
 
@@ -68,8 +68,13 @@ marked `blocked` with the reason. Every per-company call is wrapped in a try/exc
 ### 3.3 HTTP layer (`http.py`)
 - `Client.get` is the only way out. Every call reserves a request from `--max-requests` (default 2000) and checks `--deadline-minutes`
   (default 42 of the 45 allowed). Going over raises `BudgetExhausted`, so the limits are enforced, not just reported.
-- **SSRF guard**: http(s) only, ports 80/443 only, no localhost/`.local`; every resolved IP must be globally routable; every redirect hop is
-  re-validated (custom `HTTPRedirectHandler`).
+- **SSRF guard**: http(s) only, ports 80/443 only, no localhost/`.local`; every resolved IP must be globally routable. Connections open to the
+  exact IP that passed the check (no second DNS lookup, so no rebinding window); environment proxies are ignored.
+- **Redirects** are followed by `Client.get` itself, not by urllib: at most 5 hops, and each hop is validated, robots-checked when the caller asked
+  for robots, counted against the request budget and limited by the *destination* host's concurrency. On any change of origin (scheme, host
+  or port) `Authorization`, `Cookie`, `X-Subscription-Token` and similar headers are dropped, so a credential never reaches another host.
+  The NAV feed's `next_url` and entry URLs must stay on the feed host.
+- **Cost ceiling**: `--max-cost-usd` (default 10). A paid call reserves its cost before the request and is refused if it would cross the ceiling.
 - Limits: 2 MB per page (8 MB per feed page), 15 s timeout, at most one retry on 429/5xx. At most 6 concurrent requests to brreg.no and 2 to any other host.
 - `robots.txt` is fetched once per host and honoured for all non-API pages. A 401/403 on robots means disallow-all.
 - Requests are attributed per company through a thread-local, so each envelope reports its own request count.
@@ -115,8 +120,10 @@ At most about 8 requests per site.
 **Identity gate** (`assess_identity`), in priority order:
 
 1. The org number (in any separator format) on a page → **exact 1.0**, unless that page also lists other org numbers *and* the domain doesn't match
-   the name. That case is a group/portfolio page → `ambiguous`. A number found only in hidden markup needs a name-matching or declared
-   domain and a page that does not embed ≥ 3 other valid org numbers (chain sites list every member).
+   the name. That case is a group/portfolio page → `ambiguous`. On a domain that is neither name-matching nor officially declared, the
+   number must sit in the site's **own identity block**: footer/address, a contact or about page, or its JSON-LD Organization. A news
+   article or a client list naming the company on someone else's domain is `ambiguous`. A number found only in hidden markup needs a
+   name-matching or declared domain and a page that does not embed ≥ 3 other valid (MOD11) org numbers (chain sites list every member).
 2. A different labelled org number or VAT id on the site → **rejected** (parent, sister or unrelated entity).
 3. A parked, for-sale or placeholder page → **rejected**.
 4. The exact legal name *with its legal suffix in capitals* (`Sandnes Elektriske AS`, so the English word "as" can't satisfy it) plus the registry phone
@@ -190,7 +197,7 @@ The current `smoke/` folder holds the final-code run (R01): 4,376 claims, 781 re
 unchanged. Offline tests also cover real change, removal, and stale-carry.
 
 **Reproducibility**: fresh clone at the pinned commit, empty venv, `pip install -r requirements.txt`, run command → 3/3 envelopes (including
-one deliberately invalid input) and 15/15 tests pass.
+one deliberately invalid input) and all offline tests pass (32 in the current suite).
 
 ## 6. Plan checklist status
 
@@ -212,7 +219,7 @@ one deliberately invalid input) and 15/15 tests pass.
 - **Storage**: JSON state files plus a JSONL history instead of SQLite. Same guarantees (baseline, history, idempotency), fewer moving parts.
 - **Source registry**: documented as a table in `SOURCES_AND_SECURITY.md` and enforced in code (fixed connectors, robots.txt), rather than a runtime `sources.yaml` gate.
 - **Rate-limit handling**: a single retry with backoff on 429/5xx and fixed per-host concurrency. No circuit breaker.
-- **Security tests**: the SSRF guard is tested for private, loopback, metadata and non-standard-port URLs. Redirect re-validation and size caps are in code but not covered by a unit test.
+- **Security tests**: covered by unit tests: SSRF (private, loopback, metadata, non-standard ports), redirects to blocked targets, DNS rebinding, credential stripping on cross-origin redirects, bounded redirect chains, NAV pagination host pin, oversized responses, deadline reserve and cost ceiling. Not covered: a live end-to-end test against a hostile server (the network tests use stand-ins).
 - **Metrics**: requests, latency, runtime and cost are reported. "Verified facts per request per source" isn't computed separately.
 
 ### Not done

@@ -108,6 +108,21 @@ def test_orgnr_validity():
     assert valid_orgnr("923609016") and valid_orgnr("979543883") and not valid_orgnr("923609017")
 
 
+def test_orgnr_on_third_party_page_is_not_official_website():
+    # reviewer case: an unrelated domain mentions the company's number in an article or a client list
+    for html in ("<body><h1>Lokale nyheter</h1><p>Selskapet med org.nr 810 034 882 har fått ny kontrakt.</p></body>",
+                 "<body><h1>Webbyrå Nord</h1><p>Våre kunder: Sandnes Elektriske AS (810 034 882)</p></body>"):
+        for origin in ("search_candidate", "name_derived_domain"):
+            v = assess_identity(dossier(), [page(html, "https://other.no/")], origin, "other.no")
+            assert v["verdict"] == "ambiguous", (origin, v)
+
+
+def test_orgnr_in_own_footer_on_brand_domain_is_exact():
+    html = "<body><h1>Lys og Strøm</h1><footer>Sandnes Elektriske AS · Org.nr 810 034 882</footer></body>"
+    v = assess_identity(dossier(), [page(html, "https://lysogstrom.no/")], "name_derived_domain", "lysogstrom.no")
+    assert v["verdict"] == "exact", v
+
+
 def test_domain_guesses_skip_generic_names():
     assert domain_guesses("HOLDING AS") == []
     assert "sandneselektriske.no" in domain_guesses("SANDNES ELEKTRISKE AS")
@@ -146,16 +161,123 @@ def _patched(module, name, value):
     return lambda: setattr(module, name, original)
 
 
-def test_redirect_to_loopback_or_metadata_blocked():
-    import urllib.request
-    from signalpost.http import _SafeRedirect
-    req = urllib.request.Request("https://example.com/")
-    for target in ("http://127.0.0.1/", "http://169.254.169.254/latest/meta-data/", "http://10.1.2.3/", "http://localhost/"):
+class _FakeWeb:
+    """Stands in for the network: maps URL -> (status, headers, body); records every request actually sent."""
+
+    def __init__(self, routes: dict):
+        self.routes, self.sent = routes, []
+
+    def open(self, request, timeout=None):
+        import urllib.error
+        self.sent.append((request.full_url, {k.lower(): v for k, v in request.header_items()}))
+        status, headers, body = self.routes.get(request.full_url, (404, {}, b""))
+        if status in (301, 302, 303, 307, 308) or status >= 400:
+            import email.message
+            msg = email.message.Message()
+            for k, v in headers.items():
+                msg[k] = v
+            raise urllib.error.HTTPError(request.full_url, status, "x", msg, None)
+        web = self
+
+        class R:
+            def __init__(self):
+                self.status, self.headers = status, {"content-type": "text/html", **headers}
+
+            def read(self, n):
+                return body[:n]
+
+            def geturl(self):
+                return request.full_url
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+        return R()
+
+
+def _resolver(mapping: dict):
+    """getaddrinfo stand-in: IP literals resolve to themselves, named hosts per mapping (default: a public IP)."""
+    import ipaddress
+
+    def resolve(host, port, *a, **k):
         try:
-            _SafeRedirect().redirect_request(req, None, 302, "Found", {}, target)
+            ipaddress.ip_address(host)
+            ip = host
         except ValueError:
-            continue
-        raise AssertionError(f"redirect not blocked: {target}")
+            ip = mapping.get(host, "93.184.216.34")
+        return [(2, 1, 6, "", (ip, port))]
+    return resolve
+
+
+def _with_fake_network(routes: dict, dns: dict | None = None):
+    import socket
+    from signalpost import http as h
+    web = _FakeWeb(routes)
+    restore = [_patched(socket, "getaddrinfo", _resolver(dns or {})), _patched(h._OPENER, "open", web.open)]
+    return web, lambda: [r() for r in restore]
+
+
+def test_redirect_to_loopback_metadata_or_private_host_blocked():
+    from signalpost.http import Client
+    for target, dns in (("http://127.0.0.1/", {}), ("http://169.254.169.254/latest/meta-data/", {}),
+                        ("http://10.1.2.3/", {}), ("https://internal.example/", {"internal.example": "192.168.0.10"})):
+        web, restore = _with_fake_network({"https://a.example/": (302, {"Location": target}, b"")}, dns)
+        try:
+            resp = Client().get("https://a.example/")
+            assert resp.error and resp.error.startswith("blocked_url"), (target, resp.error)
+            assert [u for u, _ in web.sent] == ["https://a.example/"], web.sent  # the blocked hop is never requested
+        finally:
+            restore()
+
+
+def test_credentials_never_cross_origin_on_redirect():
+    from signalpost.http import Client
+    routes = {"https://pam-stilling-feed.nav.no/a": (302, {"Location": "/b"}, b""),                       # same origin
+              "https://pam-stilling-feed.nav.no/b": (302, {"Location": "https://attacker.example/steal"}, b""),
+              "https://attacker.example/steal": (200, {}, b"ok")}
+    web, restore = _with_fake_network(routes)
+    try:
+        c = Client()
+        c.get("https://pam-stilling-feed.nav.no/a", headers={"Authorization": "Bearer SECRET", "X-Subscription-Token": "KEY", "Cookie": "s=1"})
+        sent = dict(web.sent)
+        assert sent["https://pam-stilling-feed.nav.no/b"].get("authorization") == "Bearer SECRET"  # kept on same origin
+        leaked = sent["https://attacker.example/steal"]
+        assert not ({"authorization", "x-subscription-token", "cookie"} & set(leaked)), leaked
+        assert c.requests == 3 and c.by_host.get("attacker.example") == 1  # every hop counted, per destination host
+    finally:
+        restore()
+
+
+def test_redirect_chain_is_bounded():
+    from signalpost.http import Client
+    routes = {f"https://loop.example/{i}": (302, {"Location": f"/{i + 1}"}, b"") for i in range(20)}
+    web, restore = _with_fake_network(routes)
+    try:
+        resp = Client().get("https://loop.example/0")
+        assert resp.error.startswith("too many redirects") and len(web.sent) == 6
+    finally:
+        restore()
+
+
+def test_nav_pagination_never_leaves_feed_host():
+    import json as _json
+    from signalpost.http import Client
+    from signalpost.jobs import FEED, JobIndex
+    page = {"items": [], "next_url": "https://attacker.example/api/v1/feed/x"}
+    routes = {FEED + "/api/v1/feed": (200, {"content-type": "application/json"}, _json.dumps(page).encode())}
+    web, restore = _with_fake_network(routes)
+    import os
+    os.environ["NAV_FEED_TOKEN"] = "TOKEN"
+    try:
+        j = JobIndex()
+        j.build(Client(), 1, 10)
+        assert not any("attacker.example" in u for u, _ in web.sent), web.sent
+        assert j.error and "off the NAV feed host" in j.error and not j.complete
+    finally:
+        os.environ.pop("NAV_FEED_TOKEN", None)
+        restore()
 
 
 def test_dns_rebinding_cannot_reach_private_address():
@@ -175,20 +297,6 @@ def test_dns_rebinding_cannot_reach_private_address():
     finally:
         for r in restore:
             r()
-
-
-def test_redirect_to_host_resolving_private_blocked():
-    import socket
-    from signalpost import http as h
-    restore = _patched(socket, "getaddrinfo", _FakeDNS("192.168.0.10"))
-    try:
-        try:
-            h._SafeRedirect().redirect_request(__import__("urllib.request").request.Request("https://a.example/"), None, 302, "", {}, "https://internal.example/")
-        except ValueError:
-            return
-        raise AssertionError("redirect to privately-resolving host not blocked")
-    finally:
-        restore()
 
 
 def test_oversized_response_not_accepted():
@@ -227,6 +335,19 @@ def test_deadline_reserve_blocks_new_requests():
     except BudgetExhausted:
         return
     raise AssertionError("request allowed inside the output reserve")
+
+
+def test_cost_ceiling_enforced_before_paid_call():
+    from signalpost.http import BudgetExhausted, Client
+    c = Client(max_cost_usd=0.01)
+    c.reserve_cost(0.005)
+    c.reserve_cost(0.005)
+    try:
+        c.reserve_cost(0.005)
+    except BudgetExhausted:
+        assert c.third_party_cost_usd == 0.01
+        return
+    raise AssertionError("paid call allowed past the ceiling")
 
 
 def test_page_text_is_data_not_instructions():
@@ -305,6 +426,24 @@ def test_site_pages_are_not_news():
     assert not is_news_item("Hjem", "https://vizer.no/", "https://vizer.no/")
     assert not is_news_item("Kontakt oss i dag for tilbud", "https://vizer.no/kontakt", "https://vizer.no/")
     assert is_news_item("Vi åpner ny avdeling i Bergen", "https://x.no/nyheter/vi-apner-ny-avdeling-i-bergen", "https://x.no/nyheter")
+
+
+def test_input_formats():
+    import tempfile
+    from run import read_inputs
+    cases = {
+        "pretty.json": '{\n  "organisation_numbers": [\n    "979543883",\n    "810034882"\n  ]\n}\n',
+        "list.json": '[\n  "979543883",\n  {"organisation_number": "810 034 882"}\n]',
+        "rows.jsonl": '{"organisation_number": "979543883"}\n{"organisation_number": "810034882"}\n',
+        "plain.txt": "979543883\n# comment\n810034882\n",
+        "csvish.txt": "979543883, 810034882",
+    }
+    with tempfile.TemporaryDirectory() as tmp:
+        for name, content in cases.items():
+            path = Path(tmp) / name
+            path.write_text(content, encoding="utf-8")
+            orgs, _, invalid = read_inputs(path)
+            assert orgs == ["979543883", "810034882"] and not invalid, (name, orgs, invalid)
 
 
 def test_missing_financials_never_zero():

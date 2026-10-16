@@ -13,7 +13,7 @@ import tldextract
 from bs4 import BeautifulSoup
 
 from .dossier import Dossier
-from .http import Client, Response, resolves
+from .http import BudgetExhausted, Client, Response, resolves
 
 _EXTRACT = tldextract.TLDExtract(suffix_list_urls=())  # bundled public-suffix snapshot: no network call
 LEGAL_SUFFIXES = {"as", "asa", "ans", "da", "enk", "sa", "ba", "nuf", "iks", "ks", "sti", "bbl", "brl", "sf", "kf"}
@@ -173,11 +173,12 @@ def assess_identity(d: Dossier, pages: list[Page], origin: str, domain: str) -> 
         page_others = {x for x in labelled if x != org and x not in d.subunit_orgs}
         visible = org_re.search(text)
         m = visible or org_re.search(raw_html)
-        if m and not org_hit:
+        owned = bool(visible) and ownership_context(page, org_re)
+        if m and (not org_hit or (owned and not org_hit["owned"])):
             span = (text[max(0, m.start() - 80): m.end() + 40] if visible else m.group(0)).strip()
             # hidden-markup hits (script data, attributes) are weaker: a chain site can embed every member's number
             listed = {x for x in re.findall(r"(?<!\d)(\d{9})(?!\d)", raw_html) if x != org and x not in d.subunit_orgs and valid_orgnr(x)}
-            org_hit = {"page": page.resp.final_url, "span": span, "visible": bool(visible),
+            org_hit = {"page": page.resp.final_url, "span": span, "visible": bool(visible), "owned": owned,
                        "group_page": len(page_others) >= 1 or len(listed) >= 3}
         other_orgs |= page_others
         for node in walk_jsonld(page.jsonld, ORG_TYPES):
@@ -200,9 +201,16 @@ def assess_identity(d: Dossier, pages: list[Page], origin: str, domain: str) -> 
             contact_hit = contact_hit or {"page": page.resp.final_url, "span": f"registered address '{' '.join(addr.get('adresse') or [])}, {postcode}' appears on page"}
     declared = origin in {"official_registry", "nav_employer_homepage", "nav_contact_email_domain"}
     strong_domain = name_domain or declared
-    if org_hit and not (org_hit["group_page"] and not name_domain) and (org_hit["visible"] or strong_domain):
-        return {"verdict": "exact", "score": 1.0, "reason": "organisation number appears on company page" +
-                ("" if org_hit["visible"] else " markup (name-matching or declared domain)"), **org_hit}
+    # Two questions: is the page about this company (org number present), and is the DOMAIN the company's own?
+    # On a domain not tied to the company by name or an official declaration, the number must sit where a site states its
+    # own identity (footer, contact/about page, its JSON-LD Organization) - not in an article or a client list.
+    if org_hit and not (org_hit["group_page"] and not name_domain):
+        if strong_domain:
+            return {"verdict": "exact", "score": 1.0, "reason": "organisation number appears on company page" +
+                    ("" if org_hit["visible"] else " markup (name-matching or declared domain)"), **org_hit}
+        if org_hit["owned"]:
+            return {"verdict": "exact", "score": 1.0, "reason": "organisation number in the site's own identity block (footer, contact/about page or structured data)", **org_hit}
+        return {"verdict": "ambiguous", "score": 0.7, "reason": "organisation number mentioned on a page of an unconfirmed domain, outside the site's own identity block (article, client list or directory)", **org_hit}
     if org_hit:
         return {"verdict": "ambiguous", "score": 0.7, "reason": "organisation number only in hidden markup or on a page listing several entities (group/chain/portfolio page)", **org_hit}
     if other_orgs:
@@ -216,6 +224,17 @@ def assess_identity(d: Dossier, pages: list[Page], origin: str, domain: str) -> 
     if name_hit or brand_hit or contact_hit:
         best = {"verdict": "ambiguous", "score": 0.6, "reason": "name or contact match only: possibly a related, group or same-name entity", **(name_hit or brand_hit or contact_hit)}
     return best
+
+
+def ownership_context(page: Page, org_re: re.Pattern[str]) -> bool:
+    """True when the org number appears where a site states its OWN identity: footer/address block, a contact or
+    about page, or the page's JSON-LD Organization node."""
+    if page.kind in ("contact", "about"):
+        return bool(org_re.search(page.text))
+    blocks = page.soup.find_all(["footer", "address"]) + page.soup.select('[class*="footer" i], [id*="footer" i], [class*="colophon" i]')
+    if any(org_re.search(b.get_text(" ", strip=True)) for b in blocks):
+        return True
+    return any(org_re.search(json.dumps(node, ensure_ascii=False)) for node in walk_jsonld(page.jsonld, ORG_TYPES))
 
 
 def legal_name_regex(legal: str) -> re.Pattern[str] | None:
@@ -295,12 +314,15 @@ def brave_candidates(client: Client, d: Dossier) -> list[dict[str, str]]:
     key = os.environ.get("BRAVE_API_KEY")
     if not key or not d.entity.get("navn"):
         return []
+    cost = float(os.environ.get("BRAVE_COST_PER_QUERY", "0.005"))
+    try:
+        client.reserve_cost(cost)  # refused before the request if it would exceed the run's cost ceiling
+    except BudgetExhausted:
+        return []
+    d.cost_usd += cost
     q = urllib.parse.quote(f'"{d.entity["navn"]}"')
     resp = client.get(f"https://api.search.brave.com/res/v1/web/search?q={q}&country=no&count=10",
                       headers={"X-Subscription-Token": key}, accept="application/json")
-    cost = float(os.environ.get("BRAVE_COST_PER_QUERY", "0.005"))
-    client.third_party_cost_usd += cost
-    d.cost_usd += cost
     if not resp.ok:
         return []
     # search results are candidates only; nothing from the result snippet is stored or published

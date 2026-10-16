@@ -104,7 +104,10 @@ def fetch_entity(client: Client, d: Dossier) -> None:
 
 def _seed_identity(d: Dossier) -> None:
     seed = d.seed
-    ev = d.add_evidence(None, "official_registry_snapshot", f"snapshot row {d.org}: {seed.get('name')}", url=ENTITY.format(org=d.org))
+    # the fact came from the batch's snapshot row, not the live API: cite the registry's bulk dataset and say so
+    ev = d.add_evidence(None, "official_registry_snapshot",
+                        f"input snapshot row for {d.org} (live entity API unavailable this run): name={seed.get('name')!r}",
+                        url="https://data.brreg.no/enhetsregisteret/api/enheter/lastned", extraction="frozen_snapshot_row")
     d.entity = {"navn": seed.get("name"), "organisasjonsform": {"kode": seed.get("legal_form")}, "hjemmeside": seed.get("website"),
                 "forretningsadresse": {"kommune": seed.get("municipality")}}
     for field, key in (("legal_name", "name"), ("municipality", "municipality"), ("registry_website", "website")):

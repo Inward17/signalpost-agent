@@ -32,15 +32,17 @@ def read_inputs(path: Path) -> tuple[list[str], dict[str, dict], list[dict]]:
     with opener(path, "rt", encoding="utf-8-sig") as fh:
         text = fh.read()
     stripped = text.strip()
-    if stripped.startswith("["):
-        rows = json.loads(stripped)
-    elif stripped.startswith("{") and "\n" not in stripped:
+    try:  # whole-file JSON first: a list, or an object (pretty-printed or not)
         body = json.loads(stripped)
-        rows = body.get("organisation_numbers") or body.get("companies") or [body]
-    elif stripped.startswith("{"):
-        rows = [json.loads(line) for line in text.splitlines() if line.strip()]
-    else:
-        rows = [line.strip() for line in text.splitlines() if line.strip() and not line.startswith("#")]
+        rows = body if isinstance(body, list) else             body.get("organisation_numbers") or body.get("organisationNumbers") or body.get("companies") or body.get("orgnr") or [body]
+    except json.JSONDecodeError:
+        if stripped.startswith("{"):  # JSONL: one object per line
+            rows = [json.loads(line) for line in text.splitlines() if line.strip()]
+        else:  # plain text, one number per line (commas/semicolons also accepted)
+            rows = [t.strip() for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")
+                    for t in line.replace(";", ",").split(",") if t.strip()]
+    if not isinstance(rows, list):
+        rows = [rows]
     orgs, seeds, invalid = [], {}, []
     for row in rows:
         raw = row.get("organisation_number") or row.get("orgnr") or row.get("organisasjonsnummer") if isinstance(row, dict) else row
@@ -123,6 +125,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--run-id", default=None)
     ap.add_argument("--max-requests", type=int, default=2000)
     ap.add_argument("--deadline-minutes", type=float, default=42.0, help="hard stop; output is always written")
+    ap.add_argument("--max-cost-usd", type=float, default=10.0, help="hard ceiling on paid third-party API spend")
     ap.add_argument("--workers", type=int, default=16)
     ap.add_argument("--jobs-window-days", type=int, default=45)
     ap.add_argument("--no-domain-guessing", action="store_true")
@@ -132,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     run_id = args.run_id or "run-" + started_at.replace(":", "").replace("-", "")
     orgs, seeds, invalid = read_inputs(args.input)
     margin = min(90.0, args.deadline_minutes * 60 * 0.25)  # tail kept free for envelope building and writing
-    client = Client(max_requests=args.max_requests, deadline_s=args.deadline_minutes * 60, reserve_s=margin)
+    client = Client(max_requests=args.max_requests, deadline_s=args.deadline_minutes * 60, reserve_s=margin, max_cost_usd=args.max_cost_usd)
     dossiers = {org: Dossier(org, seeds[org]) for org in orgs}
     previous = load_previous(args.state_dir, args.previous)
     suppressed = args.state_dir / "suppressed_persons.txt"

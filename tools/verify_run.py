@@ -14,6 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from run import read_inputs  # noqa: E402
+from signalpost.registry import FIN_FIELDS as FIN_PATHS  # noqa: E402
 
 STATES = {"available", "not_available", "blocked", "not_applicable", "ambiguous", "failed"}
 SECTIONS = {"identity", "financials", "leadership", "locations", "website", "social_profiles", "contact", "jobs", "public_activity"}
@@ -134,6 +135,7 @@ def main() -> int:
 
     # R13 fabrication spot-check: re-fetch the source and compare published values
     spot = 0
+    checked_values = 0
     for e in envs:
         if spot >= a.spot_check or e.get("state") != "available":
             continue
@@ -144,12 +146,21 @@ def main() -> int:
                 warns.append(f"R13 [{org}] legal name differs from live registry now (may be a real change)")
             fin = [c for c in e["claims"] if c["field"] in FIN]
             if fin:
-                recs = fetch_json(f"https://data.brreg.no/regnskapsregisteret/regnskap/{org}")
-                live = json.dumps(recs)
-                for c in fin:
-                    amt = c["value"]["amount"]
-                    if not re.search(rf"[:\s]{re.escape(repr(float(amt)))}[,}}]", live) and not re.search(rf"[:\s]{re.escape(str(amt))}[,}}]", live):
-                        fail(f"R13 [{org}] {c['field']} {amt} not found in live filing")
+                records = fetch_json(f"https://data.brreg.no/regnskapsregisteret/regnskap/{org}")
+                for c in fin:  # exact tuple: field, statement type, period end, currency, value
+                    v = c["value"]
+                    period_end = (c.get("reporting_period") or "").split("/")[-1]
+                    rec = next((r for r in records if (r.get("regnskapstype") or "SELSKAP").lower() == v["statement"]
+                                and (r.get("regnskapsperiode") or {}).get("tilDato") == period_end), None)
+                    if rec is None:
+                        warns.append(f"R13 [{org}] {c['field']} {period_end} {v['statement']}: period no longer in live API (rolled out?)")
+                        continue
+                    live = rec
+                    for key in FIN_PATHS[c["field"]]:
+                        live = live.get(key) if isinstance(live, dict) else None
+                    if (rec.get("valuta") or "NOK") != v["currency"] or live is None or float(live) != float(v["amount"]):
+                        fail(f"R13 [{org}] {c['field']} {v['statement']} {period_end}: published {v['amount']} {v['currency']}, live {live} {rec.get('valuta')}")
+                    checked_values += 1
             spot += 1
         except Exception as exc:  # network flake is a warning, not a contract failure
             warns.append(f"R13 [{org}] spot-check skipped: {exc}")
@@ -158,7 +169,7 @@ def main() -> int:
         "input_rows": len(orgs) + len(invalid), "envelopes": len(envs), "claims": counts["claims"], "evidence": counts["evidence"],
         "websites_published": len(counts["websites"]), "jobs_published": counts["jobs"], "stale_claims": counts["stale"],
         "changes": counts["changes"], "requests": ops.get("requests"), "runtime_s": report.get("runtime_s"),
-        "cost_usd": ops.get("third_party_cost_usd"), "spot_checked": spot,
+        "cost_usd": ops.get("third_party_cost_usd"), "spot_checked": spot, "financial_values_checked": checked_values,
         "section_available": {s: report["section_states"][s].get("available", 0) for s in report["section_states"]},
         "passed": not fails, "failures": fails[:40], "failure_count": len(fails), "warnings": warns[:20],
         "websites": counts["websites"],

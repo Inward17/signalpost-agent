@@ -5,7 +5,7 @@
 | Source | Access method | Used for | Licence / terms | Identity link | Requests |
 |---|---|---|---|---|---|
 | Brønnøysund Enhetsregisteret `api/enheter/{org}` | Open REST API, no key | Legal identity, form, status, addresses, industry, employees, founding date, registry website, phone, capital, historical names | [NLOD 2.0](https://data.norge.no/nlod/en/2.0) — attribution kept in every evidence record | Exact organisation number (response must echo it) | 1 / company |
-| Regnskapsregisteret `regnskap/{org}` | Open REST API | Filed annual accounts: revenue, operating result, profit before tax, net result, assets, equity, debt, payroll, audit flags — per reporting period, currency and company/group statement | NLOD 2.0 | Exact organisation number | 1 / company |
+| Regnskapsregisteret `regnskap/{org}` | Open REST API, described by Brønnøysund as a temporary "preview" research API without service guarantees; outages are reported as `blocked`/`failed`, never as missing figures | Filed annual accounts: revenue, operating result, profit before tax, net result, assets, equity, debt, payroll, audit flags — per reporting period, currency and company/group statement | NLOD 2.0 | Exact organisation number | 1 / company |
 | Enhetsregisteret `enheter/{org}/roller` | Open REST API | Board, CEO, auditor and other registered roles | NLOD 2.0 | Exact organisation number | 1 / company |
 | Enhetsregisteret `underenheter?overordnetEnhet={org}` | Open REST API | Registered workplaces (subunits) and their addresses | NLOD 2.0 | Parent organisation number | 1 / company |
 | Enhetsregisteret `oppdateringer/enheter?organisasjonsnummer={org}&includeChanges=true` | Open REST API | Dated official change log (address, name, website, employees, filings, …) | NLOD 2.0 | Exact organisation number | 1 / company |
@@ -23,7 +23,7 @@ authorised role endpoints exposing national identity numbers.
 The organisation number is the only identity anchor. Every website candidate (registry `hjemmeside`, NAV employer homepage
 or contact-email domain for an orgnr-matched ad, name-derived domain, optional search candidate) is fetched and assessed:
 
-1. **Exact (score 1.0)** — the organisation number (any of `810034882`, `810 034 882`, `810.034.882`, `NO 810 034 882 MVA`) appears on the homepage, contact or about page — unless that page also lists other organisation numbers on a non-matching domain (group/portfolio page → `ambiguous`). A number found only in hidden markup (script data, attributes) counts only on a name-matching or officially declared domain, and never when the HTML lists ≥ 3 other valid (MOD11) organisation numbers: chain sites embed every member's number.
+1. **Exact (score 1.0)** — the organisation number (any of `810034882`, `810 034 882`, `810.034.882`, `NO 810 034 882 MVA`) appears on the homepage, contact or about page — unless that page also lists other organisation numbers on a non-matching domain (group/portfolio page → `ambiguous`). On a domain that is neither name-matching nor officially declared, the number must sit in the site's own identity block (footer/address, contact or about page, its JSON-LD Organization); a news article or client list mentioning the company on someone else's domain is `ambiguous`. A number found only in hidden markup (script data, attributes) counts only on a name-matching or officially declared domain, and never when the HTML lists ≥ 3 other valid (MOD11) organisation numbers: chain sites embed every member's number.
 2. **Rejected** — the site states a *different* labelled organisation number / VAT id → parent, sister, franchise or unrelated entity. This overrides every name signal.
 3. **Rejected** — parked / for-sale / placeholder page.
 4. **Exact (0.97)** — full registered legal name (legal-form suffix in capitals) *and* the registry phone number or registered street address + postcode appear on the site, on a name-matching or officially declared domain.
@@ -52,12 +52,16 @@ This is an engineering description, not a legal opinion; a production deployment
 - **Single HTTP path** (`signalpost/http.py`): every request passes the budget/deadline check, the SSRF guard and size limits.
 - **SSRF guard**: only `http(s)` on ports 80/443; hostnames must resolve exclusively to globally-routable IPs (loopback, RFC1918, link-local,
   metadata addresses blocked); every redirect hop is re-validated; max 5 redirects; environment proxies are ignored.
+- **Redirects**: followed by the client hop by hop (max 5), never by urllib. Each hop is validated, budget-counted, rate-limited per destination
+  host and robots-checked where applicable. Credentials (`Authorization`, `Cookie`, `X-Subscription-Token`, `X-API-Key`) are dropped on any
+  change of origin, and the NAV feed's pagination and entry URLs must stay on `pam-stilling-feed.nav.no`.
 - **DNS-rebinding protection**: validation and connection use the *same* resolution. The custom HTTP(S) connection classes resolve once,
   check every returned address, and open the socket to that checked IP (TLS still verifies the real hostname via SNI), so a second DNS
   answer cannot steer the connection to an internal address.
 - **Response limits**: 2 MB per page (8 MB per NAV feed page), 15 s timeout, HTML only for site pages; scripts are never executed (static parsing).
 - **Prompt injection**: there is no LLM in the loop; fetched text is data, matched only by deterministic rules.
 - **Secrets**: none required. Optional `BRAVE_API_KEY` / `NAV_FEED_TOKEN` are read from environment variables only and never logged or written to output.
+- **Cost ceiling**: `--max-cost-usd` (default $10). Paid calls reserve their cost before the request and are refused past the ceiling (default spend is $0).
 - **Budgets enforced, not reported**: `--max-requests` (default 2000) and `--deadline-minutes` (default 42 of the 45 allowed). The HTTP client
   itself refuses to start any request in the final reserve (90 s, or a quarter of very short deadlines), so no phase can eat the time kept for
   writing output. When budget or time runs out, remaining sources are marked `blocked` with the reason and every envelope is still written.
