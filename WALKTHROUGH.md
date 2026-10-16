@@ -187,7 +187,7 @@ Each of the identity-gate failures has a regression test.
 
 ## 5. Results
 
-**13 verification runs at `e123b93`** (see [TEST_REPORT.md](TEST_REPORT.md)): all pass the 13 contract rule groups; 142 unique published
+**13 verification runs at `3202c93`** (see [TEST_REPORT.md](TEST_REPORT.md)): all pass the 13 contract rule groups; 142 unique published
 websites manually audited by proof type; 1,400 financial values (65 companies) matched the live filing by exact field, statement, period and currency; 1,000-profile dataset in `profiles/`.
 
 **Earlier smoke test (first code version, before the final gate fixes):** 100/100 envelopes, 4,621 claims, 870 of 2,000 requests, 482 s, $0.

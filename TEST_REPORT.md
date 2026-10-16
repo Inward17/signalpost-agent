@@ -1,8 +1,10 @@
 # Verification report
 
-**Code tested: commit `e123b93b06770ce2846c8eafe47f9017fd644a17`** (recorded by the harness in `testruns/status.txt`; every run below
+**Code tested: commit `3202c93c0b40c69d54405af20057bb19f7ded33b`** (recorded by the harness in `testruns/status.txt`; every run below
 executed at exactly this commit, with the pinned dependencies in `requirements.txt`). This is the code freeze: later commits change
 documentation and data artifacts only.
+
+History note: commit messages were rewritten to remove tool-attribution trailers. This changed commit hashes only; the tested code's file tree is unchanged (tree `44c2418874205e490041323c910cc8854c364428`, originally committed as `e123b93`).
 
 Reproduce: `bash testruns/run_all.sh && python testruns/verify_all.py` · Machine-readable: `testruns/RESULTS.json` · Offline tests: `python tests/test_agent.py` (38 pass)
 
@@ -31,7 +33,7 @@ over three review rounds are fixed and covered by regression tests.**
 
 `testruns/verify_all.py` adds run-specific expectations (marked * below).
 
-## Results at `e123b93`
+## Results at `3202c93`
 
 | Run | Purpose | Envelopes | Claims | Websites | Jobs | Requests | Runtime | Result |
 |---|---|---|---|---|---|---|---|---|
@@ -84,7 +86,7 @@ Some of these are probably genuine, but proof of ownership is missing, so they a
 ## 1,000-profile dataset
 
 `profiles/profiles.jsonl.gz` holds **1,000 unique companies**, one envelope each, with 46,902 claims and 46,902 evidence records.
-It is merged from R01–R07, R10 and R11–R13. All passed verification at `e123b93`; the builder refuses any run that didn't. Constrained runs
+It is merged from R01–R07, R10 and R11–R13. All passed verification at `3202c93`; the builder refuses any run that didn't. Constrained runs
 (R08, R09) are excluded. `profiles/profiles-manifest.json` records the commit, content SHA-256, source runs and section counts.
 
 This dataset is a separate deliverable from the runtime evaluation. The agent never reads it: `run.py` researches whatever companies it's

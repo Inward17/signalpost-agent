@@ -3,7 +3,7 @@
   "unique_organisation_numbers": 1000,
   "claims": 46902,
   "evidence_records": 46902,
-  "agent_commit": "e123b93b06770ce2846c8eafe47f9017fd644a17",
+  "agent_commit": "3202c93c0b40c69d54405af20057bb19f7ded33b",
   "content_sha256": "33106fe9e7e40c57bb9e13ea1b0aa56c19f88c045b1dd2a20df4e5269cc75292",
   "source_runs": [
     {
@@ -104,5 +104,6 @@
       "not_available": 1
     }
   },
-  "note": "Every included run passed tools/verify_run.py. Profiles are evidence for local testing; Builderr scores fresh official batches."
+  "note": "Every included run passed tools/verify_run.py. Profiles are evidence for local testing; Builderr scores fresh official batches.",
+  "agent_tree": "44c2418874205e490041323c910cc8854c364428"
 }
