@@ -493,7 +493,8 @@ def research_website(client: Client, d: Dossier, allow_guessing: bool = True) ->
         if verdict["verdict"] == "ambiguous" and not ambiguous:
             ambiguous = verdict
         blocked = blocked or verdict["verdict"] == "blocked"
-        if verdict["verdict"] == "unreachable" and "did not resolve" not in verdict["reason"] and not re.search(r"HTTP 40[45]|HTTP 410", verdict["reason"]):
+        known = cand["origin"] in {"official_registry", "nav_employer_homepage", "nav_contact_email_domain"} or dom == d.previous_site_domain
+        if known and verdict["verdict"] == "unreachable" and "did not resolve" not in verdict["reason"] and not re.search(r"HTTP 40[45]|HTTP 410", verdict["reason"]):
             transient = transient or verdict["reason"]
         if len(tried) >= 6:
             break

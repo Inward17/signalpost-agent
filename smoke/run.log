@@ -1,10 +1,10 @@
 [signalpost] 100 companies, 0 invalid inputs, 0 previous snapshots
 [signalpost] phase identity: 100 companies, 100 requests used, 13s
-[signalpost] phase accounts: 100 companies, 200 requests used, 26s
-[signalpost] phase roles: 100 companies, 300 requests used, 40s
-[signalpost] phase subunits: 100 companies, 400 requests used, 53s
-[signalpost] phase registry_updates: 100 companies, 500 requests used, 67s
-[signalpost] NAV feed: 95 pages, 30512 entries, error=None
-[signalpost] phase jobs: 100 companies, 596 requests used, 358s
-[signalpost] phase website: 100 companies, 870 requests used, 482s
-{"envelopes": 100, "one_envelope_per_input": true, "envelope_states": {"available": 100}, "claims_total": 4621, "runtime_s": 481.7, "requests": 870}
+[signalpost] phase accounts: 100 companies, 201 requests used, 26s
+[signalpost] phase roles: 100 companies, 301 requests used, 39s
+[signalpost] phase subunits: 100 companies, 401 requests used, 53s
+[signalpost] phase registry_updates: 100 companies, 501 requests used, 65s
+[signalpost] NAV feed: 94 pages, 29200 entries, error=None
+[signalpost] phase jobs: 100 companies, 596 requests used, 346s
+[signalpost] phase website: 100 companies, 781 requests used, 474s
+{"envelopes": 100, "one_envelope_per_input": true, "envelope_states": {"available": 100}, "claims_total": 4376, "runtime_s": 474.3, "requests": 781}

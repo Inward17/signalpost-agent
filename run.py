@@ -111,6 +111,10 @@ def main(argv: list[str] | None = None) -> int:
     margin = 90.0  # seconds reserved for envelope building and writing
     dossiers = {org: Dossier(org, seeds[org]) for org in orgs}
     previous = load_previous(args.state_dir, args.previous)
+    for org, prev in previous.items():
+        if org in dossiers:
+            site = next((c["value"] for c in prev.get("claims", []) if c.get("field") == "official_website"), None)
+            dossiers[org].previous_site_domain = (site or {}).get("domain")
     print(f"[signalpost] {len(orgs)} companies, {len(invalid)} invalid inputs, {len(previous)} previous snapshots", file=sys.stderr)
 
     def phase(name: str, section: str, fn: Callable[[Client, Dossier], None], pick: Callable[[Dossier], bool] = lambda d: True) -> None:

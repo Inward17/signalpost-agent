@@ -32,6 +32,7 @@ class Dossier:
         self.errors: list[dict[str, Any]] = []
         self.requests = 0
         self.cost_usd = 0.0
+        self.previous_site_domain: str | None = None  # verified last run: an outage there is "unchecked", not "absent"
         self.frozen = False  # set at deadline: late-finishing threads can no longer mutate the envelope
         self.lock = threading.Lock()
 

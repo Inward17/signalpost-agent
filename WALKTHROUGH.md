@@ -166,14 +166,20 @@ workplaces, verified website, linked profiles, hiring, latest news, and recent r
 | **Wrong company**: "VESTGÅRD INVEST AS" matched `xpartner.as` through a shared phone number on a registry-declared site | same audit | declared sites now need the entity's own name; contact-only → `ambiguous` |
 | Group pages listing many org numbers could prove any subsidiary | review | multi-org pages count as proof only on a name-matching domain |
 | Contact section showed "not reached" even though a registry phone existed | smoke review | the registry phone sets `contact` to available |
+| **Wrong company**: SHARK AS (Sandefjord) matched `shark.no`, which shows a different "Shark AS" (Kolbotn) | 10-run audit | name-only rule removed entirely |
+| HTTP 429 on a verified site produced a false `removed_official_website` | 10-run refresh (R10) | outage on a declared or previously verified site → `blocked`/`failed`, site facts kept `stale` |
+| Further state and contract gaps (invalid-input envelopes, careers page, budget-cut locations, junk news) | `tools/verify_run.py` | see TEST_REPORT.md |
 | Field-less "Ukjent" change-log rows showing up as activity | smoke review | only rows with real changes, or new/deleted rows, are kept |
 
 Each of the identity-gate failures has a regression test.
 
 ## 5. Results
 
-**Smoke test (100 companies, random sample of the public universe, seed 20261016), from `smoke/out/run-report.json`:**
-100/100 envelopes, 4,621 claims, 870 of 2,000 requests, 482 s, $0.
+**10 verification runs** (see [TEST_REPORT.md](TEST_REPORT.md)): all pass the 13 contract rule groups; 127 unique published websites
+manually audited by proof type; 50 financial spot-checks against the live filing all matched.
+
+**Earlier smoke test (first code version, before the final gate fixes):** 100/100 envelopes, 4,621 claims, 870 of 2,000 requests, 482 s, $0.
+The current `smoke/` folder holds the final-code run (R01): 4,376 claims, 781 requests, 474 s.
 - Identity, financials, leadership, locations, public activity: available for 100/100.
 - Website: 13 verified, 39 withheld as ambiguous, 46 not available, 2 blocked by robots.txt. After the fixes, every published site is proven by
   org number (9), or by exact legal name plus phone/address on a matching or registry-declared domain (4).
@@ -210,7 +216,7 @@ one deliberately invalid input) and 15/15 tests pass.
 - **Metrics**: requests, latency, runtime and cost are reported. "Verified facts per request per source" isn't computed separately.
 
 ### Not done
-- **1,000-company local test** (the plan said "if time permits"). Note that at about 8.7 requests per company, a 1,000-company batch would hit the 2,000-request cap.
+- **1,000-company local test** (10 × 100-company verification runs were done instead; see TEST_REPORT.md) (the plan said "if time permits"). Note that at about 8.7 requests per company, a 1,000-company batch would hit the 2,000-request cap.
   The agent would then return all 1,000 envelopes, with the later phases (jobs/website) marked `blocked` for companies the budget didn't reach. That behaviour is designed but hasn't been measured at that scale.
 - External news, Doffin tenders, Proffi enrichment and LLM-assisted extraction: left out deliberately (rights, precision risk, or cost). Listed under limitations.
 - Account PDFs (annual-report parsing) aren't parsed.

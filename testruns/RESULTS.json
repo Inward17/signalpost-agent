@@ -1,0 +1,1139 @@
+{
+  "R01": {
+    "input_rows": 100,
+    "envelopes": 100,
+    "claims": 4376,
+    "evidence": 4376,
+    "websites_published": 9,
+    "jobs_published": 0,
+    "stale_claims": 0,
+    "changes": 0,
+    "requests": 781,
+    "runtime_s": 474.3,
+    "cost_usd": 0.0,
+    "spot_checked": 5,
+    "section_available": {
+      "identity": 100,
+      "financials": 99,
+      "leadership": 100,
+      "locations": 100,
+      "website": 9,
+      "social_profiles": 4,
+      "contact": 28,
+      "jobs": 0,
+      "public_activity": 100
+    },
+    "passed": true,
+    "failures": [],
+    "failure_count": 0,
+    "warnings": [],
+    "websites": [
+      [
+        "852829052",
+        "SOLLIFJELLET ALPINSENTER SA",
+        "https://sollifjellet.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "927287463",
+        "MARITIM MONTERING AS",
+        "https://www.maritimmontering.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "924490896",
+        "NM HEST OG RYTTER AS",
+        "https://nmhestogrytter.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "999536468",
+        "GJØVIK TANNLEGEKONTOR AS",
+        "https://www.gjoviktannlegekontor.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "913211510",
+        "OSLO ELEKTROINSTALLASJON AS",
+        "https://osloelektroinstallasjon.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "928176991",
+        "FAN PARKS INTERNATIONAL AS",
+        "https://www.fanparks.com/",
+        "organisation number appears on company page"
+      ],
+      [
+        "928847276",
+        "VELKLANG AS",
+        "https://www.velklang.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "919146222",
+        "VIZER AS",
+        "https://vizer.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "912417387",
+        "JAKOBSEN MARINE AS",
+        "https://jakobsenmarine.no/",
+        "exact legal name plus registry phone/address on site"
+      ]
+    ],
+    "purpose": "random 100, JSONL universe rows"
+  },
+  "R02": {
+    "input_rows": 100,
+    "envelopes": 100,
+    "claims": 4571,
+    "evidence": 4571,
+    "websites_published": 9,
+    "jobs_published": 1,
+    "stale_claims": 0,
+    "changes": 0,
+    "requests": 823,
+    "runtime_s": 442.9,
+    "cost_usd": 0.0,
+    "spot_checked": 5,
+    "section_available": {
+      "identity": 100,
+      "financials": 99,
+      "leadership": 99,
+      "locations": 99,
+      "website": 9,
+      "social_profiles": 3,
+      "contact": 39,
+      "jobs": 1,
+      "public_activity": 100
+    },
+    "passed": true,
+    "failures": [],
+    "failure_count": 0,
+    "warnings": [],
+    "websites": [
+      [
+        "932108097",
+        "SORTLAND SORTLAND AS",
+        "https://www.sortlandsortland.com/",
+        "organisation number appears on company page"
+      ],
+      [
+        "959002436",
+        "ÅRSKOGVIKA CAMPING DA",
+        "https://www.arskog.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "938050287",
+        "THON HOLDING AS",
+        "https://thon.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "919415878",
+        "AQUA INNOVASJON AS",
+        "https://www.aquainnovasjon.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "915623433",
+        "WALL-IT AS",
+        "https://wall-it.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "929022831",
+        "FLO-CODE AS",
+        "https://www.flo-code.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "984591306",
+        "OSLO VEDHANDEL AS",
+        "https://www.oslovedhandel.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "935571308",
+        "LOFOTEN GROWTH AS",
+        "https://lofoten-growth.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "920732623",
+        "SAKKI AS",
+        "https://www.sakki.no/",
+        "organisation number appears on company page"
+      ]
+    ],
+    "purpose": "random 100, plain-text input"
+  },
+  "R03": {
+    "input_rows": 100,
+    "envelopes": 100,
+    "claims": 4417,
+    "evidence": 4417,
+    "websites_published": 8,
+    "jobs_published": 0,
+    "stale_claims": 0,
+    "changes": 0,
+    "requests": 826,
+    "runtime_s": 490.8,
+    "cost_usd": 0.0,
+    "spot_checked": 5,
+    "section_available": {
+      "identity": 100,
+      "financials": 100,
+      "leadership": 99,
+      "locations": 99,
+      "website": 8,
+      "social_profiles": 7,
+      "contact": 38,
+      "jobs": 0,
+      "public_activity": 100
+    },
+    "passed": true,
+    "failures": [],
+    "failure_count": 0,
+    "warnings": [],
+    "websites": [
+      [
+        "979596200",
+        "KONTORLEVERANDØREN GJØVIK AS",
+        "https://kontorlev.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "921594666",
+        "NAVY RACE AS",
+        "https://www.navyrace.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "971538333",
+        "STIFTELSEN DANVIK",
+        "https://www.danvikfhs.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "931427458",
+        "ROYA BEAUTY AS",
+        "https://royabeauty.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "921800649",
+        "SCANDIHALL AS",
+        "https://scandihall.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "929274490",
+        "BAREKNIPS AS",
+        "https://www.bareknips.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "971117591",
+        "FORKYNN ORDET STIFTELSE",
+        "https://forkynnordet.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "933451550",
+        "KYSTSKOLEN AS",
+        "https://www.kystskolen.no/",
+        "organisation number appears on company page"
+      ]
+    ],
+    "purpose": "random 100, JSON list input"
+  },
+  "R04": {
+    "input_rows": 100,
+    "envelopes": 100,
+    "claims": 4551,
+    "evidence": 4551,
+    "websites_published": 13,
+    "jobs_published": 0,
+    "stale_claims": 0,
+    "changes": 0,
+    "requests": 775,
+    "runtime_s": 438.2,
+    "cost_usd": 0.0,
+    "spot_checked": 5,
+    "section_available": {
+      "identity": 100,
+      "financials": 100,
+      "leadership": 100,
+      "locations": 100,
+      "website": 13,
+      "social_profiles": 6,
+      "contact": 35,
+      "jobs": 0,
+      "public_activity": 100
+    },
+    "passed": true,
+    "failures": [],
+    "failure_count": 0,
+    "warnings": [],
+    "websites": [
+      [
+        "994473751",
+        "ALVELAND AS",
+        "https://alveland.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "998540038",
+        "AKSIOM INVESTERING AS",
+        "https://www.aksiom-investering.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "918306234",
+        "KVALITET BILPLEIE AS",
+        "https://kvalitetbilpleie.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "913947010",
+        "FREMTEK AS",
+        "https://www.fremtek.com/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "911842912",
+        "KAPITAL REGNSKAP AS",
+        "https://kapitalregnskap.as/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "927437155",
+        "FRITZØE NORDIC AS",
+        "https://fritzoenordic.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "919065885",
+        "FURUSTRAND AS",
+        "https://furustrand.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "961024439",
+        "NORDIC TOY TEAM AS",
+        "https://www.ringo.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "833663542",
+        "FRAM KOMPETANSE AS",
+        "https://www.framkompetanse.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "977533341",
+        "VENNESLA BILTEKNIKK AS",
+        "https://sjekkpunkt.no/bilverksted/venneslabilteknikk",
+        "organisation number appears on company page"
+      ],
+      [
+        "913206797",
+        "DEN SISTE REISEN-BEGRAVELSESBYRÅ I OSLO AS",
+        "https://densistereisen.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "983474594",
+        "SODVIN AS",
+        "https://www.sodvin.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "936573444",
+        "GRANHOLT COACHING AS",
+        "https://www.granholtcoaching.no/",
+        "organisation number appears on company page"
+      ]
+    ],
+    "purpose": "random 100, gzipped JSONL"
+  },
+  "R05": {
+    "input_rows": 102,
+    "envelopes": 102,
+    "claims": 4511,
+    "evidence": 4511,
+    "websites_published": 13,
+    "jobs_published": 0,
+    "stale_claims": 0,
+    "changes": 0,
+    "requests": 821,
+    "runtime_s": 447.4,
+    "cost_usd": 0.0,
+    "spot_checked": 5,
+    "section_available": {
+      "identity": 100,
+      "financials": 100,
+      "leadership": 100,
+      "locations": 100,
+      "website": 13,
+      "social_profiles": 10,
+      "contact": 33,
+      "jobs": 0,
+      "public_activity": 99
+    },
+    "passed": true,
+    "failures": [],
+    "failure_count": 0,
+    "warnings": [],
+    "websites": [
+      [
+        "976541537",
+        "LANDSFORBUNDET FOR MOTORHISTORISKE KJØRETØY",
+        "https://www.lmk.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "918430954",
+        "FOTOKNOFF AS",
+        "https://www.fotoknoff.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "933472078",
+        "HAVER WALLIN AS",
+        "https://www.haverwallin.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "980901181",
+        "OSLO OG OMEGN BOLIGFORVALTNING BBL",
+        "https://www.obf.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "976215834",
+        "STIFTELSEN KUNSTSILO",
+        "https://www.kunstsilo.no/no",
+        "organisation number appears on company page"
+      ],
+      [
+        "925589950",
+        "PARASOLLFIX AS",
+        "https://smartfootoriginals.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "914380669",
+        "ACTIVE WEB AS",
+        "https://activeweb.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "948099985",
+        "GERD STENSEN AS",
+        "https://gerdstensen.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "934358449",
+        "TINDEQ AS",
+        "https://tindeq.com/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "980463230",
+        "TB REGNSKAP AS",
+        "https://tbregnskap.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "993276065",
+        "ENVIRO BIL NESBRU AS",
+        "https://envirobil.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "971652411",
+        "DENTALIA AS",
+        "https://dentalia.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "963722664",
+        "LILLE GRENSEN SKO AS",
+        "https://lillegrensensko.no/",
+        "organisation number appears on company page"
+      ]
+    ],
+    "purpose": "random 100 + 2 duplicate rows + 2 invalid numbers"
+  },
+  "R06": {
+    "input_rows": 100,
+    "envelopes": 100,
+    "claims": 5512,
+    "evidence": 5512,
+    "websites_published": 31,
+    "jobs_published": 0,
+    "stale_claims": 0,
+    "changes": 0,
+    "requests": 860,
+    "runtime_s": 506.5,
+    "cost_usd": 0.0,
+    "spot_checked": 5,
+    "section_available": {
+      "identity": 100,
+      "financials": 99,
+      "leadership": 100,
+      "locations": 100,
+      "website": 31,
+      "social_profiles": 21,
+      "contact": 60,
+      "jobs": 0,
+      "public_activity": 100
+    },
+    "passed": true,
+    "failures": [],
+    "failure_count": 0,
+    "warnings": [],
+    "websites": [
+      [
+        "936816703",
+        "SCHJØLBERG & TOMBRE AS",
+        "https://schjolberg-tombre.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "992463597",
+        "ÅSE OG OMEGN PRIVATSKOLELAG",
+        "https://www.aasemontessori.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "991358919",
+        "BYBERG AS",
+        "https://www.byberg.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "921193068",
+        "MØTEPUNKTET CAFE AS",
+        "https://motepunktetcafe.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "991603026",
+        "MESTERBYGG MOSS AS",
+        "https://www.mesterbyggmoss.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "932200759",
+        "BERGEN KANTINETJENESTE AS",
+        "https://bergenkantinetjeneste.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "986596631",
+        "EVENT PARTNER AS",
+        "https://eventpartner.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "983847412",
+        "ADCARE AS",
+        "https://adcare.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "934482557",
+        "BERGEN TAKMESTER AS",
+        "https://www.bergentakmester.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "926861824",
+        "BØ & MADLAND AS",
+        "https://www.bomadland.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "895197742",
+        "NYE MODENA AS",
+        "https://nyemodena.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "916785887",
+        "KRAGERØ AUTO AS",
+        "https://www.kragero-auto.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "833269402",
+        "KONSULENTPARTNER AS",
+        "https://konsulentpartner.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "916923538",
+        "SPORT & GRØNT AS",
+        "https://sportgront.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "920798462",
+        "AREAL+ AS",
+        "https://www.arealpluss.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "920209270",
+        "BISTO ENTREPRENØR AS",
+        "https://www.bistoentreprenor.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "914799899",
+        "FISHTECH HYGENA AS",
+        "https://fishtech-hygena.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "915459420",
+        "ROLFSEN AS",
+        "https://rolfsen.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "925152706",
+        "INAQ AS",
+        "https://inaq.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "948120984",
+        "AKTIV ØKONOMISERVICE AS",
+        "https://okservice.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "924847417",
+        "CREATIVE LIVING AS",
+        "https://creativeliving.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "914175232",
+        "VÅLERENGA FOTBALL ELITE",
+        "https://www.vif-fotball.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "988187364",
+        "SØRLANDSREKLAME AS",
+        "https://sorlandsreklame.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "927177005",
+        "BUD CAMPING AS",
+        "https://budcamping.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "939773460",
+        "VARIG FORSIKRING NORDMØRE OG ROMSDAL GJENSIDIG",
+        "https://varignr.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "918714006",
+        "ALVA INDUSTRIES AS",
+        "https://www.alvaindustries.com/",
+        "organisation number appears on company page"
+      ],
+      [
+        "978632025",
+        "STORK AS",
+        "https://stork.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "930695424",
+        "WASHPOINT AS",
+        "https://washpoint.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "920196187",
+        "VIKEN MUSIKK AS",
+        "https://www.vikenmusikk.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "974692856",
+        "NORSK STEINMILJØ AS",
+        "https://norsk-steinmiljo.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "927730014",
+        "ANLEGGSDELER AS",
+        "https://www.anleggsdeler.no/",
+        "organisation number appears on company page"
+      ]
+    ],
+    "purpose": "100 companies with >=5 employees (website/jobs stress)"
+  },
+  "R07": {
+    "input_rows": 100,
+    "envelopes": 100,
+    "claims": 5541,
+    "evidence": 5541,
+    "websites_published": 44,
+    "jobs_published": 2,
+    "stale_claims": 0,
+    "changes": 0,
+    "requests": 943,
+    "runtime_s": 470.0,
+    "cost_usd": 0.0,
+    "spot_checked": 5,
+    "section_available": {
+      "identity": 100,
+      "financials": 99,
+      "leadership": 100,
+      "locations": 100,
+      "website": 44,
+      "social_profiles": 30,
+      "contact": 84,
+      "jobs": 2,
+      "public_activity": 100
+    },
+    "passed": true,
+    "failures": [],
+    "failure_count": 0,
+    "warnings": [],
+    "websites": [
+      [
+        "979543883",
+        "DIPS AS",
+        "https://www.dips.com/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "923609016",
+        "EQUINOR ASA",
+        "https://www.equinor.com/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "992155752",
+        "SOGNDAL FJELLSPORT AS",
+        "https://www.fjellsportfestivalen.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "980174085",
+        "STEIN IVAR LUDVIGSEN TRANSPORT AS",
+        "https://lflytting.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "916498128",
+        "PROSA SECURITY AS",
+        "https://prosasecurity.com/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "934801229",
+        "PINSEKIRKEN ELIM, HVITTINGFOSS",
+        "https://www.elimhvittingfoss.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "948466856",
+        "BORETTSLAGET OSLO HAVEBYSELSKAP",
+        "https://havebyselskapet.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "921680791",
+        "POOD AS",
+        "https://www.pood.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "929611640",
+        "PERRI AS",
+        "https://www.perribygg.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "971157682",
+        "INGENIØRTEKNIKK AS",
+        "http://www.ingeniorteknikk.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "912417115",
+        "ETA NORGE AS",
+        "https://etanorge.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "911577305",
+        "FOTOGRAF HELLE K. HAGEN AS",
+        "https://www.hellekhagen.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "917787069",
+        "NORDSJØ KONTORPARK AS",
+        "https://nordsjokontorpark.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "983371264",
+        "PRAVDA AS",
+        "https://pravda.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "933326071",
+        "BRÆKHUS ADVOKATFIRMA AS",
+        "https://braekhus.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "913229169",
+        "TEKNISK SENTER AS",
+        "https://teknisksenter.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "979933045",
+        "LYNGEN NORTH AS",
+        "https://lyngen-north.com/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "980902587",
+        "BENDIX AS",
+        "https://www.vollara.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "947534866",
+        "STIFTELSEN WØYEN",
+        "https://www.stiftelsen-woyen.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "976846923",
+        "IDEX BIOMETRICS ASA",
+        "https://idexbiometrics.com/",
+        "organisation number appears on company page"
+      ],
+      [
+        "936994326",
+        "HOVE TAKSERING AS",
+        "https://www.hovetaksering.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "975872378",
+        "MASKE AS",
+        "https://www.maske.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "941612474",
+        "WEBSTEP AS",
+        "https://webstep.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "918895965",
+        "TIDERON AS",
+        "https://tideron.com/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "991279571",
+        "AKOFS OFFSHORE OPERATIONS AS",
+        "https://www.akofsoffshore.com/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "994263501",
+        "ELEKTRIKERN BODØ AS",
+        "https://elektrikernbodo.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "981315847",
+        "DENTAL-DIRECT AS",
+        "https://www.dental-direct.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "998845394",
+        "3-VISJON AS",
+        "https://www.3-visjon.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "925921793",
+        "ASK SPEKEHUS AS",
+        "https://askgard.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "937950004",
+        "BILLINGSTAD TRELAST AS",
+        "https://www.billingstadtrelast.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "985220514",
+        "NORSK VANNSKJÆRING AS",
+        "https://norsk-vannskjaering.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "957383327",
+        "COASTDESIGN AS",
+        "https://coastdesign.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "816269792",
+        "BULK DATA CENTERS AS",
+        "https://bulkinfrastructure.com/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "971540028",
+        "DNT NORD-TRØNDELAG",
+        "https://www.dnt.no/nordtrondelag",
+        "organisation number appears on company page"
+      ],
+      [
+        "994536850",
+        "KRYPTON FILM AS",
+        "https://kryptonfilm.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "880911392",
+        "RØRKJØP AS",
+        "https://www.rorkjop.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "914912350",
+        "ØSTLYNG & BJERKE AS",
+        "https://www.ostlyngbjerke.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "987008695",
+        "MOTHO AS",
+        "https://www.motho.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "930613576",
+        "RAGNAS HAGE AS",
+        "https://www.ragnashage.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "976879341",
+        "SAMEIET FREDENSBORGVEIEN 41 B",
+        "https://fredensborgveien41b.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "989213504",
+        "OPPLÆRINGSKONTORET FOR TEKNOLOGIFAG PÅ HAUGALANDET SA",
+        "https://www.opptek.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "998595207",
+        "KONTROLL & NDT AS",
+        "https://www.kndt.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "970916482",
+        "RYFYLKEMUSEET STI",
+        "https://ryfylkemuseet.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "987675799",
+        "ADVOKATENE CHRISTIAN WIIG & CO AS",
+        "https://christianwiig.no/",
+        "organisation number appears on company page"
+      ]
+    ],
+    "purpose": "4 known companies + 96 with registry website"
+  },
+  "R08": {
+    "input_rows": 100,
+    "envelopes": 100,
+    "claims": 4189,
+    "evidence": 4189,
+    "websites_published": 0,
+    "jobs_published": 0,
+    "stale_claims": 0,
+    "changes": 0,
+    "requests": 300,
+    "runtime_s": 39.9,
+    "cost_usd": 0.0,
+    "spot_checked": 5,
+    "section_available": {
+      "identity": 100,
+      "financials": 100,
+      "leadership": 100,
+      "locations": 100,
+      "website": 0,
+      "social_profiles": 0,
+      "contact": 31,
+      "jobs": 0,
+      "public_activity": 0
+    },
+    "passed": true,
+    "failures": [],
+    "failure_count": 0,
+    "warnings": [],
+    "websites": [],
+    "budget_blocked_sections": 300,
+    "purpose": "budget stress: --max-requests 300"
+  },
+  "R09": {
+    "input_rows": 100,
+    "envelopes": 100,
+    "claims": 4306,
+    "evidence": 4306,
+    "websites_published": 0,
+    "jobs_published": 0,
+    "stale_claims": 0,
+    "changes": 0,
+    "requests": 539,
+    "runtime_s": 183.0,
+    "cost_usd": 0.0,
+    "spot_checked": 5,
+    "section_available": {
+      "identity": 100,
+      "financials": 100,
+      "leadership": 100,
+      "locations": 100,
+      "website": 0,
+      "social_profiles": 0,
+      "contact": 32,
+      "jobs": 0,
+      "public_activity": 98
+    },
+    "passed": true,
+    "failures": [],
+    "failure_count": 0,
+    "warnings": [],
+    "websites": [],
+    "deadline_blocked_sections": 200,
+    "purpose": "deadline stress: --deadline-minutes 3"
+  },
+  "R10": {
+    "input_rows": 100,
+    "envelopes": 100,
+    "claims": 4376,
+    "evidence": 4376,
+    "websites_published": 9,
+    "jobs_published": 0,
+    "stale_claims": 4,
+    "changes": 0,
+    "requests": 784,
+    "runtime_s": 471.3,
+    "cost_usd": 0.0,
+    "spot_checked": 5,
+    "section_available": {
+      "identity": 100,
+      "financials": 99,
+      "leadership": 100,
+      "locations": 100,
+      "website": 8,
+      "social_profiles": 4,
+      "contact": 28,
+      "jobs": 0,
+      "public_activity": 100
+    },
+    "passed": true,
+    "failures": [],
+    "failure_count": 0,
+    "warnings": [],
+    "websites": [
+      [
+        "852829052",
+        "SOLLIFJELLET ALPINSENTER SA",
+        "https://sollifjellet.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "927287463",
+        "MARITIM MONTERING AS",
+        "https://www.maritimmontering.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "924490896",
+        "NM HEST OG RYTTER AS",
+        "https://nmhestogrytter.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "999536468",
+        "GJØVIK TANNLEGEKONTOR AS",
+        "https://www.gjoviktannlegekontor.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "913211510",
+        "OSLO ELEKTROINSTALLASJON AS",
+        "https://osloelektroinstallasjon.no/",
+        "organisation number appears on company page"
+      ],
+      [
+        "928176991",
+        "FAN PARKS INTERNATIONAL AS",
+        "https://www.fanparks.com/",
+        "organisation number appears on company page"
+      ],
+      [
+        "928847276",
+        "VELKLANG AS",
+        "https://www.velklang.no/",
+        "site declared by official registry and its legal/brand name appears on page"
+      ],
+      [
+        "919146222",
+        "VIZER AS",
+        "https://vizer.no/",
+        "exact legal name plus registry phone/address on site"
+      ],
+      [
+        "912417387",
+        "JAKOBSEN MARINE AS",
+        "https://jakobsenmarine.no/",
+        "exact legal name plus registry phone/address on site"
+      ]
+    ],
+    "real_changes": [],
+    "purpose": "refresh of R01 with --previous (idempotency / change detection)"
+  }
+}

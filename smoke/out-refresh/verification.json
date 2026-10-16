@@ -1,0 +1,85 @@
+{
+  "input_rows": 100,
+  "envelopes": 100,
+  "claims": 4376,
+  "evidence": 4376,
+  "websites_published": 9,
+  "jobs_published": 0,
+  "stale_claims": 4,
+  "changes": 0,
+  "requests": 784,
+  "runtime_s": 471.3,
+  "cost_usd": 0.0,
+  "spot_checked": 5,
+  "section_available": {
+    "identity": 100,
+    "financials": 99,
+    "leadership": 100,
+    "locations": 100,
+    "website": 8,
+    "social_profiles": 4,
+    "contact": 28,
+    "jobs": 0,
+    "public_activity": 100
+  },
+  "passed": true,
+  "failures": [],
+  "failure_count": 0,
+  "warnings": [],
+  "websites": [
+    [
+      "852829052",
+      "SOLLIFJELLET ALPINSENTER SA",
+      "https://sollifjellet.no/",
+      "site declared by official registry and its legal/brand name appears on page"
+    ],
+    [
+      "927287463",
+      "MARITIM MONTERING AS",
+      "https://www.maritimmontering.no/",
+      "organisation number appears on company page"
+    ],
+    [
+      "924490896",
+      "NM HEST OG RYTTER AS",
+      "https://nmhestogrytter.no/",
+      "organisation number appears on company page"
+    ],
+    [
+      "999536468",
+      "GJØVIK TANNLEGEKONTOR AS",
+      "https://www.gjoviktannlegekontor.no/",
+      "exact legal name plus registry phone/address on site"
+    ],
+    [
+      "913211510",
+      "OSLO ELEKTROINSTALLASJON AS",
+      "https://osloelektroinstallasjon.no/",
+      "organisation number appears on company page"
+    ],
+    [
+      "928176991",
+      "FAN PARKS INTERNATIONAL AS",
+      "https://www.fanparks.com/",
+      "organisation number appears on company page"
+    ],
+    [
+      "928847276",
+      "VELKLANG AS",
+      "https://www.velklang.no/",
+      "site declared by official registry and its legal/brand name appears on page"
+    ],
+    [
+      "919146222",
+      "VIZER AS",
+      "https://vizer.no/",
+      "exact legal name plus registry phone/address on site"
+    ],
+    [
+      "912417387",
+      "JAKOBSEN MARINE AS",
+      "https://jakobsenmarine.no/",
+      "exact legal name plus registry phone/address on site"
+    ]
+  ]
+}

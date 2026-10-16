@@ -23,13 +23,12 @@ authorised role endpoints exposing national identity numbers.
 The organisation number is the only identity anchor. Every website candidate (registry `hjemmeside`, NAV employer homepage
 or contact-email domain for an orgnr-matched ad, name-derived domain, optional search candidate) is fetched and assessed:
 
-1. **Exact (score 1.0)** — the organisation number (any of `810034882`, `810 034 882`, `810.034.882`, `NO 810 034 882 MVA`) appears on the homepage, contact or about page.
+1. **Exact (score 1.0)** — the organisation number (any of `810034882`, `810 034 882`, `810.034.882`, `NO 810 034 882 MVA`) appears on the homepage, contact or about page — unless that page also lists other organisation numbers on a non-matching domain (group/portfolio page → `ambiguous`).
 2. **Rejected** — the site states a *different* labelled organisation number / VAT id → parent, sister, franchise or unrelated entity. This overrides every name signal.
 3. **Rejected** — parked / for-sale / placeholder page.
-4. **Exact (0.97)** — full registered legal name *and* the registry phone number or registered street address + postcode appear on the site.
-5. **Exact (0.92)** — the site was declared by an official source (registry `hjemmeside`, or NAV ad whose `employer.orgnr` equals the company) *and* name/contact is corroborated on the page.
-6. **Exact (0.90)** — full legal name including legal form (e.g. "Sandnes Elektriske AS"; AS names are unique in Foretaksregisteret) on a domain whose label equals the name, with no conflicting organisation number.
-7. Anything else with a name hit → `ambiguous`, recorded with the reason, **not published**.
+4. **Exact (0.97)** — full registered legal name (legal-form suffix in capitals) *and* the registry phone number or registered street address + postcode appear on the site, on a name-matching or officially declared domain.
+5. **Exact (0.92)** — the site was declared by an official source (registry `hjemmeside`, or NAV ad whose `employer.orgnr` equals the company) *and* the legal or brand name appears on the page. A matching phone alone is not enough (shared phones point to related companies).
+6. Anything else with a name hit → `ambiguous`, recorded with the reason, **not published**.
 
 Social profiles are published only when linked from the verified site *and* the handle matches the legal name/domain or the profile
 is listed in the site's own JSON-LD `sameAs`. Unmatched outbound links are counted but withheld (e.g. a franchise linking to the chain).
@@ -51,3 +50,6 @@ phone numbers are not published. Website e-mail addresses are only kept for gene
 - **Budgets enforced, not reported**: `--max-requests` (default 2000) and `--deadline-minutes` (default 42 of the 45 allowed). When either runs
   out, remaining sources are marked `blocked` with the reason and the run still writes one envelope per company.
 - **Politeness**: ≤ 6 concurrent requests to brreg.no, ≤ 2 per other host, robots.txt honoured for all non-API pages, identifying User-Agent.
+
+A name alone is never enough, even an exact "Name AS" on a domain equal to the name: verification runs found
+`shark.no` showing "Shark AS" (a Kolbotn property firm) while the requested SHARK AS is a Sandefjord freight company.

@@ -1,9 +1,9 @@
 {
   "run": {
-    "run_id": "smoke-002-refresh",
+    "run_id": "R10",
     "agent_version": "1.0.0",
-    "started_at": "2026-10-15T20:50:50Z",
-    "completed_at": "2026-10-15T20:58:53Z",
+    "started_at": "2026-10-16T03:53:13Z",
+    "completed_at": "2026-10-16T04:01:04Z",
     "terminal_status": "completed"
   },
   "input_rows": 100,
@@ -17,7 +17,8 @@
       "available": 100
     },
     "financials": {
-      "available": 100
+      "available": 99,
+      "failed": 1
     },
     "leadership": {
       "available": 100
@@ -26,18 +27,21 @@
       "available": 100
     },
     "website": {
-      "ambiguous": 39,
-      "not_available": 46,
-      "available": 13,
-      "blocked": 2
+      "not_available": 65,
+      "blocked": 3,
+      "ambiguous": 19,
+      "available": 8,
+      "failed": 5
     },
     "social_profiles": {
-      "not_available": 95,
-      "available": 5
+      "not_available": 90,
+      "available": 4,
+      "failed": 5,
+      "blocked": 1
     },
     "contact": {
-      "not_available": 55,
-      "available": 45
+      "available": 28,
+      "not_available": 72
     },
     "jobs": {
       "not_available": 100
@@ -46,35 +50,35 @@
       "available": 100
     }
   },
-  "claims_total": 4621,
+  "claims_total": 4376,
   "changes_total": 0,
-  "runtime_s": 483.2,
+  "runtime_s": 471.3,
   "operations": {
-    "requests": 870,
+    "requests": 784,
     "max_requests": 2000,
-    "bytes": 73125036,
+    "bytes": 54984766,
     "requests_by_host_top": {
-      "data.brreg.no": 500,
-      "pam-stilling-feed.nav.no": 96,
-      "parteewear.no": 6,
-      "www.sea-tex.no": 5,
-      "medium.no": 4,
-      "www.duroc.com": 4,
-      "www.artec-aqua.no": 4,
-      "jmc-holding.com": 4,
-      "fagtrykkide.no": 4,
-      "independentliving.com": 4,
-      "www.elektrikergruppen.no": 3,
-      "smartdialog.com": 3,
-      "rgcrane.com": 3,
-      "xcsports.no": 3,
-      "aktivveiledning.no": 3
+      "data.brreg.no": 501,
+      "pam-stilling-feed.nav.no": 95,
+      "showdevida.no": 6,
+      "gjoviktannlegekontor.no": 5,
+      "vizer.no": 5,
+      "krimat.com": 5,
+      "thi-holding.com": 4,
+      "blueline.com": 4,
+      "alfas.com": 3,
+      "labraxmanagement.com": 3,
+      "eneroptima.no": 3,
+      "brathwait.com": 3,
+      "nhtco.com": 3,
+      "classicwines.com": 3,
+      "krageroparken.no": 3
     },
-    "p50_ms": 793,
-    "p95_ms": 10969,
+    "p50_ms": 803,
+    "p95_ms": 9773,
     "third_party_cost_usd": 0.0,
-    "nav_feed_pages": 95,
-    "nav_feed_entries": 30512
+    "nav_feed_pages": 94,
+    "nav_feed_entries": 29200
   },
-  "per_company_requests": 7
+  "per_company_requests": 5
 }

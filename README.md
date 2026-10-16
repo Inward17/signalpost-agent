@@ -93,15 +93,16 @@ Breadth-first phases so every company gets the high-value official baseline befo
 | Brave Search API | optional; only used if `BRAVE_API_KEY` is set (default off) | ~$0.005/company if enabled |
 
 **Expected cost per official run: $0.00** (default configuration). Request use: ~6 registry requests per company + ~100 shared NAV feed
-pages + ~0–8 website requests per company. Measured smoke run: 100 companies, 870 of the 2,000-request budget, 8 minutes; the budget/deadline caps are enforced so larger batches degrade by marking optional sources `blocked`, never by dropping rows.
+pages + ~0–8 website requests per company. Measured: 100 companies use 775–943 of the 2,000-request budget and take 7–8.5 minutes; the budget/deadline caps are enforced so larger batches degrade by marking optional sources `blocked`, never by dropping rows.
 
-## Smoke test
+## Smoke test and verification
 
-`smoke/` holds the 100-company smoke batch (random sample of the public universe, seed 20261016), the envelopes, the run report and the
-HTML viewer. Measured result (`smoke/out/run-report.json`): 100/100 envelopes, 4,621 claims, 870 requests, 482 s, $0.
-Identity/financials/leadership/locations/public activity available for 100/100; verified website 13 (39 candidates withheld as
-`ambiguous`, 2 `blocked` by robots.txt); jobs 0 in this sample (matcher verified separately on hiring companies).
-`smoke/out-refresh/` is a second run against the first run's state: 0 changes, 0 false changes (idempotent refresh).
+`smoke/` holds the 100-company smoke batch (random sample of the public universe), the envelopes, the run report, the HTML viewer and
+`verification.json`. Measured: 100/100 envelopes, 4,376 claims, 781 requests, 474 s, $0. `smoke/out-refresh/` is a second run
+against the first run's output: 0 false changes; one site answered HTTP 429 and its facts were kept as `stale`.
+
+10 verification runs (input formats, duplicates and invalid numbers, employer-heavy batches, budget and deadline stress, refresh) all
+pass the 13 contract rule groups in `tools/verify_run.py`. See [TEST_REPORT.md](TEST_REPORT.md).
 
 ## Limitations
 
