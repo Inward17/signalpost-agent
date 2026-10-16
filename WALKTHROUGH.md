@@ -121,8 +121,7 @@ At most about 8 requests per site.
 4. The exact legal name *with its legal suffix in capitals* (`Sandnes Elektriske AS`, so the English word "as" can't satisfy it) plus the registry phone
    or the registered street and postcode → exact 0.97, but only on a name-matching domain or an officially declared site.
 5. An officially declared site plus the legal or brand name on the page → exact 0.92. A contact detail alone is **not** enough, because shared phones point to related companies.
-6. The full legal name on the matching **.no** domain, with no conflicting org number → exact 0.90.
-7. Anything weaker → `ambiguous`, recorded with the reason and the candidate list, and nothing published.
+6. Anything weaker → `ambiguous`, recorded with the reason and the candidate list, and nothing published.
 
 **Extraction from an exact site**: the website claim with its identity method and score; the description (meta/og or first paragraph), labelled as
 company copy; the brand (`og:site_name`); social profiles linked from the site, kept only if the handle matches the name or domain or the profile is listed in
