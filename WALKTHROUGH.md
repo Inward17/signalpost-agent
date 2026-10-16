@@ -188,11 +188,11 @@ Each of the identity-gate failures has a regression test.
 
 ## 5. Results
 
-**13 verification runs at `3202c93`** (see [TEST_REPORT.md](TEST_REPORT.md)): all pass the 13 contract rule groups; 142 unique published
+**13 verification runs at `afc3f0a`** (see [TEST_REPORT.md](TEST_REPORT.md)): all pass the 13 contract rule groups; 142 unique published
 websites manually audited by proof type; 1,400 financial values (65 companies) matched the live filing by exact field, statement, period and currency; 1,000-profile dataset in `profiles/`.
 
 **Earlier smoke test (first code version, before the final gate fixes):** 100/100 envelopes, 4,621 claims, 870 of 2,000 requests, 482 s, $0.
-The current `smoke/` folder holds the final-code run (R01): 4,376 claims, 781 requests, 474 s.
+The current `smoke/` folder holds the final-code run (R01): 4,376 claims, 823 requests, 472 s.
 - Identity, financials, leadership, locations, public activity: available for 100/100.
 - Website: 13 verified, 39 withheld as ambiguous, 46 not available, 2 blocked by robots.txt. After the fixes, every published site is proven by
   org number (9), or by exact legal name plus phone/address on a matching or registry-declared domain (4).

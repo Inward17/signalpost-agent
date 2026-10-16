@@ -1,15 +1,14 @@
 # Verification report
 
-**Code tested: commit `3202c93c0b40c69d54405af20057bb19f7ded33b`** (recorded by the test harness; every run below
+**Code tested: commit `afc3f0ab3858b86889a07b7deff73bc1685edc21`** (recorded by the test harness; every run below
 executed at exactly this commit, with the pinned dependencies in `requirements.txt`). This is the code freeze: later commits change
 documentation and data artifacts only.
 
-History note: commit messages were rewritten to remove tool-attribution trailers. This changed commit hashes only; the tested code's file tree is unchanged (tree `44c2418874205e490041323c910cc8854c364428`, originally committed as `e123b93`).
 
-The offline test suite (38 tests) and the 13-run test harness were used for validation and are kept outside this repository; their results are recorded here. The contract verifier `tools/verify_run.py` is included and can check any output folder.
+Offline tests: `python tests/test_agent.py` (40 tests, included). The 13-run test harness was used for validation and is kept outside this repository; its results are recorded here. The contract verifier `tools/verify_run.py` is included and can check any output folder.
 
 **Result: 13/13 runs pass every contract check. Zero wrong-company publications in the tested code; the identity and security problems found
-over three review rounds are fixed and covered by regression tests.**
+over four review rounds are fixed and covered by regression tests.**
 
 ## How each run is checked
 
@@ -33,23 +32,23 @@ over three review rounds are fixed and covered by regression tests.**
 
 The run harness adds run-specific expectations (marked * below).
 
-## Results at `3202c93`
+## Results at `afc3f0a`
 
 | Run | Purpose | Envelopes | Claims | Websites | Jobs | Requests | Runtime | Result |
 |---|---|---|---|---|---|---|---|---|
-| R01 | random 100, JSONL universe rows | 100 | 4,376 | 9 | 0 | 824 | 474 s | PASS |
-| R02 | random 100, plain-text input | 100 | 4,569 | 8 | 1 | 890 | 412 s | PASS |
-| R03 | random 100, JSON list input | 100 | 4,417 | 8 | 0 | 865 | 428 s | PASS |
-| R04 | random 100, gzipped JSONL | 100 | 4,546 | 11 | 0 | 815 | 420 s | PASS |
-| R05 | random 100 + 2 duplicate rows + 2 invalid numbers | 102* | 4,507 | 12 | 0 | 881 | 411 s | PASS |
-| R06 | 100 companies with ≥ 5 employees | 100 | 5,512 | 31 | 0 | 922 | 510 s | PASS |
-| R07 | DIPS, Equinor, 2 hiring companies + 96 with registry website | 100 | 5,533 | 43 | 2 | 1,056 | 429 s | PASS |
-| R08 | budget stress `--max-requests 300` | 100 | 4,189 | 0 | 0 | 300* | 39 s | PASS |
-| R09 | deadline stress `--deadline-minutes 3` | 100 | 4,306 | 0 | 0 | 524 | **137 s*** | PASS |
-| R10 | refresh of R01 with `--previous` | 100 | 4,376 | 9 | 0 | 831 | 474 s | PASS, 0 false changes* |
-| R11 | random 100, companies never used before | 100 | 4,451 | 5 | 1 | 892 | 419 s | PASS |
-| R12 | random 100, companies never used before | 100 | 4,589 | 8 | 0 | 898 | 464 s | PASS |
-| R13 | random 100, companies never used before | 100 | 4,402 | 7 | 0 | 821 | 444 s | PASS |
+| R01 | random 100, JSONL universe rows | 100 | 4,376 | 9 | 0 | 823 | 472 s | PASS |
+| R02 | random 100, plain-text input | 100 | 4,569 | 8 | 1 | 894 | 407 s | PASS |
+| R03 | random 100, JSON list input | 100 | 4,417 | 8 | 0 | 864 | 425 s | PASS |
+| R04 | random 100, gzipped JSONL | 100 | 4,546 | 11 | 0 | 816 | 413 s | PASS |
+| R05 | random 100 + 2 duplicate rows + 2 invalid numbers | 102* | 4,507 | 12 | 0 | 880 | 407 s | PASS |
+| R06 | 100 companies with >=5 employees (website/jobs stress) | 100 | 5,512 | 31 | 0 | 921 | 502 s | PASS |
+| R07 | 4 known companies + 96 with registry website | 100 | 5,533 | 43 | 2 | 1,058 | 429 s | PASS |
+| R08 | budget stress: --max-requests 300 | 100 | 4,189 | 0 | 0 | 300* | 39 s | PASS |
+| R09 | deadline stress: --deadline-minutes 3 | 100 | 4,306 | 0 | 0 | 524 | **136 s*** | PASS |
+| R10 | refresh of R01 with --previous (idempotency / change detection) | 100 | 4,376 | 9 | 0 | 828 | 470 s | PASS, 0 false changes* |
+| R11 | random 100, companies not used in any earlier run | 100 | 4,451 | 5 | 1 | 891 | 428 s | PASS |
+| R12 | random 100, companies not used in any earlier run | 100 | 4,589 | 8 | 0 | 898 | 453 s | PASS |
+| R13 | random 100, companies not used in any earlier run | 100 | 4,402 | 7 | 0 | 822 | 452 s | PASS |
 
 \* R05: duplicates collapse to one envelope, and each invalid number gets a contract-complete `failed` envelope (100 + 2).
 R08: the cap holds at exactly 300 requests; all 100 envelopes are still written, and 300 sections are marked `blocked` with "budget" as the reason.
@@ -63,7 +62,7 @@ period and currency. All match.
 locations 98–100, public activity 100, website 5–11, social profiles 3–7, contact 28–39, jobs 0–1.
 
 **Source yield** (smoke run R01, `source_yield` in each run report): Brønnøysund 501 requests → 4,337 claims (8.7 per request) for 100 companies;
-company websites 228 requests → 39 claims (0.17 per request) for 9 companies; NAV feed 95 requests → 0 claims in this batch.
+company websites 228 requests → 39 claims (0.17 per request) for 9 companies; NAV feed 94 requests → 0 claims in this batch.
 
 ## Identity audit (manual)
 
@@ -86,7 +85,7 @@ Some of these are probably genuine, but proof of ownership is missing, so they a
 ## 1,000-profile dataset
 
 `profiles/profiles.jsonl.gz` holds **1,000 unique companies**, one envelope each, with 46,902 claims and 46,902 evidence records.
-It is merged from R01–R07, R10 and R11–R13. All passed verification at `3202c93`; the builder refuses any run that didn't. Constrained runs
+It is merged from R01–R07, R10 and R11–R13. All passed verification at `afc3f0a`; the builder refuses any run that didn't. Constrained runs
 (R08, R09) are excluded. `profiles/profiles-manifest.json` records the commit, content SHA-256, source runs and section counts.
 
 This dataset is a separate deliverable from the runtime evaluation. The agent never reads it: `run.py` researches whatever companies it's
@@ -113,6 +112,7 @@ given, and the only earlier data it reads is the previous run's snapshot, for th
 | 15 | Cost ceiling only reported, not enforced | contract | review 2 | paid calls reserve cost first and are refused past `--max-cost-usd` | `test_cost_ceiling_enforced_before_paid_call` |
 | 16 | HTTP 429 on a verified site produced a false removal; refusals mislabelled | false change / state | R10, audits | outages on declared or previously verified sites keep facts `stale`; refusals from plausible company sites → `blocked`; random `.com` bot walls ignored | `test_rate_limited_site_keeps_site_facts_stale_not_removed`, `test_site_refusing_requests_is_blocked_not_absent`, `test_unrelated_dotcom_bot_wall_is_not_reported_as_blocked` |
 | 17 | Inconsistent states, invalid-input envelopes missing keys, junk news, snapshot fallback citing the live API | contract / quality | verifier | fixed individually | R05, R08, `test_site_pages_are_not_news` |
+| 18 | A page listing several entities' org numbers on an undeclared name-matching domain was accepted as the company's own site | wrong company (latent) | review 4 | group/listing pages prove ownership only on a site the company declared and whose domain matches its name | `test_group_page_on_undeclared_name_matching_domain_is_ambiguous`, `test_group_page_declared_by_the_company_on_its_name_domain_is_exact` |
 
 ## What these runs do not show
 
