@@ -8,10 +8,11 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 780,
-    "runtime_s": 449.5,
+    "requests": 824,
+    "runtime_s": 465.5,
     "cost_usd": 0.0,
     "spot_checked": 5,
+    "financial_values_checked": 88,
     "section_available": {
       "identity": 100,
       "financials": 99,
@@ -94,10 +95,11 @@
     "jobs_published": 1,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 821,
-    "runtime_s": 409.6,
+    "requests": 884,
+    "runtime_s": 364.7,
     "cost_usd": 0.0,
     "spot_checked": 5,
+    "financial_values_checked": 114,
     "section_available": {
       "identity": 100,
       "financials": 99,
@@ -180,10 +182,11 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 822,
-    "runtime_s": 447.5,
+    "requests": 865,
+    "runtime_s": 446.5,
     "cost_usd": 0.0,
     "spot_checked": 5,
+    "financial_values_checked": 109,
     "section_available": {
       "identity": 100,
       "financials": 100,
@@ -260,10 +263,11 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 775,
-    "runtime_s": 407.1,
+    "requests": 814,
+    "runtime_s": 420.9,
     "cost_usd": 0.0,
     "spot_checked": 5,
+    "financial_values_checked": 113,
     "section_available": {
       "identity": 100,
       "financials": 100,
@@ -349,7 +353,7 @@
       [
         "936573444",
         "GRANHOLT COACHING AS",
-        "https://www.granholtcoaching.no/",
+        "https://www.granholtcoaching.no",
         "organisation number appears on company page markup (name-matching or declared domain)"
       ]
     ],
@@ -364,10 +368,11 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 819,
-    "runtime_s": 390.1,
+    "requests": 878,
+    "runtime_s": 408.6,
     "cost_usd": 0.0,
     "spot_checked": 5,
+    "financial_values_checked": 90,
     "section_available": {
       "identity": 100,
       "financials": 100,
@@ -474,10 +479,11 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 864,
-    "runtime_s": 497.8,
+    "requests": 926,
+    "runtime_s": 501.0,
     "cost_usd": 0.0,
     "spot_checked": 5,
+    "financial_values_checked": 104,
     "section_available": {
       "identity": 100,
       "financials": 99,
@@ -581,7 +587,7 @@
       [
         "920209270",
         "BISTO ENTREPRENØR AS",
-        "https://www.bistoentreprenor.no/",
+        "https://www.bistoentreprenor.no",
         "exact legal name plus registry phone/address on site"
       ],
       [
@@ -686,10 +692,11 @@
     "jobs_published": 2,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 942,
-    "runtime_s": 416.6,
+    "requests": 1054,
+    "runtime_s": 391.6,
     "cost_usd": 0.0,
     "spot_checked": 5,
+    "financial_values_checked": 138,
     "section_available": {
       "identity": 100,
       "financials": 99,
@@ -983,9 +990,10 @@
     "stale_claims": 0,
     "changes": 0,
     "requests": 300,
-    "runtime_s": 39.3,
+    "runtime_s": 40.1,
     "cost_usd": 0.0,
     "spot_checked": 5,
+    "financial_values_checked": 106,
     "section_available": {
       "identity": 100,
       "financials": 100,
@@ -1014,10 +1022,11 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 524,
+    "requests": 525,
     "runtime_s": 135.3,
     "cost_usd": 0.0,
     "spot_checked": 5,
+    "financial_values_checked": 97,
     "section_available": {
       "identity": 100,
       "financials": 100,
@@ -1046,10 +1055,11 @@
     "jobs_published": 0,
     "stale_claims": 4,
     "changes": 0,
-    "requests": 781,
-    "runtime_s": 476.9,
+    "requests": 829,
+    "runtime_s": 462.4,
     "cost_usd": 0.0,
     "spot_checked": 5,
+    "financial_values_checked": 88,
     "section_available": {
       "identity": 100,
       "financials": 99,
@@ -1133,10 +1143,11 @@
     "jobs_published": 1,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 831,
-    "runtime_s": 415.4,
+    "requests": 890,
+    "runtime_s": 422.0,
     "cost_usd": 0.0,
     "spot_checked": 5,
+    "financial_values_checked": 97,
     "section_available": {
       "identity": 100,
       "financials": 100,
@@ -1168,7 +1179,7 @@
       [
         "925822884",
         "7 FJELL BIL VEST AS",
-        "https://www.7fjellbil.no/",
+        "https://www.7fjellbil.no",
         "organisation number appears on company page"
       ],
       [
@@ -1180,7 +1191,7 @@
       [
         "929218426",
         "ANLEGGSGARTNER KRISTIAN SØRBY AS",
-        "https://kristiansorby.no/",
+        "https://kristiansorby.no",
         "exact legal name plus registry phone/address on site"
       ],
       [
@@ -1201,10 +1212,11 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 839,
-    "runtime_s": 464.8,
+    "requests": 901,
+    "runtime_s": 462.9,
     "cost_usd": 0.0,
     "spot_checked": 5,
+    "financial_values_checked": 141,
     "section_available": {
       "identity": 100,
       "financials": 100,
@@ -1237,7 +1249,7 @@
         "933190390",
         "KOLNES EVENT AS",
         "https://www.lilleeventhuset.no/",
-        "organisation number appears on company page"
+        "organisation number in the site's own identity block (footer, contact/about page or structured data)"
       ],
       [
         "913813693",
@@ -1260,7 +1272,7 @@
       [
         "818002912",
         "HYTTEAVISEN AS",
-        "https://www.hytteavisen.no/",
+        "https://www.hytteavisen.no",
         "organisation number appears on company page"
       ],
       [
@@ -1293,10 +1305,11 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 767,
-    "runtime_s": 434.5,
+    "requests": 823,
+    "runtime_s": 431.9,
     "cost_usd": 0.0,
     "spot_checked": 5,
+    "financial_values_checked": 115,
     "section_available": {
       "identity": 100,
       "financials": 100,

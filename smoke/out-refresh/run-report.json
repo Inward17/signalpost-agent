@@ -2,8 +2,8 @@
   "run": {
     "run_id": "R10",
     "agent_version": "1.0.0",
-    "started_at": "2026-10-16T06:31:53Z",
-    "completed_at": "2026-10-16T06:39:50Z",
+    "started_at": "2026-10-16T08:43:00Z",
+    "completed_at": "2026-10-16T08:50:42Z",
     "terminal_status": "completed"
   },
   "input_rows": 100,
@@ -52,33 +52,33 @@
   },
   "claims_total": 4376,
   "changes_total": 0,
-  "runtime_s": 476.9,
+  "runtime_s": 462.4,
   "operations": {
-    "requests": 781,
+    "requests": 829,
     "max_requests": 2000,
-    "bytes": 54895574,
+    "bytes": 54664220,
     "requests_by_host_top": {
       "data.brreg.no": 501,
       "pam-stilling-feed.nav.no": 95,
-      "showdevida.no": 6,
-      "gjoviktannlegekontor.no": 5,
+      "www.pfve.com": 10,
+      "showdevida.no": 8,
+      "flexipod.no": 6,
+      "krimat.com": 6,
+      "sollifjellet.no": 5,
+      "www.cwsca.com": 5,
       "vizer.no": 5,
-      "krimat.com": 5,
+      "www.tool.com": 5,
+      "www.nht-co.com": 5,
       "thi-holding.com": 4,
-      "blueline.com": 4,
-      "nhtco.com": 3,
-      "eneroptima.no": 3,
-      "classicwines.com": 3,
-      "labraxmanagement.com": 3,
-      "brathwait.com": 3,
-      "alfas.com": 3,
-      "krageroparken.no": 3
+      "gjoviktannlegekontor.no": 4,
+      "vora.no": 4,
+      "www.gjoviktannlegekontor.no": 4
     },
-    "p50_ms": 804,
-    "p95_ms": 8527,
+    "p50_ms": 1895,
+    "p95_ms": 3301,
     "third_party_cost_usd": 0.0,
     "nav_feed_pages": 94,
-    "nav_feed_entries": 29227
+    "nav_feed_entries": 29334
   },
   "source_yield": {
     "brreg_registry": {
@@ -88,10 +88,10 @@
       "claims_per_request": 8.66
     },
     "company_websites": {
-      "requests": 185,
+      "requests": 233,
       "claims": 39,
       "companies": 9,
-      "claims_per_request": 0.21
+      "claims_per_request": 0.17
     },
     "nav_job_feed": {
       "requests": 95,

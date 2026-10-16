@@ -2,8 +2,8 @@
   "run": {
     "run_id": "R01",
     "agent_version": "1.0.0",
-    "started_at": "2026-10-16T06:24:23Z",
-    "completed_at": "2026-10-16T06:31:52Z",
+    "started_at": "2026-10-16T08:35:14Z",
+    "completed_at": "2026-10-16T08:43:00Z",
     "terminal_status": "completed"
   },
   "input_rows": 100,
@@ -27,9 +27,9 @@
       "available": 100
     },
     "website": {
-      "not_available": 69,
+      "not_available": 70,
       "blocked": 2,
-      "ambiguous": 19,
+      "ambiguous": 18,
       "available": 9,
       "failed": 1
     },
@@ -51,33 +51,33 @@
   },
   "claims_total": 4376,
   "changes_total": 0,
-  "runtime_s": 449.5,
+  "runtime_s": 465.5,
   "operations": {
-    "requests": 780,
+    "requests": 824,
     "max_requests": 2000,
-    "bytes": 55517603,
+    "bytes": 55196633,
     "requests_by_host_top": {
       "data.brreg.no": 501,
       "pam-stilling-feed.nav.no": 95,
-      "showdevida.no": 6,
+      "www.pfve.com": 10,
+      "showdevida.no": 8,
+      "flexipod.no": 6,
+      "krimat.com": 6,
+      "sollifjellet.no": 5,
+      "www.cwsca.com": 5,
       "vizer.no": 5,
-      "krimat.com": 5,
+      "www.tool.com": 5,
+      "www.nht-co.com": 5,
       "thi-holding.com": 4,
-      "blueline.com": 4,
-      "eneroptima.no": 3,
-      "nhtco.com": 3,
-      "alfas.com": 3,
-      "classicwines.com": 3,
-      "brathwait.com": 3,
-      "labraxmanagement.com": 3,
-      "krageroparken.no": 3,
-      "jetttechnologies.no": 3
+      "vora.no": 4,
+      "www.lonepinecapital.com": 4,
+      "blueline.com": 4
     },
-    "p50_ms": 1515,
-    "p95_ms": 7355,
+    "p50_ms": 1971,
+    "p95_ms": 3279,
     "third_party_cost_usd": 0.0,
     "nav_feed_pages": 94,
-    "nav_feed_entries": 29220
+    "nav_feed_entries": 29331
   },
   "source_yield": {
     "brreg_registry": {
@@ -87,10 +87,10 @@
       "claims_per_request": 8.66
     },
     "company_websites": {
-      "requests": 184,
+      "requests": 228,
       "claims": 39,
       "companies": 9,
-      "claims_per_request": 0.21
+      "claims_per_request": 0.17
     },
     "nav_job_feed": {
       "requests": 95,
