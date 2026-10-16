@@ -2,8 +2,8 @@
   "run": {
     "run_id": "R13",
     "agent_version": "1.0.0",
-    "started_at": "2026-10-16T06:05:29Z",
-    "completed_at": "2026-10-16T06:12:56Z",
+    "started_at": "2026-10-16T06:39:04Z",
+    "completed_at": "2026-10-16T06:46:18Z",
     "terminal_status": "completed"
   },
   "input_rows": 100,
@@ -50,33 +50,33 @@
   },
   "claims_total": 4402,
   "changes_total": 0,
-  "runtime_s": 446.7,
+  "runtime_s": 434.5,
   "operations": {
-    "requests": 768,
+    "requests": 767,
     "max_requests": 2000,
-    "bytes": 59783442,
+    "bytes": 59715706,
     "requests_by_host_top": {
       "data.brreg.no": 500,
       "pam-stilling-feed.nav.no": 95,
       "nordiccover.com": 6,
       "vm-bygg.no": 4,
       "www.borealisfestival.no": 4,
-      "norskriksspill.no": 3,
-      "rasmussentransport.no": 3,
-      "mimazi.com": 3,
-      "carand.com": 3,
-      "northerndc.no": 3,
       "narvestad.no": 3,
+      "norskriksspill.no": 3,
+      "mimazi.com": 3,
+      "rasmussentransport.no": 3,
+      "northerndc.no": 3,
       "milleniumholding.com": 3,
+      "carand.com": 3,
       "fauskestorbilsenter.no": 3,
       "narvestad.com": 3,
-      "dregg.com": 3
+      "system2.com": 3
     },
-    "p50_ms": 1618,
-    "p95_ms": 8610,
+    "p50_ms": 919,
+    "p95_ms": 10557,
     "third_party_cost_usd": 0.0,
     "nav_feed_pages": 94,
-    "nav_feed_entries": 29210
+    "nav_feed_entries": 29230
   },
   "source_yield": {
     "brreg_registry": {
@@ -86,7 +86,7 @@
       "claims_per_request": 8.74
     },
     "company_websites": {
-      "requests": 173,
+      "requests": 172,
       "claims": 33,
       "companies": 7,
       "claims_per_request": 0.19

@@ -2,8 +2,8 @@
   "run": {
     "run_id": "R01",
     "agent_version": "1.0.0",
-    "started_at": "2026-10-16T03:45:18Z",
-    "completed_at": "2026-10-16T03:53:12Z",
+    "started_at": "2026-10-16T06:24:23Z",
+    "completed_at": "2026-10-16T06:31:52Z",
     "terminal_status": "completed"
   },
   "input_rows": 100,
@@ -27,16 +27,16 @@
       "available": 100
     },
     "website": {
-      "not_available": 65,
+      "not_available": 69,
       "blocked": 2,
       "ambiguous": 19,
       "available": 9,
-      "failed": 5
+      "failed": 1
     },
     "social_profiles": {
-      "not_available": 91,
+      "not_available": 95,
       "available": 4,
-      "failed": 5
+      "failed": 1
     },
     "contact": {
       "available": 28,
@@ -51,11 +51,11 @@
   },
   "claims_total": 4376,
   "changes_total": 0,
-  "runtime_s": 474.3,
+  "runtime_s": 449.5,
   "operations": {
-    "requests": 781,
+    "requests": 780,
     "max_requests": 2000,
-    "bytes": 55559762,
+    "bytes": 55517603,
     "requests_by_host_top": {
       "data.brreg.no": 501,
       "pam-stilling-feed.nav.no": 95,
@@ -65,19 +65,45 @@
       "thi-holding.com": 4,
       "blueline.com": 4,
       "eneroptima.no": 3,
-      "alfas.com": 3,
-      "labraxmanagement.com": 3,
-      "brathwait.com": 3,
-      "classicwines.com": 3,
       "nhtco.com": 3,
+      "alfas.com": 3,
+      "classicwines.com": 3,
+      "brathwait.com": 3,
+      "labraxmanagement.com": 3,
       "krageroparken.no": 3,
       "jetttechnologies.no": 3
     },
-    "p50_ms": 911,
-    "p95_ms": 8207,
+    "p50_ms": 1515,
+    "p95_ms": 7355,
     "third_party_cost_usd": 0.0,
     "nav_feed_pages": 94,
-    "nav_feed_entries": 29200
+    "nav_feed_entries": 29220
+  },
+  "source_yield": {
+    "brreg_registry": {
+      "requests": 501,
+      "claims": 4337,
+      "companies": 100,
+      "claims_per_request": 8.66
+    },
+    "company_websites": {
+      "requests": 184,
+      "claims": 39,
+      "companies": 9,
+      "claims_per_request": 0.21
+    },
+    "nav_job_feed": {
+      "requests": 95,
+      "claims": 0,
+      "companies": 0,
+      "claims_per_request": 0.0
+    },
+    "search_api": {
+      "requests": 0,
+      "claims": 0,
+      "companies": 0,
+      "claims_per_request": null
+    }
   },
   "per_company_requests": 5
 }

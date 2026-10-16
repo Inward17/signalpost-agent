@@ -1,14 +1,14 @@
 {
   "input_rows": 100,
   "envelopes": 100,
-  "claims": 4462,
-  "evidence": 4462,
-  "websites_published": 7,
+  "claims": 4457,
+  "evidence": 4457,
+  "websites_published": 6,
   "jobs_published": 1,
   "stale_claims": 0,
   "changes": 0,
-  "requests": 835,
-  "runtime_s": 420.5,
+  "requests": 831,
+  "runtime_s": 415.4,
   "cost_usd": 0.0,
   "spot_checked": 5,
   "section_available": {
@@ -16,8 +16,8 @@
     "financials": 100,
     "leadership": 100,
     "locations": 100,
-    "website": 7,
-    "social_profiles": 6,
+    "website": 6,
+    "social_profiles": 5,
     "contact": 34,
     "jobs": 1,
     "public_activity": 100
@@ -43,12 +43,6 @@
       "925822884",
       "7 FJELL BIL VEST AS",
       "https://www.7fjellbil.no/",
-      "organisation number appears on company page"
-    ],
-    [
-      "995695871",
-      "NORLANDIA RATVIKA BARNEHAGE AS",
-      "https://norlandiabarnehagene.no/",
       "organisation number appears on company page"
     ],
     [

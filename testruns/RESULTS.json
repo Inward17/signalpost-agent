@@ -9,7 +9,7 @@
     "stale_claims": 0,
     "changes": 0,
     "requests": 780,
-    "runtime_s": 470.5,
+    "runtime_s": 449.5,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -94,8 +94,8 @@
     "jobs_published": 1,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 822,
-    "runtime_s": 405.7,
+    "requests": 821,
+    "runtime_s": 409.6,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -181,7 +181,7 @@
     "stale_claims": 0,
     "changes": 0,
     "requests": 822,
-    "runtime_s": 437.2,
+    "runtime_s": 447.5,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -254,14 +254,14 @@
   "R04": {
     "input_rows": 100,
     "envelopes": 100,
-    "claims": 4551,
-    "evidence": 4551,
-    "websites_published": 13,
+    "claims": 4548,
+    "evidence": 4548,
+    "websites_published": 12,
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
     "requests": 775,
-    "runtime_s": 418.1,
+    "runtime_s": 407.1,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -269,7 +269,7 @@
       "financials": 100,
       "leadership": 100,
       "locations": 100,
-      "website": 13,
+      "website": 12,
       "social_profiles": 6,
       "contact": 35,
       "jobs": 0,
@@ -314,7 +314,7 @@
         "927437155",
         "FRITZØE NORDIC AS",
         "https://fritzoenordic.no/",
-        "organisation number appears on company page"
+        "organisation number appears on company page markup (name-matching or declared domain)"
       ],
       [
         "919065885",
@@ -335,12 +335,6 @@
         "organisation number appears on company page"
       ],
       [
-        "977533341",
-        "VENNESLA BILTEKNIKK AS",
-        "https://sjekkpunkt.no/bilverksted/venneslabilteknikk",
-        "organisation number appears on company page"
-      ],
-      [
         "913206797",
         "DEN SISTE REISEN-BEGRAVELSESBYRÅ I OSLO AS",
         "https://densistereisen.no/",
@@ -356,7 +350,7 @@
         "936573444",
         "GRANHOLT COACHING AS",
         "https://www.granholtcoaching.no/",
-        "organisation number appears on company page"
+        "organisation number appears on company page markup (name-matching or declared domain)"
       ]
     ],
     "purpose": "random 100, gzipped JSONL"
@@ -370,8 +364,8 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 822,
-    "runtime_s": 410.8,
+    "requests": 819,
+    "runtime_s": 390.1,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -406,7 +400,7 @@
         "933472078",
         "HAVER WALLIN AS",
         "https://www.haverwallin.no/",
-        "organisation number appears on company page"
+        "organisation number appears on company page markup (name-matching or declared domain)"
       ],
       [
         "980901181",
@@ -481,7 +475,7 @@
     "stale_claims": 0,
     "changes": 0,
     "requests": 864,
-    "runtime_s": 513.0,
+    "runtime_s": 497.8,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -582,7 +576,7 @@
         "920798462",
         "AREAL+ AS",
         "https://www.arealpluss.no/",
-        "organisation number appears on company page"
+        "organisation number appears on company page markup (name-matching or declared domain)"
       ],
       [
         "920209270",
@@ -636,7 +630,7 @@
         "927177005",
         "BUD CAMPING AS",
         "https://budcamping.no/",
-        "organisation number appears on company page"
+        "organisation number appears on company page markup (name-matching or declared domain)"
       ],
       [
         "939773460",
@@ -692,8 +686,8 @@
     "jobs_published": 2,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 943,
-    "runtime_s": 415.9,
+    "requests": 942,
+    "runtime_s": 416.6,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -806,7 +800,7 @@
         "913229169",
         "TEKNISK SENTER AS",
         "https://teknisksenter.no/",
-        "organisation number appears on company page"
+        "organisation number appears on company page markup (name-matching or declared domain)"
       ],
       [
         "979933045",
@@ -989,7 +983,7 @@
     "stale_claims": 0,
     "changes": 0,
     "requests": 300,
-    "runtime_s": 38.6,
+    "runtime_s": 39.3,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -1020,8 +1014,8 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 523,
-    "runtime_s": 135.9,
+    "requests": 524,
+    "runtime_s": 135.3,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -1052,8 +1046,8 @@
     "jobs_published": 0,
     "stale_claims": 4,
     "changes": 0,
-    "requests": 783,
-    "runtime_s": 469.2,
+    "requests": 781,
+    "runtime_s": 476.9,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -1133,14 +1127,14 @@
   "R11": {
     "input_rows": 100,
     "envelopes": 100,
-    "claims": 4462,
-    "evidence": 4462,
-    "websites_published": 7,
+    "claims": 4457,
+    "evidence": 4457,
+    "websites_published": 6,
     "jobs_published": 1,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 835,
-    "runtime_s": 420.5,
+    "requests": 831,
+    "runtime_s": 415.4,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -1148,8 +1142,8 @@
       "financials": 100,
       "leadership": 100,
       "locations": 100,
-      "website": 7,
-      "social_profiles": 6,
+      "website": 6,
+      "social_profiles": 5,
       "contact": 34,
       "jobs": 1,
       "public_activity": 100
@@ -1175,12 +1169,6 @@
         "925822884",
         "7 FJELL BIL VEST AS",
         "https://www.7fjellbil.no/",
-        "organisation number appears on company page"
-      ],
-      [
-        "995695871",
-        "NORLANDIA RATVIKA BARNEHAGE AS",
-        "https://norlandiabarnehagene.no/",
         "organisation number appears on company page"
       ],
       [
@@ -1214,7 +1202,7 @@
     "stale_claims": 0,
     "changes": 0,
     "requests": 839,
-    "runtime_s": 465.0,
+    "runtime_s": 464.8,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {
@@ -1305,8 +1293,8 @@
     "jobs_published": 0,
     "stale_claims": 0,
     "changes": 0,
-    "requests": 768,
-    "runtime_s": 446.7,
+    "requests": 767,
+    "runtime_s": 434.5,
     "cost_usd": 0.0,
     "spot_checked": 5,
     "section_available": {

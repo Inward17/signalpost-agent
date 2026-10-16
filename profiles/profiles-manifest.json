@@ -1,0 +1,108 @@
+{
+  "profiles": 1000,
+  "unique_organisation_numbers": 1000,
+  "claims": 46929,
+  "evidence_records": 46929,
+  "agent_commit": "f0b3f58cac90da449f41df3ff1683e3787d0a124",
+  "content_sha256": "ee85642c7c95cb12172ebf547dfde981a5450685a5ce050ade1f9b53d50fa779",
+  "source_runs": [
+    {
+      "run": "R01",
+      "profiles": 100,
+      "run_id": "R01"
+    },
+    {
+      "run": "R02",
+      "profiles": 100,
+      "run_id": "R02"
+    },
+    {
+      "run": "R03",
+      "profiles": 100,
+      "run_id": "R03"
+    },
+    {
+      "run": "R04",
+      "profiles": 100,
+      "run_id": "R04"
+    },
+    {
+      "run": "R05",
+      "profiles": 100,
+      "run_id": "R05"
+    },
+    {
+      "run": "R06",
+      "profiles": 100,
+      "run_id": "R06"
+    },
+    {
+      "run": "R07",
+      "profiles": 100,
+      "run_id": "R07"
+    },
+    {
+      "run": "R11",
+      "profiles": 100,
+      "run_id": "R11"
+    },
+    {
+      "run": "R12",
+      "profiles": 100,
+      "run_id": "R12"
+    },
+    {
+      "run": "R13",
+      "profiles": 100,
+      "run_id": "R13"
+    },
+    {
+      "run": "R10",
+      "profiles": 100,
+      "run_id": "R10"
+    }
+  ],
+  "section_states": {
+    "identity": {
+      "available": 1000
+    },
+    "financials": {
+      "available": 996,
+      "failed": 4
+    },
+    "leadership": {
+      "available": 996,
+      "not_available": 4
+    },
+    "locations": {
+      "available": 995,
+      "not_available": 5
+    },
+    "website": {
+      "not_available": 572,
+      "blocked": 36,
+      "ambiguous": 239,
+      "available": 147,
+      "failed": 6
+    },
+    "social_profiles": {
+      "not_available": 896,
+      "available": 96,
+      "failed": 6,
+      "blocked": 2
+    },
+    "contact": {
+      "available": 426,
+      "not_available": 574
+    },
+    "jobs": {
+      "not_available": 996,
+      "available": 4
+    },
+    "public_activity": {
+      "available": 999,
+      "not_available": 1
+    }
+  },
+  "note": "Every included run passed tools/verify_run.py. Profiles are evidence for local testing; Builderr scores fresh official batches."
+}

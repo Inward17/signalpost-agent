@@ -2,8 +2,8 @@
   "run": {
     "run_id": "R12",
     "agent_version": "1.0.0",
-    "started_at": "2026-10-16T05:57:44Z",
-    "completed_at": "2026-10-16T06:05:29Z",
+    "started_at": "2026-10-16T06:31:19Z",
+    "completed_at": "2026-10-16T06:39:03Z",
     "terminal_status": "completed"
   },
   "input_rows": 100,
@@ -50,33 +50,33 @@
   },
   "claims_total": 4597,
   "changes_total": 0,
-  "runtime_s": 465.0,
+  "runtime_s": 464.8,
   "operations": {
     "requests": 839,
     "max_requests": 2000,
-    "bytes": 69590684,
+    "bytes": 69449129,
     "requests_by_host_top": {
       "data.brreg.no": 500,
       "pam-stilling-feed.nav.no": 95,
       "havsnurp.no": 5,
       "www.autoguard.no": 5,
       "atlaseiendom.no": 4,
-      "www.res-group.com": 4,
       "northernfarmhouse.com": 4,
+      "www.res-group.com": 4,
       "safecomputing.no": 4,
-      "www.hugedomains.com": 4,
       "introark.no": 4,
       "arendalmarkiseservice.no": 4,
-      "www.espegard.no": 4,
       "citysteinhus.no": 4,
+      "www.espegard.no": 4,
+      "projectcrew.com": 4,
       "frakttjenesten.no": 3,
-      "alkare.no": 3
+      "b2la.com": 3
     },
-    "p50_ms": 814,
-    "p95_ms": 7362,
+    "p50_ms": 889,
+    "p95_ms": 7133,
     "third_party_cost_usd": 0.0,
     "nav_feed_pages": 94,
-    "nav_feed_entries": 29205
+    "nav_feed_entries": 29227
   },
   "source_yield": {
     "brreg_registry": {

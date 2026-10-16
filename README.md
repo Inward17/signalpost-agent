@@ -95,14 +95,14 @@ Breadth-first phases so every company gets the high-value official baseline befo
 **Expected cost per official run: $0.00** (default configuration). Request use: ~6 registry requests per company + ~100 shared NAV feed
 pages + ~0–8 website requests per company. Measured: 100 companies use 775–943 of the 2,000-request budget and take 7–8.5 minutes; the budget/deadline caps are enforced so larger batches degrade by marking optional sources `blocked`, never by dropping rows.
 
-## Smoke test and verification
+## Smoke test, verification and 1,000 profiles
 
-`smoke/` holds the 100-company smoke batch (random sample of the public universe), the envelopes, the run report, the HTML viewer and
-`verification.json`. Measured: 100/100 envelopes, 4,376 claims, 781 requests, 474 s, $0. `smoke/out-refresh/` is a second run
-against the first run's output: 0 false changes; one site answered HTTP 429 and its facts were kept as `stale`.
-
-10 verification runs (input formats, duplicates and invalid numbers, employer-heavy batches, budget and deadline stress, refresh) all
-pass the 13 contract rule groups in `tools/verify_run.py`. See [TEST_REPORT.md](TEST_REPORT.md).
+- `smoke/`: 100-company smoke batch, envelopes, run report, HTML viewer, `verification.json`. 100/100 envelopes, 4,376 claims,
+  780 requests, 450 s, $0. `smoke/out-refresh/` is a second run against the first run's output: 0 false changes.
+- `profiles/profiles.jsonl.gz`: **1,000 unique company profiles** (46,929 claims, each with evidence) merged from verified runs; see the manifest.
+- 13 verification runs (input formats, duplicates and invalid numbers, employer-heavy batches, 300 never-seen companies, budget and deadline
+  stress, refresh) all pass the 13 contract rule groups in `tools/verify_run.py` at commit `f0b3f58`. See [TEST_REPORT.md](TEST_REPORT.md).
+- Privacy operations: `python tools/purge.py --person "Name" | --org <number> | --older-than-days 365` (see SOURCES_AND_SECURITY.md).
 
 ## Limitations
 

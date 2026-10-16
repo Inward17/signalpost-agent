@@ -2,8 +2,8 @@
   "run": {
     "run_id": "R11",
     "agent_version": "1.0.0",
-    "started_at": "2026-10-16T05:50:43Z",
-    "completed_at": "2026-10-16T05:57:43Z",
+    "started_at": "2026-10-16T06:24:23Z",
+    "completed_at": "2026-10-16T06:31:18Z",
     "terminal_status": "completed"
   },
   "input_rows": 100,
@@ -26,14 +26,14 @@
       "available": 100
     },
     "website": {
-      "ambiguous": 25,
+      "ambiguous": 26,
       "not_available": 62,
-      "available": 7,
+      "available": 6,
       "blocked": 6
     },
     "social_profiles": {
-      "not_available": 94,
-      "available": 6
+      "not_available": 95,
+      "available": 5
     },
     "contact": {
       "not_available": 66,
@@ -47,35 +47,35 @@
       "available": 100
     }
   },
-  "claims_total": 4462,
+  "claims_total": 4457,
   "changes_total": 0,
-  "runtime_s": 420.5,
+  "runtime_s": 415.4,
   "operations": {
-    "requests": 835,
+    "requests": 831,
     "max_requests": 2000,
-    "bytes": 59808255,
+    "bytes": 59786618,
     "requests_by_host_top": {
       "data.brreg.no": 500,
       "pam-stilling-feed.nav.no": 96,
-      "www.hugedomains.com": 6,
       "www.mechtronic.no": 5,
       "www.quipsit.no": 5,
       "www.akasa.no": 4,
       "kalm.com": 4,
       "apexdata.no": 4,
-      "bryggekompaniet.no": 3,
+      "mamove.com": 3,
       "breiendom.no": 3,
+      "bryggekompaniet.no": 3,
       "mollerbil.no": 3,
       "angvikauto.no": 3,
-      "mamove.com": 3,
       "fazile.com": 3,
-      "eruca.no": 3
+      "eruca.no": 3,
+      "aparte.no": 3
     },
-    "p50_ms": 1631,
-    "p95_ms": 7319,
+    "p50_ms": 1308,
+    "p95_ms": 8446,
     "third_party_cost_usd": 0.0,
     "nav_feed_pages": 94,
-    "nav_feed_entries": 29205
+    "nav_feed_entries": 29220
   },
   "source_yield": {
     "brreg_registry": {
@@ -85,10 +85,10 @@
       "claims_per_request": 8.86
     },
     "company_websites": {
-      "requests": 239,
-      "claims": 33,
-      "companies": 7,
-      "claims_per_request": 0.14
+      "requests": 235,
+      "claims": 28,
+      "companies": 6,
+      "claims_per_request": 0.12
     },
     "nav_job_feed": {
       "requests": 96,
