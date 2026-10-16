@@ -14,6 +14,7 @@ ACCOUNTS = "https://data.brreg.no/regnskapsregisteret/regnskap/{org}"
 ANNOUNCEMENTS = "https://w2.brreg.no/kunngjoring/hent_nr.jsp?orgnr={org}"
 ANNOUNCEMENT_ITEM = "https://w2.brreg.no/kunngjoring/hent_en.jsp?kid={kid}&sokeverdi={org}&spraak=nb"
 JSON = "application/json"
+SUPPRESSED_PERSONS: set[str] = set()  # filled by run.py from <state-dir>/suppressed_persons.txt
 
 
 def _get(value: Any, *path: str) -> Any:
@@ -176,7 +177,7 @@ def fetch_roles(client: Client, d: Dossier) -> None:
             entity = item.get("enhet") or {}
             entity_name = entity.get("navn")
             holder = person or (" ".join(entity_name) if isinstance(entity_name, list) else entity_name)
-            if not holder:
+            if not holder or holder.casefold() in SUPPRESSED_PERSONS:  # honoured objection / erasure request
                 continue
             value = {"name": holder, "role": _get(item, "type", "beskrivelse"), "role_code": _get(item, "type", "kode"),
                      "holder_type": "person" if person else "organisation"}

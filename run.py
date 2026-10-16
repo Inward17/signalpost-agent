@@ -19,6 +19,7 @@ from signalpost import __version__
 from signalpost.dossier import SECTIONS, Dossier
 from signalpost.envelope import build
 from signalpost.http import BudgetExhausted, Client, utc_now
+from signalpost import registry
 from signalpost.jobs import JobIndex, collect_jobs
 from signalpost.registry import fetch_accounts, fetch_entity, fetch_registry_updates, fetch_roles, fetch_subunits
 from signalpost.report import write_html
@@ -83,6 +84,29 @@ def failed_envelope(org: str, run_meta: dict, stage: str, message: str, reason: 
             "errors": [{"stage": stage, "message": message}], "operations": {"requests": requests, "third_party_cost_usd": 0.0}}
 
 
+SOURCE_GROUP = {"official_job_feed": "nav_job_feed", "company_owned": "company_websites"}
+
+
+def source_yield(envelopes: list[dict[str, Any]], by_host: dict[str, int]) -> dict[str, Any]:
+    """Published claims and companies covered per source group, against the requests that group consumed."""
+    requests = {"brreg_registry": 0, "nav_job_feed": 0, "company_websites": 0, "search_api": 0}
+    for host, n in by_host.items():
+        group = "brreg_registry" if host.endswith("brreg.no") else "nav_job_feed" if host.endswith("nav.no") else             "search_api" if host.endswith("search.brave.com") else "company_websites"
+        requests[group] += n
+    claims: dict[str, int] = {}
+    companies: dict[str, set] = {}
+    for env in envelopes:
+        ev = {e["id"]: e for e in env.get("evidence", [])}
+        for c in env.get("claims", []):
+            cls = next((ev[i]["source_class"] for i in c["evidence_ids"] if i in ev), "unknown")
+            group = SOURCE_GROUP.get(cls, "brreg_registry" if cls.startswith("official") else cls)
+            claims[group] = claims.get(group, 0) + 1
+            companies.setdefault(group, set()).add(env["organisation_number"])
+    return {g: {"requests": requests.get(g, 0), "claims": claims.get(g, 0), "companies": len(companies.get(g, ())),
+                "claims_per_request": round(claims.get(g, 0) / requests[g], 2) if requests.get(g) else None}
+            for g in sorted(set(requests) | set(claims))}
+
+
 def atomic_write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -107,10 +131,13 @@ def main(argv: list[str] | None = None) -> int:
     started_at, t0 = utc_now(), time.monotonic()
     run_id = args.run_id or "run-" + started_at.replace(":", "").replace("-", "")
     orgs, seeds, invalid = read_inputs(args.input)
-    client = Client(max_requests=args.max_requests, deadline_s=args.deadline_minutes * 60)
-    margin = 90.0  # seconds reserved for envelope building and writing
+    margin = min(90.0, args.deadline_minutes * 60 * 0.25)  # tail kept free for envelope building and writing
+    client = Client(max_requests=args.max_requests, deadline_s=args.deadline_minutes * 60, reserve_s=margin)
     dossiers = {org: Dossier(org, seeds[org]) for org in orgs}
     previous = load_previous(args.state_dir, args.previous)
+    suppressed = args.state_dir / "suppressed_persons.txt"
+    if suppressed.exists():
+        registry.SUPPRESSED_PERSONS.update(n.strip().casefold() for n in suppressed.read_text(encoding="utf-8").splitlines() if n.strip())
     for org, prev in previous.items():
         if org in dossiers:
             site = next((c["value"] for c in prev.get("claims", []) if c.get("field") == "official_website"), None)
@@ -121,7 +148,7 @@ def main(argv: list[str] | None = None) -> int:
         todo = [d for d in dossiers.values() if pick(d)]
 
         def one(d: Dossier) -> None:
-            if client.time_left() < margin or client.remaining() <= 0:
+            if client.time_left() <= 0 or client.remaining() <= 0:
                 d.section(section, "blocked", "run time/request budget reached before this source was queried")
                 return
             client.local.dossier = d
@@ -137,7 +164,7 @@ def main(argv: list[str] | None = None) -> int:
 
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
             futures = [pool.submit(one, d) for d in todo]
-            done, pending = wait(futures, timeout=max(1.0, client.time_left() - margin))
+            done, pending = wait(futures, timeout=max(1.0, client.time_left() + 15))  # +15s: in-flight requests finish or time out
             for f in pending:
                 f.cancel()
         print(f"[signalpost] phase {name}: {len(todo)} companies, {client.requests} requests used, {time.monotonic() - t0:.0f}s", file=sys.stderr)
@@ -150,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
     phase("registry_updates", "public_activity", fetch_registry_updates, identified)
 
     jobs = JobIndex()
-    if client.time_left() > margin:
+    if client.time_left() > 0:
         max_pages = max(5, min(160, client.remaining() // 6))
         try:
             jobs.build(client, args.jobs_window_days, max_pages)
@@ -202,6 +229,7 @@ def main(argv: list[str] | None = None) -> int:
         "runtime_s": round(time.monotonic() - t0, 1),
         "operations": {**client.stats(), "third_party_cost_usd": round(client.third_party_cost_usd, 4),
                        "nav_feed_pages": jobs.pages, "nav_feed_entries": len(jobs.entries)},
+        "source_yield": source_yield(envelopes, client.by_host),
         "per_company_requests": sorted(e["operations"]["requests"] for e in envelopes)[len(envelopes) // 2] if envelopes else 0,
     }
     atomic_write(out / "run-report.json", json.dumps(report, ensure_ascii=False, indent=2))

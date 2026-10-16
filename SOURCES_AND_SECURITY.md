@@ -35,20 +35,32 @@ is listed in the site's own JSON-LD `sameAs`. Unmatched outbound links are count
 
 ## Personal data
 
-Registered role holders' names and roles are published as in the public register; birth dates are discarded. Sole-trader (ENK)
-phone numbers are not published. Website e-mail addresses are only kept for generic company mailboxes on the company's own domain
-(`post@`, `info@`, `kontakt@` …). No personal profiles, no sensitive inference. No personal data is sent to any third-party model (none is used).
+This is an engineering description, not a legal opinion; a production deployment in Norway should be reviewed by a privacy professional.
+
+| Topic | Practice |
+|---|---|
+| Purpose | Company research: who leads a company, where it operates, whether it is hiring. Personal data appears only as part of company facts. |
+| Data published | Names and roles of registered role holders (CEO, board, auditor) exactly as in Enhetsregisteret; NAV ad titles and locations. No birth dates (discarded on fetch), no national ID numbers (authorised endpoints never called), no sole-trader (ENK) phone numbers, no personal e-mail addresses (only generic company mailboxes on the company's own domain). |
+| Legal basis (assumed) | Legitimate interest in company due diligence, for data the law requires to be public in the register. NLOD 2.0 covers reuse of the dataset but **does not by itself grant a basis for processing personal data**; that basis has to be assessed for the actual deployment. |
+| Not done | No profiles of individuals, no linking a person across companies, no inference of sensitive characteristics, no personal data sent to third parties (there is no LLM or external model). |
+| Retention | `state/<org>.json` holds the latest snapshot only. `state/history/` is append-only for the agent so evidence survives refreshes; the operator prunes it with `python tools/purge.py --older-than-days 365` (suggested retention: 12 months, run periodically). |
+| Corrections and erasure / objection | `python tools/purge.py --person "Name"` removes that person's role claims, evidence and change records from the state and history, and adds them to `state/suppressed_persons.txt`, which every later run honours, so the public register does not re-add them. `--org <number>` removes a company's baseline and history. Registry data is re-fetched each run, so a correction made at Brønnøysund appears on the next refresh. |
+| Logs | Run logs contain counts and URLs, never personal data or secrets. |
 
 ## Security
 
 - **Single HTTP path** (`signalpost/http.py`): every request passes the budget/deadline check, the SSRF guard and size limits.
 - **SSRF guard**: only `http(s)` on ports 80/443; hostnames must resolve exclusively to globally-routable IPs (loopback, RFC1918, link-local,
-  metadata addresses blocked); every redirect hop is re-validated; max 5 redirects.
+  metadata addresses blocked); every redirect hop is re-validated; max 5 redirects; environment proxies are ignored.
+- **DNS-rebinding protection**: validation and connection use the *same* resolution. The custom HTTP(S) connection classes resolve once,
+  check every returned address, and open the socket to that checked IP (TLS still verifies the real hostname via SNI), so a second DNS
+  answer cannot steer the connection to an internal address.
 - **Response limits**: 2 MB per page (8 MB per NAV feed page), 15 s timeout, HTML only for site pages; scripts are never executed (static parsing).
 - **Prompt injection**: there is no LLM in the loop; fetched text is data, matched only by deterministic rules.
 - **Secrets**: none required. Optional `BRAVE_API_KEY` / `NAV_FEED_TOKEN` are read from environment variables only and never logged or written to output.
-- **Budgets enforced, not reported**: `--max-requests` (default 2000) and `--deadline-minutes` (default 42 of the 45 allowed). When either runs
-  out, remaining sources are marked `blocked` with the reason and the run still writes one envelope per company.
+- **Budgets enforced, not reported**: `--max-requests` (default 2000) and `--deadline-minutes` (default 42 of the 45 allowed). The HTTP client
+  itself refuses to start any request in the final reserve (90 s, or a quarter of very short deadlines), so no phase can eat the time kept for
+  writing output. When budget or time runs out, remaining sources are marked `blocked` with the reason and every envelope is still written.
 - **Politeness**: ≤ 6 concurrent requests to brreg.no, ≤ 2 per other host, robots.txt honoured for all non-API pages, identifying User-Agent.
 
 A name alone is never enough, even an exact "Name AS" on a domain equal to the name: verification runs found

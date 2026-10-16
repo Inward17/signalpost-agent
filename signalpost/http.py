@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import http.client
 import ipaddress
 import json
 import socket
@@ -64,23 +65,30 @@ class Response:
             return self.body.decode("utf-8", errors="replace")
 
 
+def _validated_ip(host: str, port: int) -> str:
+    """Resolve once and require every address to be globally routable; return the address to connect to."""
+    host = (host or "").lower().rstrip(".")
+    if host == "localhost" or host.endswith((".localhost", ".local", ".internal")):
+        raise ValueError("local host blocked")
+    try:
+        infos = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    except (socket.gaierror, UnicodeError) as exc:
+        raise ValueError("hostname did not resolve") from exc
+    addresses = [info[4][0] for info in infos]
+    if not addresses or not all(ipaddress.ip_address(a.split("%")[0]).is_global for a in addresses):
+        raise ValueError("non-public address blocked")
+    return addresses[0]
+
+
 def assert_public_url(url: str) -> None:
-    """Reject non-HTTP(S), localhost and any host resolving to a non-global address (SSRF guard)."""
+    """Early reject of non-HTTP(S), odd ports, local names and non-public addresses (fast fail before any request)."""
     parsed = urllib.parse.urlparse(url)
     host = (parsed.hostname or "").lower().rstrip(".")
     if parsed.scheme not in {"http", "https"} or not host:
         raise ValueError("only public http(s) URLs are allowed")
     if parsed.port not in (None, 80, 443):
         raise ValueError("non-standard port blocked")
-    if host == "localhost" or host.endswith((".localhost", ".local", ".internal")):
-        raise ValueError("local host blocked")
-    try:
-        infos = socket.getaddrinfo(host, parsed.port or (443 if parsed.scheme == "https" else 80), type=socket.SOCK_STREAM)
-    except (socket.gaierror, UnicodeError) as exc:
-        raise ValueError("hostname did not resolve") from exc
-    for info in infos:
-        if not ipaddress.ip_address(info[4][0]).is_global:
-            raise ValueError("non-public address blocked")
+    _validated_ip(host, parsed.port or (443 if parsed.scheme == "https" else 80))
 
 
 def resolves(host: str) -> bool:
@@ -91,23 +99,48 @@ def resolves(host: str) -> bool:
         return False
 
 
+class _PinnedHTTPConnection(http.client.HTTPConnection):
+    """Connects to the exact address that passed validation, so a second DNS answer can never redirect the socket (no rebinding)."""
+
+    def connect(self) -> None:
+        self.sock = socket.create_connection((_validated_ip(self.host, self.port), self.port), self.timeout, self.source_address)
+
+
+class _PinnedHTTPSConnection(http.client.HTTPSConnection):
+    def connect(self) -> None:
+        sock = socket.create_connection((_validated_ip(self.host, self.port), self.port), self.timeout, self.source_address)
+        self.sock = self._context.wrap_socket(sock, server_hostname=self.host)  # TLS still verifies the real hostname
+
+
+class _PinnedHTTPHandler(urllib.request.HTTPHandler):
+    def http_open(self, req):  # noqa: ANN001
+        return self.do_open(_PinnedHTTPConnection, req)
+
+
+class _PinnedHTTPSHandler(urllib.request.HTTPSHandler):
+    def https_open(self, req):  # noqa: ANN001
+        return self.do_open(_PinnedHTTPSConnection, req, context=self._context)
+
+
 class _SafeRedirect(urllib.request.HTTPRedirectHandler):
     max_redirections = 5
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
-        assert_public_url(newurl)  # re-validate every hop (DNS rebinding / open redirect)
+        assert_public_url(newurl)  # every hop is re-checked; the pinned connection re-checks again at connect time
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-_OPENER = urllib.request.build_opener(_SafeRedirect())
+# ProxyHandler({}) ignores environment proxies so the pinned socket is the real destination
+_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}), _PinnedHTTPHandler(), _PinnedHTTPSHandler(), _SafeRedirect())
 
 
 class Client:
     """Every outbound request goes through here so budget and safety are enforced, not just reported."""
 
-    def __init__(self, max_requests: int = 2000, deadline_s: float = 45 * 60, timeout: float = 15.0):
+    def __init__(self, max_requests: int = 2000, deadline_s: float = 45 * 60, timeout: float = 15.0, reserve_s: float = 0.0):
+        """reserve_s: tail of the deadline kept free for writing output; no request may start inside it."""
         self.max_requests = max_requests
-        self.deadline = time.monotonic() + deadline_s
+        self.deadline = time.monotonic() + deadline_s - reserve_s
         self.timeout = timeout
         self.requests = 0
         self.bytes = 0
@@ -163,7 +196,7 @@ class Client:
             request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": accept, **(headers or {})})
             try:
                 with self._host_slot(host):
-                    timeout = max(2.0, min(self.timeout, self.time_left()))
+                    timeout = max(1.0, min(self.timeout, self.time_left()))
                     with _OPENER.open(request, timeout=timeout) as resp:
                         body = resp.read(max_bytes + 1)
                         last = Response(url, resp.geturl(), resp.status, body[:max_bytes], resp.headers.get("content-type", ""),
