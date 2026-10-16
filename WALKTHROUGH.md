@@ -38,7 +38,7 @@ signalpost/jobs.py         NAV vacancy feed index + orgnr-verified matching
 signalpost/website.py      website discovery, identity gate, company-owned extraction
 signalpost/envelope.py     envelope assembly, refresh diff, cited synthesis
 signalpost/report.py       self-contained HTML viewer
-tests/test_agent.py        33 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats, no-zero-fill)
+tests/test_agent.py        34 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats, no-zero-fill)
 smoke/                     100-company batch, first run (out/), refresh run (out-refresh/), logs
 README.md  SOURCES_AND_SECURITY.md  SUBMISSION.md  WALKTHROUGH.md
 ```
@@ -113,6 +113,10 @@ marked `blocked` with the reason. Every per-company call is wrapped in a try/exc
 name-derived domains (`sandneselektriske.no`, `sandnes-elektriske.no`, `.com`; generic names like "HOLDING AS" are skipped) that are checked
 by DNS first, so no HTTP is spent on non-existent domains; then optional Brave API results. Directory and social sites are never treated as candidates.
 At most 6 domains per company.
+
+**Unreachable candidates**: an explicit 403/429 from an officially declared site, the previously verified site, or a name-derived `.no`
+domain makes the section `blocked`. A timeout or 5xx on a declared or previously verified site makes it `failed`, and its last facts are
+kept `stale`. Errors on random guesses (for example a `.com` bot wall) leave it `not_available`.
 
 **Crawl**: robots check, homepage, then contact/about pages only while proof is still missing. After a match, news and careers pages are fetched too.
 At most about 8 requests per site.
@@ -197,7 +201,7 @@ The current `smoke/` folder holds the final-code run (R01): 4,376 claims, 781 re
 unchanged. Offline tests also cover real change, removal, and stale-carry.
 
 **Reproducibility**: fresh clone at the pinned commit, empty venv, `pip install -r requirements.txt`, run command → 3/3 envelopes (including
-one deliberately invalid input) and all offline tests pass (33 in the current suite).
+one deliberately invalid input) and all offline tests pass (34 in the current suite).
 
 ## 6. Plan checklist status
 

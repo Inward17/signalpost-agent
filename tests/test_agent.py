@@ -358,6 +358,27 @@ def test_site_refusing_requests_is_blocked_not_absent():
         restore()
 
 
+def test_unrelated_dotcom_bot_wall_is_not_reported_as_blocked():
+    from signalpost.http import Client
+    from signalpost.website import research_website
+    web, restore = _with_fake_network({})
+    original_open = web.open
+
+    def com_wall(request, timeout=None):
+        if ".com" in request.full_url and not request.full_url.endswith("robots.txt"):
+            web.routes[request.full_url] = (403, {}, b"")  # only the guessed .com answers, with a bot wall
+        return original_open(request, timeout)
+    from signalpost import http as h
+    restore_open = _patched(h._OPENER, "open", com_wall)
+    try:
+        d = dossier()
+        research_website(Client(), d)
+        assert d.sections["website"]["state"] == "not_available", d.sections["website"]
+    finally:
+        restore_open()
+        restore()
+
+
 def test_cost_ceiling_enforced_before_paid_call():
     from signalpost.http import BudgetExhausted, Client
     c = Client(max_cost_usd=0.01)

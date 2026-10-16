@@ -41,7 +41,7 @@ Outputs:
 Useful flags: `--state-dir` (refresh baseline, default `state/`), `--previous envelopes.jsonl` (explicit previous snapshot),
 `--max-requests 2000`, `--deadline-minutes 42`, `--max-cost-usd 10`, `--workers 16`, `--jobs-window-days 45`, `--no-domain-guessing`, `--run-id`.
 
-Offline tests: `python tests/test_agent.py` (33 tests; also runs under pytest).
+Offline tests: `python tests/test_agent.py` (34 tests; also runs under pytest).
 
 ## Envelope
 

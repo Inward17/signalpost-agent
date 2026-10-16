@@ -531,9 +531,10 @@ def research_website(client: Client, d: Dossier, allow_guessing: bool = True) ->
         if verdict["verdict"] == "ambiguous" and not ambiguous:
             ambiguous = verdict
         blocked = blocked or verdict["verdict"] == "blocked"
-        if verdict["verdict"] == "unreachable" and re.search(r"HTTP (403|429)", verdict["reason"]):
-            refused = refused or verdict["reason"]  # the site exists and refused us: "blocked", not "nothing there"
         known = cand["origin"] in {"official_registry", "nav_employer_homepage", "nav_contact_email_domain"} or dom == d.previous_site_domain
+        plausible = known or (cand["origin"] == "name_derived_domain" and dom.endswith(".no"))  # a random .com bot wall says nothing
+        if plausible and verdict["verdict"] == "unreachable" and re.search(r"HTTP (403|429)", verdict["reason"]):
+            refused = refused or verdict["reason"]  # the likely company site refused us: "blocked", not "nothing there"
         if known and verdict["verdict"] == "unreachable" and "did not resolve" not in verdict["reason"] and not re.search(r"HTTP 40[45]|HTTP 410", verdict["reason"]):
             transient = transient or verdict["reason"]
         if len(tried) >= 6:
