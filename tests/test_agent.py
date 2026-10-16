@@ -337,6 +337,27 @@ def test_deadline_reserve_blocks_new_requests():
     raise AssertionError("request allowed inside the output reserve")
 
 
+def test_site_refusing_requests_is_blocked_not_absent():
+    from signalpost.http import Client
+    from signalpost.website import research_website
+    web, restore = _with_fake_network({})  # every URL answers 404 by default...
+    original_open = web.open
+
+    def rate_limited(request, timeout=None):
+        if request.full_url.rstrip("/").endswith(("sandneselektriske.no", "sandnes-elektriske.no")):
+            web.routes[request.full_url] = (429, {}, b"")  # ...except the company's site, which rate-limits us
+        return original_open(request, timeout)
+    from signalpost import http as h
+    restore_open = _patched(h._OPENER, "open", rate_limited)
+    try:
+        d = dossier()
+        research_website(Client(), d)
+        assert d.sections["website"]["state"] == "blocked", d.sections["website"]
+    finally:
+        restore_open()
+        restore()
+
+
 def test_cost_ceiling_enforced_before_paid_call():
     from signalpost.http import BudgetExhausted, Client
     c = Client(max_cost_usd=0.01)
@@ -437,13 +458,19 @@ def test_input_formats():
         "rows.jsonl": '{"organisation_number": "979543883"}\n{"organisation_number": "810034882"}\n',
         "plain.txt": "979543883\n# comment\n810034882\n",
         "csvish.txt": "979543883, 810034882",
+        "bare.json": '["979543883", 810034882]',
     }
+    single = {"one.txt": "979543883\n", "one-no-newline.txt": "979543883"}
     with tempfile.TemporaryDirectory() as tmp:
         for name, content in cases.items():
             path = Path(tmp) / name
             path.write_text(content, encoding="utf-8")
             orgs, _, invalid = read_inputs(path)
             assert orgs == ["979543883", "810034882"] and not invalid, (name, orgs, invalid)
+        for name, content in single.items():
+            path = Path(tmp) / name
+            path.write_text(content, encoding="utf-8")
+            assert read_inputs(path)[0] == ["979543883"], name
 
 
 def test_missing_financials_never_zero():

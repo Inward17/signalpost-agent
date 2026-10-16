@@ -34,6 +34,8 @@ def read_inputs(path: Path) -> tuple[list[str], dict[str, dict], list[dict]]:
     stripped = text.strip()
     try:  # whole-file JSON first: a list, or an object (pretty-printed or not)
         body = json.loads(stripped)
+        if not isinstance(body, (list, dict)):
+            raise json.JSONDecodeError("bare JSON scalar: treat as text", stripped, 0)  # e.g. a file holding one number
         rows = body if isinstance(body, list) else             body.get("organisation_numbers") or body.get("organisationNumbers") or body.get("companies") or body.get("orgnr") or [body]
     except json.JSONDecodeError:
         if stripped.startswith("{"):  # JSONL: one object per line

@@ -503,6 +503,7 @@ def research_website(client: Client, d: Dossier, allow_guessing: bool = True) ->
     ambiguous: dict[str, Any] | None = None
     blocked = False
     transient: str | None = None  # 429/403/5xx/timeout: we could not check, which is not the same as "not there"
+    refused: str | None = None
 
     def candidates():
         yield from list(d.website_candidates)
@@ -530,6 +531,8 @@ def research_website(client: Client, d: Dossier, allow_guessing: bool = True) ->
         if verdict["verdict"] == "ambiguous" and not ambiguous:
             ambiguous = verdict
         blocked = blocked or verdict["verdict"] == "blocked"
+        if verdict["verdict"] == "unreachable" and re.search(r"HTTP (403|429)", verdict["reason"]):
+            refused = refused or verdict["reason"]  # the site exists and refused us: "blocked", not "nothing there"
         known = cand["origin"] in {"official_registry", "nav_employer_homepage", "nav_contact_email_domain"} or dom == d.previous_site_domain
         if known and verdict["verdict"] == "unreachable" and "did not resolve" not in verdict["reason"] and not re.search(r"HTTP 40[45]|HTTP 410", verdict["reason"]):
             transient = transient or verdict["reason"]
@@ -539,6 +542,10 @@ def research_website(client: Client, d: Dossier, allow_guessing: bool = True) ->
         d.section("website", "ambiguous", f"candidate {ambiguous.get('homepage')} not published: {ambiguous['reason']}", candidates_checked=outcomes)
     elif blocked:
         d.section("website", "blocked", "candidate site disallows automated access (robots.txt)", candidates_checked=outcomes)
+    elif refused and not transient:
+        d.section("website", "blocked", f"candidate site refused automated access this run: {refused}", candidates_checked=outcomes)
+        d.section("social_profiles", "blocked", "website could not be checked this run")
+        return
     elif transient:
         state = "blocked" if re.search(r"HTTP (403|429)", transient) else "failed"
         d.section("website", state, f"candidate site could not be checked this run: {transient}", candidates_checked=outcomes)

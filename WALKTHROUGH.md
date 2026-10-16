@@ -38,7 +38,7 @@ signalpost/jobs.py         NAV vacancy feed index + orgnr-verified matching
 signalpost/website.py      website discovery, identity gate, company-owned extraction
 signalpost/envelope.py     envelope assembly, refresh diff, cited synthesis
 signalpost/report.py       self-contained HTML viewer
-tests/test_agent.py        32 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats, no-zero-fill)
+tests/test_agent.py        33 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats, no-zero-fill)
 smoke/                     100-company batch, first run (out/), refresh run (out-refresh/), logs
 README.md  SOURCES_AND_SECURITY.md  SUBMISSION.md  WALKTHROUGH.md
 ```
@@ -197,7 +197,7 @@ The current `smoke/` folder holds the final-code run (R01): 4,376 claims, 781 re
 unchanged. Offline tests also cover real change, removal, and stale-carry.
 
 **Reproducibility**: fresh clone at the pinned commit, empty venv, `pip install -r requirements.txt`, run command → 3/3 envelopes (including
-one deliberately invalid input) and all offline tests pass (32 in the current suite).
+one deliberately invalid input) and all offline tests pass (33 in the current suite).
 
 ## 6. Plan checklist status
 
