@@ -206,7 +206,9 @@ def assess_identity(d: Dossier, pages: list[Page], origin: str, domain: str) -> 
     # A domain that merely matches the name does not prove ownership (same-name companies exist), so outside declared sites
     # the number must sit where the site states its OWN identity: footer/address, contact/about page, its JSON-LD Organization.
     org_reason = None
-    if org_hit and not (org_hit["group_page"] and not name_domain):
+    # A page listing several entities' numbers (group/chain/portfolio) proves nothing about which one owns the site, unless the
+    # company itself declared this name-matching site to an official source.
+    if org_hit and (not org_hit["group_page"] or (declared and name_domain)):
         if declared:
             return {"verdict": "exact", "score": 1.0, "reason": "organisation number on the site the company declared to an official source" +
                     ("" if org_hit["visible"] else " (in page markup)"), **org_hit}

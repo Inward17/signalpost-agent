@@ -11,6 +11,5 @@ testruns/*.log
 testruns/status.txt
 
 # kept locally for validation, not part of the submission
-tests/
 testruns/
 smoke/out-refresh/report.html

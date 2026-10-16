@@ -5,7 +5,7 @@ filed accounts, leadership, workplaces, verified website, company-linked social 
 public activity — with a source, retrieval time, content hash and reporting period on every claim, honest availability states,
 and a refresh diff against the previous run.
 
-Registry-anchored and deterministic: no LLM, no paid API, $0 third-party cost.
+Registry-anchored and deterministic: no LLM. The default configuration uses no paid API and has an expected third-party cost of $0. The optional Brave Search integration (off unless `BRAVE_API_KEY` is set) costs about $0.005 per company when enabled, and its spend is capped by `--max-cost-usd`.
 
 ## Install and run (one command)
 
@@ -41,7 +41,7 @@ Outputs:
 Useful flags: `--state-dir` (refresh baseline, default `state/`), `--previous envelopes.jsonl` (explicit previous snapshot),
 `--max-requests 2000`, `--deadline-minutes 42`, `--max-cost-usd 10`, `--workers 16`, `--jobs-window-days 45`, `--no-domain-guessing`, `--run-id`.
 
-Validation: the offline test suite and the 13-run test harness are kept outside this repository; their results are in [TEST_REPORT.md](TEST_REPORT.md). To check any run's output against the contract: `python tools/verify_run.py --input companies.jsonl --output out`.
+Offline tests: `python tests/test_agent.py` (40 tests, no network needed; also runs under pytest). To check any run's output against the contract: `python tools/verify_run.py --input companies.jsonl --output out`. The 13-run test harness is kept outside this repository; its results are in [TEST_REPORT.md](TEST_REPORT.md).
 
 ## Envelope
 
