@@ -575,10 +575,15 @@ def social_handle_matches(legal_name: str, url: str) -> bool:
     ('as', 'no', 'norge', 'official', ...) or other words of the legal name. So a sister's or parent's account
     ('sandneselektriske' on Sandnes Elektriske Service AS), a different company containing the name ('akerbp' for Aker AS),
     a subsidiary's account ('dipsfront' for DIPS AS) and group accounts ('nordictoyteamgroup') are all rejected."""
-    handle = re.sub(r"[^a-z0-9]", "", ascii_fold(urllib.parse.urlparse(url).path.rstrip("/").split("/")[-1]))
-    all_words = [t for t in tokens(legal_name)]
-    words = [t for t in core_tokens(legal_name) if t not in GENERIC and t not in {"stiftelsen", "stiftelse", "co"} and len(t) >= 3]
-    if not handle or not words or (len(words) == 1 and len(words[0]) < 4):
+    nordic = lambda text: text.replace("aa", "a").replace("oe", "o").replace("ae", "a")  # å/ø/æ are spelled several ways  # noqa: E731
+    handle = nordic(re.sub(r"[^a-z0-9]", "", ascii_fold(urllib.parse.urlparse(url).path.rstrip("/").split("/")[-1])))
+    all_words = [nordic(t) for t in tokens(legal_name)]
+    words = [nordic(t) for t in core_tokens(legal_name) if t not in GENERIC and t not in {"stiftelsen", "stiftelse", "co"} and len(t) >= 3]
+    if len(words) == 1 and len(words[0]) < 4:  # a very short name (e.g. ETA NORGE AS): require the whole legal name instead
+        words = [nordic(t) for t in core_tokens(legal_name)]
+        if len("".join(words)) < 6:
+            return False
+    if not handle or not words:
         return False
     rest = handle
     for w in words:
@@ -586,6 +591,7 @@ def social_handle_matches(legal_name: str, url: str) -> bool:
         if match is None:
             return False
         rest = rest.replace(match, "", 1)
+    rest = re.sub(r"\d+", "", rest)  # page IDs and numeric suffixes ('Krypton-Film-116363225096942', 'lillegrensensko1')
     return _strip_affixes(rest, HANDLE_AFFIXES | set(all_words))
 
 

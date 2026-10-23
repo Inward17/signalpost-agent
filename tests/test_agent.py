@@ -217,6 +217,13 @@ def test_social_handle_must_name_the_company():
         ("RINGO BERGEN AS", "https://facebook.com/ringonorge", False),                        # chain brand on a franchise site
         ("NORDIC TOY TEAM AS", "https://facebook.com/nordictoyteamgroup", False),             # group account
         ("WALL-IT AS", "https://facebook.com/wallitnorway", True),                            # harmless country affix
+        ("VÅLERENGA FOTBALL ELITE", "https://facebook.com/VaalerengaFotballElite", True),     # å written as "aa"
+        ("ETA NORGE AS", "https://linkedin.com/company/eta-norge-as", True),                  # short name: whole legal name required
+        ("ETA NORGE AS", "https://facebook.com/etaconsulting", False),
+        ("KRYPTON FILM AS", "https://facebook.com/Krypton-Film-116363225096942", True),       # page ID suffix
+        ("LILLE GRENSEN SKO AS", "https://instagram.com/lillegrensensko1", True),
+        ("DENTALIA AS", "https://facebook.com/dentalianydalen", False),                       # a branch/sister clinic
+        ("MASKE AS", "https://facebook.com/MaskegruppenNO", False),                           # the group
         ("ADVOKATENE CHRISTIAN WIIG & CO AS", "https://facebook.com/advokatchristianwiig", True),
         ("SANDNES ELEKTRISKE AS", "https://facebook.com/sandneselektriske", True),
     ]
