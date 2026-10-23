@@ -15,7 +15,7 @@ For each point it shows:
 | | Version 1 (audited) | Version 2.0 | Version 2.1 | Version 2.2 (current) |
 |---|---|---|---|---|
 | Agent code commit | `afc3f0ab3858b86889a07b7deff73bc1685edc21` | `a96e0f1d38e1db2c2323be8494de1f790ac855ab` | `1f2ad26cfdbbd270c252cc4fc15f01c3154cb0eb` | `70cfcf091640d4742684a036f988d08624d1d69d` |
-| Submission commit | `f49124a` | `7a3ade2` | `4c79c38` | the commit that contains this file, or a later documentation-only commit |
+| Submission commit | `f49124a` | `7a3ade2` | `4c79c38` | `3f5cd76` (or a later documentation-only commit) |
 | Offline tests | 40 | 47 | 51 | 56 |
 
 See every code change since version 1:
@@ -84,6 +84,7 @@ There was also no notion of a company owning only **part** of a site, so social 
   phone or address**. A brand title alone is never enough.
 - If the verified site is a **section of a larger site** (a path such as `/nordtrondelag`, not the root or a `/no` or `/home` landing path), its URL
   is published but **no social links, news or jobs** are taken from that domain.
+- Version 2.2 extends this to a subsidiary declared with its parent's **root** domain, where there is no path to detect (Part 3, point E).
 
 ### How it was made
 
@@ -118,10 +119,11 @@ if url in same_as or (core and (core in handle or handle in core and len(handle)
 - **PARASOLLFIX AS**: `Smartfootoriginals`, named after the website.
 - **WALL-IT AS**: an opaque YouTube channel ID.
 
-### The fix (v2.0, tightened in v2.1; see Part 2)
+### The fix (v2.0, tightened in v2.1 and v2.2; see Parts 2 and 3)
 
 Only an account whose **handle belongs to this company** is published. Domain-name and `sameAs` shortcuts are gone. Platform paths are rejected
 (Instagram `accounts`, `direct`, `explore`; Facebook `login`, `hashtag`, `pages`; X `hashtag`, `login`).
+Since v2.2 the company must also present the account as its own (Part 3, point F).
 
 **Tests:** `test_social_handle_must_name_the_company`, `test_social_normalisation_rejects_share_links`.
 
@@ -312,6 +314,8 @@ return bool(name) and bool(legal) and tokens(str(name)) == tokens(legal)   # exa
 
 **Tests:** `test_website_job_needs_exact_employer_not_a_similar_name`, `test_nav_job_with_similar_employer_name_is_not_published`.
 
+---
+
 # Part 3: version 2.2 (residual risks raised after version 2.1)
 
 > 1. Root-level parent websites. A subsidiary could use a parent domain without having a distinct URL path. Test that case explicitly.
@@ -337,7 +341,7 @@ declared site and carries its number. But `extract_site` then took everything on
 - JobPosting markup.
 
 ```python
-shared = section_of_larger_site(verdict["homepage"])    # v2.1: only a URL path could mark a shared site
+section = section_of_larger_site(verdict["homepage"])   # v2.1: only a URL path could mark a shared site
 ```
 
 ### The fix
@@ -550,7 +554,7 @@ version 2.2 points are checked by the tests, the replay and verifier rule R14 ra
 **5. Run the agent on the audited companies**
 
 ```bash
-python -c "import gzip,json; [print(json.loads(l)['organisation_number']) for l in gzip.open('profiles/profiles.jsonl.gz','rt',encoding='utf-8') if json.loads(l)['legal_identity']['legal_name'] in ('ASK SPEKEHUS AS','DNT NORD-TRØNDELAG','NORDIC TOY TEAM AS','PARASOLLFIX AS','WALL-IT AS')]" > audited.txt
+python -c "import gzip,json; [print(json.loads(l)['organisation_number']) for l in gzip.open('profiles/profiles.jsonl.gz','rt',encoding='utf-8') if json.loads(l)['legal_identity']['legal_name'] in ('ASK SPEKEHUS AS','DNT NORD-TRØNDELAG','NORDIC TOY TEAM AS','PARASOLLFIX AS','WALL-IT AS','VÅLERENGA FOTBALL ELITE')]" > audited.txt
 python run.py --input audited.txt --output out_check
 ```
 
@@ -559,7 +563,9 @@ Then open `out_check/report.html` and check:
 - DNT Nord-Trøndelag has its page but no social accounts;
 - Nordic Toy Team and Parasollfix have no brand-named accounts;
 - WALL-IT has no "Kontakt oss" news item;
-- no company shows a careers page.
+- no company shows a careers page;
+- Vålerenga Fotball Elite shows `vif-fotball.no` as its website but no description, social accounts or news from it. Its `official_website`
+  claim in `envelopes.jsonl` gives the reason in `site_owner` (the site is shared with the club Vålerenga Fotball).
 
 **6. Check one claim by hand.** In `out_check/envelopes.jsonl`, each claim lists `evidence_ids`. The matching evidence record gives the source URL,
 retrieval time, content hash and the exact text span behind the claim.
