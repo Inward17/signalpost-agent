@@ -25,6 +25,14 @@ def on_feed_origin(url: str) -> bool:
     return p.scheme == "https" and p.hostname == feed.hostname and port in (None, 443) and not p.username and not p.password
 
 
+def single_ad_url(ad: dict[str, Any]) -> str:
+    """Always the ad's own page on Arbeidsplassen, never a search or listing link the ad data may carry."""
+    link = str(ad.get("link") or "")
+    if re.fullmatch(r"https://arbeidsplassen\.nav\.no/stillinger/stilling/[0-9a-f-]{36}", link):
+        return link
+    return f"https://arbeidsplassen.nav.no/stillinger/stilling/{ad.get('uuid')}"
+
+
 def norm(name: str | None) -> str:
     return " ".join(re.findall(r"[^\W_]+", str(name or "").casefold()))  # unicode-aware: keeps ö, é, ü
 
@@ -122,7 +130,7 @@ def collect_jobs(client: Client, d: Dossier, index: JobIndex, per_company: int =
         locations = [", ".join(filter(None, [w.get("city") or w.get("municipal"), w.get("county")])) for w in ad.get("workLocations") or []]
         value = {
             "title": ad.get("title"), "job_title": ad.get("jobtitle") or None,
-            "url": ad.get("link") or f"https://arbeidsplassen.nav.no/stillinger/stilling/{ad.get('uuid')}",
+            "url": single_ad_url(ad),
             "published": (ad.get("published") or "")[:10] or None, "expires": (ad.get("expires") or "")[:10] or None,
             "application_due": ad.get("applicationDue"), "locations": [l for l in locations if l],
             "occupation": [c.get("level2") for c in ad.get("occupationCategories") or [] if c.get("level2")],

@@ -224,9 +224,12 @@ def assess_identity(d: Dossier, pages: list[Page], origin: str, domain: str) -> 
                 "reason": f"site states a different organisation number ({', '.join(sorted(other_orgs))}): parent, sister or unrelated entity"}
     if name_hit and contact_hit and (name_domain or declared):
         return {"verdict": "exact", "score": 0.97, "reason": "exact legal name plus registry phone/address on site", **contact_hit}
-    if declared and (name_hit or brand_hit):
-        hit = name_hit or brand_hit
-        return {"verdict": "exact", "score": 0.92, "reason": f"site declared by {origin.replace('_', ' ')} and its legal/brand name appears on page", **hit}
+    # A declared domain can still be a group or brand site: require the exact legal name (or the brand plus the registry's own
+    # phone/address), never a brand title alone.
+    if declared and (name_hit or (brand_hit and contact_hit)):
+        hit = name_hit or contact_hit
+        how = "its exact legal name appears on page" if name_hit else "its brand name plus the registry phone/address appear on page"
+        return {"verdict": "exact", "score": 0.92, "reason": f"site declared by {origin.replace('_', ' ')} and {how}", **hit}
     if org_reason:
         return {"verdict": "ambiguous", "score": 0.7, "reason": org_reason, **org_hit}
     if name_hit or brand_hit or contact_hit:
@@ -350,11 +353,12 @@ def normalize_social(url: str) -> dict[str, str] | None:
     first = parts[0].casefold()
     if platform == "linkedin" and (first not in ("company", "school", "showcase") or len(parts) < 2):
         return None
-    if platform == "facebook" and first in {"sharer", "sharer.php", "share.php", "dialog", "plugins", "policy.php", "privacy", "groups", "events", "profile.php", "tr"}:
+    if platform == "facebook" and first in {"sharer", "sharer.php", "share.php", "dialog", "plugins", "policy.php", "privacy", "groups", "events",
+                                             "profile.php", "tr", "login", "login.php", "home.php", "watch", "hashtag", "search", "help", "pages"}:
         return None
-    if platform == "instagram" and first in {"p", "reel", "reels", "stories", "explore"}:
+    if platform == "instagram" and first in {"p", "reel", "reels", "stories", "explore", "accounts", "direct", "about", "developer", "legal", "web", "tv"}:
         return None
-    if platform == "x" and (first in {"intent", "share", "home", "search", "i"} or len(parts) != 1):
+    if platform == "x" and (first in {"intent", "share", "home", "search", "i", "hashtag", "login"} or len(parts) != 1):
         return None
     if platform == "youtube" and not (first in ("channel", "user", "c") or first.startswith("@")):
         return None
@@ -373,12 +377,14 @@ def extract_site(client: Client, d: Dossier, verdict: dict[str, Any], pages: lis
     d.claim("official_website", "website", {"url": verdict["homepage"], "domain": domain, "identity_method": verdict["reason"],
             "identity_score": verdict["score"]}, [proof_ev], key="official_website", confidence=verdict["score"])
     d.section("website", "available", f"{verdict['homepage']} verified: {verdict['reason']}")
+    # A company whose site is a section of a larger site (e.g. a regional branch page on a national organisation's domain):
+    # the domain's footer, social accounts, news and vacancies belong to the site owner, not to this company.
+    section = section_of_larger_site(verdict["homepage"])
     links = verdict.get("links") or {}
-    for kind in ("news", "careers"):
-        if kind in links and client.remaining() > 50:
-            page = fetch_page(client, links[kind], kind, domain)
-            if page:
-                pages.append(page)
+    if "news" in links and not section and client.remaining() > 50:
+        page = fetch_page(client, links["news"], "news", domain)
+        if page:
+            pages.append(page)
 
     # description / brand
     meta = home.soup.select_one('meta[name="description"]') or home.soup.select_one('meta[property="og:description"]')
@@ -394,21 +400,24 @@ def extract_site(client: Client, d: Dossier, verdict: dict[str, Any], pages: lis
                 note="company's own description (promotional copy, not an independent claim)")
     site_name = home.soup.select_one('meta[property="og:site_name"]')
     brand = str(site_name.get("content") or "").strip() if site_name else ""
-    if brand and set(tokens(brand)) != set(tokens(d.entity.get("navn") or "")) and len(brand) < 80:
+    if brand and not section and set(tokens(brand)) != set(tokens(d.entity.get("navn") or "")) and len(brand) < 80:
         ev = d.add_evidence(home.resp, "company_owned", f'og:site_name = "{brand}"')
         d.claim("public_brand", "identity", brand, [ev], method="og:site_name")
 
-    # social profiles linked from the verified site (company-owned outbound links)
-    core = "".join(core_tokens(d.entity.get("navn") or ""))
-    label = domain.split(".")[0].replace("-", "")
+    if section:
+        d.section("social_profiles", "not_available", "company's site is a section of a larger site; accounts linked there belong to the site owner")
+        if d.values("registry_phone"):
+            d.section("contact", "available", "phone number registered in Enhetsregisteret")
+        return
+
+    # social profiles: linked from the verified site AND the handle names this company. Footer links often belong to a
+    # parent group, a brand, the web agency or the theme, so a link alone (or the site's sameAs markup) is not enough.
     socials: dict[str, tuple[dict[str, str], Page]] = {}
-    same_as: set[str] = set()
     for page in pages:
         for node in walk_jsonld(page.jsonld, ORG_TYPES):
             same = node.get("sameAs")
             for url in same if isinstance(same, list) else [same]:
                 if isinstance(url, str) and (s := normalize_social(url)):
-                    same_as.add(s["url"])
                     socials.setdefault(s["url"], (s, page))
         for a in page.soup.select("a[href]"):
             s = normalize_social(urllib.parse.urljoin(page.resp.final_url, str(a.get("href"))))
@@ -416,13 +425,13 @@ def extract_site(client: Client, d: Dossier, verdict: dict[str, Any], pages: lis
                 socials.setdefault(s["url"], (s, page))
     published = 0
     for url, (s, page) in socials.items():
-        handle = re.sub(r"[^a-z0-9]", "", ascii_fold(urllib.parse.urlparse(url).path.split("/")[-1]))
-        if url in same_as or (core and (core in handle or handle in core and len(handle) >= 4)) or (label and len(label) >= 4 and label in handle):
-            ev = d.add_evidence(page.resp, "company_owned", f"verified site links to {url}")
-            d.claim("social_profile", "social_profiles", s, [ev], key=f"social|{url}", method="outbound_link_from_verified_site")
+        if social_handle_matches(d.entity.get("navn") or "", url):
+            ev = d.add_evidence(page.resp, "company_owned", f"verified site links to {url}; handle matches the company name")
+            d.claim("social_profile", "social_profiles", s, [ev], key=f"social|{url}", method="outbound_link_with_matching_handle")
             published += 1
     d.section("social_profiles", "available" if published else "not_available",
-              f"{published} profile(s) linked from verified site" + (f"; {len(socials) - published} unmatched link(s) withheld" if len(socials) > published else ""))
+              f"{published} profile(s) linked from verified site with a handle matching the company" +
+              (f"; {len(socials) - published} link(s) whose handle does not name this company withheld" if len(socials) > published else ""))
 
     # contact points on the company's own domain
     emails: dict[str, Page] = {}
@@ -461,6 +470,8 @@ def extract_site(client: Client, d: Dossier, verdict: dict[str, Any], pages: lis
         if page.kind == "news":
             for t in page.soup.find_all("time")[:20]:
                 date = str(t.get("datetime") or "")[:10]
+                if not is_publish_date(t):
+                    continue  # "modified"/"updated" dates are not publication dates
                 container = t.find_parent(["article", "li", "div"])
                 link = container.find("a", href=True) if container else None
                 if not (re.match(r"\d{4}-\d{2}-\d{2}$", date) and link):
@@ -475,32 +486,92 @@ def extract_site(client: Client, d: Dossier, verdict: dict[str, Any], pages: lis
                         [ev], key=f"news|{url}", effective_date=date, method="news_page_time_element")
                 activity += 1
         for node in walk_jsonld(page.jsonld, {"JobPosting"}):
+            # a single vacancy of THIS company: titled, current, with its own URL, and naming this company as the employer
             title = str(node.get("title") or "").strip()
             expires = str(node.get("validThrough") or "")[:10] or None
-            if title and not (expires and expires < page.resp.retrieved_at[:10]):  # expired postings are not current hiring
-                ev = d.add_evidence(page.resp, "company_owned", f"JobPosting: {title}")
-                d.claim("job_posting", "jobs", {"title": title, "url": node.get("url") or page.resp.final_url,
-                        "published": str(node.get("datePosted") or "")[:10] or None, "expires": expires,
-                        "source": "company website"}, [ev], key=f"job|site|{node.get('url') or title}", method="jsonld_jobposting")
-                d.section("jobs", "available", "JobPosting markup on verified company site")
-    careers = next((p for p in pages if p.kind == "careers"), None)
-    if careers:
-        ev = d.add_evidence(careers.resp, "company_owned", f"careers page: {careers.soup.title.get_text(' ', strip=True)[:120] if careers.soup.title else careers.resp.final_url}")
-        d.claim("careers_page", "website", careers.resp.final_url, [ev])
+            url = node.get("url") if isinstance(node.get("url"), str) else None
+            if not title or not url or (expires and expires < page.resp.retrieved_at[:10]) or not hiring_org_is_company(node, d):
+                continue
+            ev = d.add_evidence(page.resp, "company_owned", f"JobPosting: {title}; hiringOrganization names this company")
+            d.claim("job_posting", "jobs", {"title": title, "url": url,
+                    "published": str(node.get("datePosted") or "")[:10] or None, "expires": expires,
+                    "source": "company website"}, [ev], key=f"job|site|{url}", method="jsonld_jobposting")
+            d.section("jobs", "available", "JobPosting markup on verified company site naming this company as employer")
+    # careers landing pages are not job ads and are not published
     if activity:
         d.section("public_activity", "available", f"{activity} dated item(s) from verified company site")
 
 
 NAV_WORDS = {"hjem", "home", "forside", "kontakt", "contact", "om oss", "about", "nyheter", "news", "aktuelt", "blogg", "blog", "les mer", "read more"}
+MENU_TITLE = re.compile(r"^(se|les|vis|see|view|read|load|show|alle|all|flere|more)\b.*\b(nyhet|nyheter|artikler|innlegg|news|posts|articles|mer|more|alle|all)\b"
+                        r"|^(les|read|see) (mer|more)$|^(flere|alle|more|all) (nyheter|news|artikler|posts)", re.I)
+POST_SECTIONS = ("nyhet", "news", "aktuelt", "artikkel", "artikler", "article", "blogg", "blog", "presse", "press", "innlegg", "post",
+                 "posts", "stories", "story", "media", "meldinger")
+NOT_POST_SEGMENTS = ("produkt", "product", "products", "shop", "butikk", "nettbutikk", "kategori", "category", "tag", "tags", "collections",
+                     "varer", "tjenester", "services", "kontakt", "contact", "om-oss", "about")
+SITE_ROOT_SEGMENTS = {"no", "nb", "nn", "en", "se", "dk", "home", "hjem", "forside", "start", "index.html", "index.php", "default.aspx", "main"}
+
+
+def section_of_larger_site(homepage: str) -> bool:
+    """True when the verified 'homepage' is a sub-path of a bigger site (e.g. dnt.no/nordtrondelag), not the site root or a
+    language/home landing path like /no/ or /home."""
+    path = urllib.parse.urlparse(homepage).path.strip("/")
+    return bool(path) and ascii_fold(path.split("/")[0]) not in SITE_ROOT_SEGMENTS
+
+
+def social_handle_matches(legal_name: str, url: str) -> bool:
+    """The account's handle must name this company: its joined distinctive name, its single distinctive word (4+ letters),
+    or at least two of its distinctive words. Brand, parent-group, agency or theme accounts and opaque IDs do not."""
+    handle = re.sub(r"[^a-z0-9]", "", ascii_fold(urllib.parse.urlparse(url).path.rstrip("/").split("/")[-1]))
+    words = [t for t in core_tokens(legal_name) if t not in GENERIC and t not in {"stiftelsen", "stiftelse", "co"} and len(t) >= 3]
+    if not handle or not words:
+        return False
+    if "".join(words) in handle:
+        return True
+    if len(words) == 1:
+        return len(words[0]) >= 4 and words[0] in handle
+    return sum(1 for w in words if w in handle) >= 2
+
+
+def is_publish_date(time_tag: Any) -> bool:
+    """Reject <time> values marked as modified/updated: those are not publication dates."""
+    markers = " ".join([str(time_tag.get("itemprop") or ""), " ".join(time_tag.get("class") or []),
+                        time_tag.get_text(" ", strip=True)[:40]])
+    before = time_tag.find_previous(string=True)
+    markers += " " + str(before or "")[-40:]
+    return not re.search(r"modif|updat|oppdat|endret|revid|sist endret", markers, re.I)
+
+
+def hiring_org_is_company(node: dict[str, Any], d: Dossier) -> bool:
+    """A JobPosting counts only when its hiringOrganization is this company (org number or exact legal name)."""
+    org = node.get("hiringOrganization")
+    blob = json.dumps(org, ensure_ascii=False) if org is not None else ""
+    if d.org in re.sub(r"\D", "", blob):
+        return True
+    name = org.get("name") if isinstance(org, dict) else org if isinstance(org, str) else ""
+    legal = d.entity.get("navn") or ""
+    return bool(name) and set(core_tokens(str(name))) == set(core_tokens(legal)) and bool(core_tokens(legal))
 
 
 def is_news_item(title: str, url: str, page_url: str) -> bool:
-    """An article, not a site page that happens to carry Article markup ('Hjem', 'Kontakt', the homepage itself)."""
+    """A dated post, not a site page that happens to carry Article markup ('Kontakt oss', a product page, the homepage)
+    or a menu label ('Se flere nyheter'). The URL must look like a post: a /YYYY/MM/ date path or a news/blog/press section."""
+    title = title.strip()
     path = urllib.parse.urlparse(url).path.strip("/")
-    if len(title.strip()) < 15 or title.strip().casefold() in NAV_WORDS or not path:
+    if len(title) < 15 or title.casefold() in NAV_WORDS or MENU_TITLE.search(title) or not path:
         return False
-    last = ascii_fold(path.split("/")[-1])
-    return not any(last == t or last.startswith(t + ".") for terms in PAGE_KINDS.values() for t in terms) and last.count("-") >= 1
+    segments = [ascii_fold(seg) for seg in path.split("/")]
+    last = segments[-1]
+    site_page_terms = [t for kind in ("contact", "about", "careers") for t in PAGE_KINDS[kind]]
+    if any(last == t or last.startswith(t + "-") or last.startswith(t + ".") for t in site_page_terms):
+        return False  # 'kontakt-oss', 'om-oss', 'karriere-...' are site pages
+    if re.search(r"(^|-)(test|sample|demo|hello-world|lorem|eksempel)(-|\d|$)", last):
+        return False  # theme/demo placeholder posts
+    if any(seg in NOT_POST_SEGMENTS or seg.startswith(NOT_POST_SEGMENTS) for seg in segments):
+        return False
+    dated = re.search(r"(^|/)(19|20)\d{2}/\d{1,2}(/|$)", path) is not None
+    in_section = any(seg.startswith(POST_SECTIONS) for seg in segments[:-1])
+    return (dated or in_section) and last.count("-") >= 1
 
 
 def research_website(client: Client, d: Dossier, allow_guessing: bool = True) -> None:

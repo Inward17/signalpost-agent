@@ -168,6 +168,97 @@ def test_group_page_declared_by_the_company_on_its_name_domain_is_exact():
     assert v["verdict"] == "ambiguous", v  # declared but not name-matching group site stays ambiguous
 
 
+def test_declared_brand_site_needs_org_number_or_exact_name():
+    # real case: ASK SPEKEHUS AS -> askgard.no, accepted on the brand title "ASK Spekehus" alone
+    d = dossier()
+    d.entity = {"navn": "ASK SPEKEHUS AS", "organisasjonsform": {"kode": "AS"}}
+    html = "<title>ASK Spekehus | ASK Gård</title><body><h1>ASK</h1><p>Spekemat fra gården.</p></body>"
+    v = assess_identity(d, [page(html, "https://askgard.no/")], "official_registry", "askgard.no")
+    assert v["verdict"] != "exact", v
+    html_named = html + "<footer>ASK Spekehus AS</footer>"
+    assert assess_identity(d, [page(html_named, "https://askgard.no/")], "official_registry", "askgard.no")["verdict"] == "exact"
+
+
+def test_section_of_larger_site_detection():
+    from signalpost.website import section_of_larger_site
+    assert section_of_larger_site("https://www.dnt.no/nordtrondelag")         # regional page on the national organisation's site
+    assert not section_of_larger_site("https://www.condelica.no/home")        # landing path of the company's own site
+    assert not section_of_larger_site("https://www.kunstsilo.no/no")
+    assert not section_of_larger_site("https://dips.com/")
+
+
+def test_section_site_publishes_no_parent_socials_news_or_jobs():
+    from signalpost.http import Client
+    from signalpost.website import extract_site
+    d = dossier()
+    html = ("<body><p>Sandnes Elektriske AS org.nr 810 034 882</p><footer><a href='https://facebook.com/parentgroup'>fb</a>"
+            "<a href='https://facebook.com/sandneselektriske'>fb2</a></footer></body>")
+    p = page(html, "https://www.parentgroup.no/sandnes")
+    verdict = {"verdict": "exact", "score": 1.0, "reason": "org number", "domain": "parentgroup.no", "homepage": "https://www.parentgroup.no/sandnes", "links": {}}
+    extract_site(Client(max_requests=0), d, verdict, [p])
+    assert not [c for c in d.claims if c["field"] in ("social_profile", "company_news", "job_posting")], d.claims
+
+
+def test_social_handle_must_name_the_company():
+    from signalpost.website import social_handle_matches
+    cases = [  # (legal name, url, expected) - the negatives are real accounts from the audited submission
+        ("NORDIC TOY TEAM AS", "https://facebook.com/Ringobamsen", False),
+        ("NORDIC TOY TEAM AS", "https://youtube.com/user/Ringokjeden", False),
+        ("PARASOLLFIX AS", "https://instagram.com/smartfootoriginals", False),
+        ("WALL-IT AS", "https://youtube.com/channel/UCRSZiaTAF2LY9RWUv4Qe-PA", False),
+        ("DIPS AS", "https://linkedin.com/company/dips-as", True),
+        ("STIFTELSEN DANVIK", "https://facebook.com/danvikfhs", True),
+        ("ADVOKATENE CHRISTIAN WIIG & CO AS", "https://facebook.com/advokatchristianwiig", True),
+        ("SANDNES ELEKTRISKE AS", "https://facebook.com/sandneselektriske", True),
+    ]
+    for name, url, expected in cases:
+        assert social_handle_matches(name, url) is expected, (name, url)
+    assert normalize_social("https://www.instagram.com/accounts/login/") is None
+    assert normalize_social("https://www.facebook.com/hashtag/norway") is None
+
+
+def test_news_must_be_a_real_dated_post():
+    from signalpost.website import is_news_item
+    assert not is_news_item("Kontakt oss | WALL-IT", "https://wall-it.no/kontakt-oss/", "https://wall-it.no/")   # real junk item
+    assert not is_news_item("Se flere nyheter fra oss", "https://x.no/nyheter/arkiv-side", "https://x.no/nyheter")
+    assert not is_news_item("Vår nye sofa i eik og lin", "https://x.no/produkter/sofa-eik-lin", "https://x.no/")
+    assert not is_news_item("Om bedriften og historien", "https://x.no/bedriften-og-historien", "https://x.no/")  # no post-like URL
+    assert not is_news_item("Renoveringsprosjekt hos Brødrene Aarseth", "https://fishtech-hygena.no/2018/08/30/blog-test-1/", "https://fishtech-hygena.no/")  # demo slug
+    assert is_news_item("Renoveringsprosjekt hos Brødrene Aarseth", "https://fishtech-hygena.no/2018/08/30/renovering-aarseth/", "https://fishtech-hygena.no/")
+    assert is_news_item("Blogginnlegg om nye rutiner", "https://x.no/blogg/blogginnlegg-om-rutiner", "https://x.no/")
+    assert is_news_item("7 enkle strømgrep før vinteren", "https://www.sodvin.no/privat/artikler/7-enkle-stromgrep", "https://www.sodvin.no/")
+
+
+def test_modified_dates_are_not_publish_dates():
+    from signalpost.website import is_publish_date
+    pg = page("<body><article><time datetime='2026-01-02' class='entry-date published'>2. jan</time></article>"
+              "<article>Oppdatert <time datetime='2026-03-04'>4. mars</time></article>"
+              "<article><time datetime='2026-05-06' itemprop='dateModified'>6. mai</time></article></body>")
+    flags = [is_publish_date(t) for t in pg.soup.find_all("time")]
+    assert flags == [True, False, False], flags
+
+
+def test_job_posting_must_name_this_company_and_careers_pages_are_not_jobs():
+    from signalpost.http import Client
+    from signalpost.jobs import single_ad_url
+    from signalpost.website import extract_site
+    jobs = [{"@type": "JobPosting", "title": "Elektriker", "url": "https://sandneselektriske.no/jobb/elektriker",
+             "hiringOrganization": {"@type": "Organization", "name": "Sandnes Elektriske AS"}},
+            {"@type": "JobPosting", "title": "Konsernkontroller", "url": "https://sandneselektriske.no/jobb/kontroller",
+             "hiringOrganization": {"@type": "Organization", "name": "Elgruppen Holding AS"}}]   # the parent's vacancy
+    html = "<body><footer>Sandnes Elektriske AS org.nr 810 034 882</footer><script type='application/ld+json'>" + json.dumps(jobs) + "</script></body>"
+    d = dossier()
+    p = page(html, "https://sandneselektriske.no/")
+    careers = parse_page("careers", Response("https://sandneselektriske.no/karriere", "https://sandneselektriske.no/karriere", 200, b"<title>Karriere</title>", "text/html"))
+    verdict = {"verdict": "exact", "score": 1.0, "reason": "org number", "domain": "sandneselektriske.no", "homepage": "https://sandneselektriske.no/", "links": {}}
+    extract_site(Client(max_requests=0), d, verdict, [p, careers])
+    titles = [c["value"]["title"] for c in d.claims if c["field"] == "job_posting"]
+    assert titles == ["Elektriker"], titles
+    assert not [c for c in d.claims if c["field"] == "careers_page"]
+    search = {"uuid": "b9aa6260-4ed4-481f-ab32-af5996fe8e55", "link": "https://arbeidsplassen.nav.no/stillinger?q=elektriker"}
+    assert single_ad_url(search) == "https://arbeidsplassen.nav.no/stillinger/stilling/b9aa6260-4ed4-481f-ab32-af5996fe8e55"
+
+
 def test_domain_guesses_skip_generic_names():
     assert domain_guesses("HOLDING AS") == []
     assert "sandneselektriske.no" in domain_guesses("SANDNES ELEKTRISKE AS")
