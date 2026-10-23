@@ -10,7 +10,7 @@
 | Enhetsregisteret `underenheter?overordnetEnhet={org}` | Open REST API | Registered workplaces (subunits) and their addresses | NLOD 2.0 | Parent organisation number | 1 / company |
 | Enhetsregisteret `oppdateringer/enheter?organisasjonsnummer={org}&includeChanges=true` | Open REST API | Dated official change log (address, name, website, employees, filings, …) | NLOD 2.0 | Exact organisation number | 1 / company |
 | NAV Arbeidsplassen job-vacancy feed `pam-stilling-feed.nav.no` | Official public feed, public token from `/api/publicToken` (or `NAV_FEED_TOKEN`) | Active job postings | NAV public feed terms; ads are public job advertisements | `employer.orgnr` must equal the company or one of its registered subunits; without orgnr only an exact registered-legal-name match is accepted | ~100 shared pages per run + 1 per candidate ad |
-| Company-owned website | Plain HTTP GET, robots.txt honoured, ≤ ~8 pages per site | Official website, description, brand, company-linked social profiles, generic contact points, dated news, careers page, JobPosting markup | Company-published content; only short spans are stored as evidence | See identity gate below | ≤ 8 / candidate |
+| Company-owned website | Plain HTTP GET, robots.txt honoured, ≤ ~8 pages per site | Official website, description, brand, company-linked social profiles, generic contact points, dated news posts, JobPosting markup naming the company | Company-published content; only short spans are stored as evidence | See identity gate below | ≤ 8 / candidate |
 | DNS | System resolver | Checks whether a name-derived domain exists before any HTTP request | — | Candidate generation only | not HTTP |
 | Brave Search API (optional, off unless `BRAVE_API_KEY` is set) | Licensed API | Candidate domains only — results are never evidence and are not stored | Brave API terms | Candidate must pass the same identity gate | 1 / company |
 
@@ -27,11 +27,15 @@ or contact-email domain for an orgnr-matched ad, name-derived domain, optional s
 2. **Rejected** — the site states a *different* labelled organisation number / VAT id → parent, sister, franchise or unrelated entity. This overrides every name signal.
 3. **Rejected** — parked / for-sale / placeholder page.
 4. **Exact (0.97)** — full registered legal name (legal-form suffix in capitals) *and* the registry phone number or registered street address + postcode appear on the site, on a name-matching or officially declared domain.
-5. **Exact (0.92)** — the site was declared by an official source (registry `hjemmeside`, or the employer homepage of a NAV ad whose `employer.orgnr` equals the company; not a contact e-mail domain) *and* the legal or brand name appears on the page. A matching phone alone is not enough (shared phones point to related companies).
+5. **Exact (0.92)** — the site was declared by an official source (registry `hjemmeside`, or the employer homepage of a NAV ad whose `employer.orgnr` equals the company; not a contact e-mail domain) *and* the exact legal name appears on the page, or the brand name plus the registry's own phone or address. A declared domain can be a group or brand site, so a brand title alone is never enough. A matching phone alone is not enough (shared phones point to related companies).
 6. Anything else with a name hit → `ambiguous`, recorded with the reason, **not published**.
 
-Social profiles are published only when linked from the verified site *and* the handle matches the legal name/domain or the profile
-is listed in the site's own JSON-LD `sameAs`. Unmatched outbound links are counted but withheld (e.g. a franchise linking to the chain).
+Social profiles are published only when linked from the verified site *and* the handle contains the company's distinctive name (footer links
+often belong to a parent group, a brand, the web agency or the theme). Platform paths (`accounts`, `login`, `hashtag`, `pages`) and opaque channel IDs are rejected.
+When the company's site is only a section of a larger site (for example a regional page on a national organisation's domain), no social accounts,
+news or jobs are taken from that domain. News must be a dated post (date path or news/blog/press section), never a contact, product or shop page,
+a menu label or a demo post, and "modified"/"updated" dates are not publish dates. Careers landing pages are not published; website JobPosting
+markup counts only when it names this company as employer, and NAV jobs always link to the single ad.
 
 ## Personal data
 

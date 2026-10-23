@@ -5,9 +5,9 @@ Evidence-backed research of Norwegian companies from an organisation number
 | | |
 |---|---|
 | Challenge | Signalpost (Builderr): build an agent that finds company information |
-| Agent code version | commit `afc3f0ab3858b86889a07b7deff73bc1685edc21` (code freeze; all results in this report were produced at this commit) |
+| Agent code version | commit `a96e0f1d38e1db2c2323be8494de1f790ac855ab` (version 2, after Builderr's audit of version 1; all results in this report were produced at this commit) |
 | Report date | 16 October 2026 |
-| Code size | about 1,950 lines of agent code, 330 lines of tooling and a 590-line offline test suite in the repository; an 82-line run harness was used for validation |
+| Code size | about 2,030 lines of agent code, 340 lines of tooling and a 660-line offline test suite in the repository; an 82-line run harness was used for validation |
 | Third-party cost per run | $0.00 (no LLM, no paid API in the default configuration) |
 
 ## 1. Executive summary
@@ -25,13 +25,13 @@ The organisation number is the only identity anchor, and a website is published 
 
 **Headline results at the frozen commit:**
 
-- 13 of 13 verification runs (1,302 company results) pass all 13 contract rule groups.
+- 13 of 13 verification runs (1,302 company results) pass all 14 contract rule groups.
 - 1,400 published financial values, re-fetched live from Regnskapsregisteret, match the official filing exactly (field, statement type, period, currency, value).
-- 142 published websites, all audited by hand: zero wrong-company publications.
+- 137 published websites, all audited by hand: zero wrong-company publications.
 - A 100-company run uses about 820–890 of the 2,000-request budget and takes 7–8 minutes, against a 45-minute limit.
 - The refresh is idempotent: rerunning on an unchanged snapshot produces zero changes.
-- 40 offline regression tests pass, including the network-security boundary cases.
-- A deduplicated dataset of 1,000 company profiles (46,902 claims) is built from the verified runs.
+- 47 offline regression tests pass, including the network-security boundary cases and the cases from Builderr's audit.
+- A deduplicated dataset of 1,000 company profiles (46,848 claims) is built from the verified runs.
 
 ## 2. The challenge and its requirements
 
@@ -92,14 +92,14 @@ Modules:
 | `signalpost/http.py` | 298 | the only outbound HTTP path: budgets, deadline reserve, SSRF guard, IP pinning, hop-by-hop redirects, robots.txt |
 | `signalpost/dossier.py` | 109 | per-company store of claims, evidence and section states |
 | `signalpost/registry.py` | 268 | Brønnøysund collectors: entity, accounts, roles, subunits, change log |
-| `signalpost/jobs.py` | 147 | NAV vacancy feed index and orgnr-verified job matching |
-| `signalpost/website.py` | 566 | website discovery, identity gate, company-owned fact extraction |
+| `signalpost/jobs.py` | 155 | NAV vacancy feed index and orgnr-verified job matching |
+| `signalpost/website.py` | 639 | website discovery, identity gate, company-owned fact extraction |
 | `signalpost/envelope.py` | 229 | envelope assembly, refresh comparison, cited synthesis |
 | `signalpost/report.py` | 79 | self-contained HTML viewer |
-| `tools/verify_run.py` | 183 | contract verifier (13 rule groups) with live financial spot-checks |
+| `tools/verify_run.py` | 195 | contract verifier (14 rule groups) with live financial spot-checks |
 | `tools/purge.py` | 78 | erasure, correction and retention operations |
 | `tools/build_dataset.py` | 69 | deduplicated 1,000-profile dataset from verified runs |
-| `tests/test_agent.py` | 590 | 40 offline regression tests |
+| `tests/test_agent.py` | 662 | 47 offline regression tests |
 
 ## 5. Technology stack
 
@@ -131,7 +131,7 @@ All dependencies are pinned in `requirements.txt`. The transitive packages (`req
 | Enhetsregisteret subunits API | open REST API | registered workplaces | NLOD 2.0 | parent organisation number |
 | Enhetsregisteret updates API | open REST API (`includeChanges=true`) | dated, field-level official changes | NLOD 2.0 | exact organisation number |
 | NAV Arbeidsplassen vacancy feed | official feed; public token fetched at run time | active job postings | NAV public feed terms | `employer.orgnr` equals the company or one of its subunits |
-| Company-owned websites | plain HTTP GET, robots.txt honoured | website, description, brand, social links, contact points, dated news, careers page, JobPosting markup | company-published content; only short spans stored | identity gate (section 8) |
+| Company-owned websites | plain HTTP GET, robots.txt honoured | website, description, brand, company-named social links, contact points, dated news posts, JobPosting markup naming the company | company-published content; only short spans stored | identity gate (section 8) |
 | Brave Search API (optional, off by default) | licensed API | candidate domains only; never evidence | Brave API terms | candidate must pass the identity gate |
 
 **Deliberately not used:** LinkedIn, Meta, Glassdoor and Indeed scraping; Google or Bing result pages; Proff, Purehelp and 1881 page scraping; Brønnøysund
@@ -182,14 +182,18 @@ At most six domains are tried per company.
 4. A parked, for-sale or placeholder page → **rejected**.
 5. The exact legal name, with the legal-form suffix in capitals, plus the registry's own phone number or street address and postcode, on a
    name-matching or declared domain → exact (0.97).
-6. A declared site whose page carries the company's legal or brand name → exact (0.92). A matching phone number alone is not enough.
+6. A declared site whose page carries the company's exact legal name, or its brand name plus the registry's own phone or address → exact (0.92).
+   A brand title alone is not enough (a declared domain can be a group or brand site), and neither is a matching phone number alone.
 7. Anything weaker → **ambiguous**, recorded with the candidates checked, and nothing published.
 
 Additional safeguards:
 - A domain that merely matches the company name proves nothing, because same-name companies exist.
 - A NAV contact e-mail domain is never treated as declared.
 - A declared candidate that redirects to a different registered domain loses its declared status.
-- Social profiles are published only when linked from the verified site and either matching the company's name or domain, or listed in its JSON-LD `sameAs`.
+- Social profiles are published only when linked from the verified site and the handle contains the company's distinctive name; platform paths
+  and opaque channel IDs are rejected.
+- When the company's site is a section of a larger site (for example `dnt.no/nordtrondelag`), the URL is published but no social accounts, news
+  or jobs are taken from that domain.
 
 **Real wrong-company cases found during testing and closed:**
 
@@ -216,10 +220,11 @@ its subunits. If the ad carries no orgnr, the employer name must equal the regis
 
 **Company-owned facts.** From a verified site the agent extracts:
 - the description (meta tag or first substantive paragraph, labelled as company copy) and the brand name;
-- linked social profiles;
+- linked social profiles whose handle names the company;
 - generic mailboxes on the company's own domain and phone numbers from `tel:` links;
-- dated news from JSON-LD articles and `<time>` elements (navigation pages filtered out);
-- the careers page, and current (unexpired) JobPosting markup.
+- dated news posts from JSON-LD articles and `<time>` elements: the URL must look like a post (date path or news/blog/press section); contact,
+  product and shop pages, menu labels and demo posts are rejected, and "modified"/"updated" dates are never used as publish dates;
+- current (unexpired) JobPosting markup that names this company as employer. Careers landing pages are not published.
 
 **Refresh.** Unchanged claims keep their first-observed time.
 - **Changed values** produce typed changes (for example `changed_registered_employees`, `changed_description`), with the previous evidence embedded.
@@ -270,11 +275,11 @@ This section is an engineering description, not a legal opinion.
 
 Testing used five layers.
 
-**1. Offline regression tests (40).** These cover the identity gate (18), discovery and extraction (4), network security (9), budgets and states (4),
+**1. Offline regression tests (47).** These cover the identity gate (19), discovery and extraction (10), network security (9), budgets and states (4),
 refresh (3), and input and data rules (2), as listed in Appendix A. Network tests use stand-ins for DNS and HTTP, so they run anywhere without network access. The test that guards
 credential stripping was mutation-checked: disabling the protection makes it fail.
 
-**2. Contract verifier.** `tools/verify_run.py` checks every envelope of a run against 13 rule groups:
+**2. Contract verifier.** `tools/verify_run.py` checks every envelope of a run against 14 rule groups:
 
 | ID | Rule | Check |
 |---|---|---|
@@ -290,6 +295,7 @@ credential stripping was mutation-checked: disabling the protection makes it fai
 | R10 | personal data | no birth dates; no sole-trader phone numbers |
 | R11 | refresh provenance | every changed claim carries its old evidence |
 | R12 | limits | requests, runtime and cost within the run's limits |
+| R14 | Builderr audit rules | social handles name the company; news items are dated posts; no careers landing pages; NAV jobs link to a single ad |
 | R13 | no fabricated financials | 5 companies per run re-fetched live; each value must equal the live record for the same field, statement, period end and currency (a 1 NOK corruption is detected) |
 
 **3. Thirteen-run suite.** Thirteen batches of 100 companies each, chosen to stress different rules:
@@ -311,7 +317,7 @@ credential stripping was mutation-checked: disabling the protection makes it fai
 **4. Manual identity audit.** After every suite, all published websites were listed by proof type and inspected by hand. This audit found the SHARK AS and
 NORLANDIA cases, which no automated rule had flagged.
 
-**5. External review.** Four independent review rounds of the source code were checked finding by finding, with each claim reproduced before fixing.
+**5. External review and Builderr's audit.** Four independent review rounds of the source code were checked finding by finding, with each claim reproduced before fixing.
 They led to the IP pinning, hop-by-hop redirects, credential stripping, HTTPS pinning for NAV, the ownership-proof rule, the stricter financial verifier,
 the enforced cost cap and the input-parsing fixes.
 
@@ -321,19 +327,19 @@ A clean-clone check (new folder, empty virtual environment, only the declared in
 
 | Run | Envelopes | Claims | Websites | Jobs | Requests | Runtime | Result |
 |---|---|---|---|---|---|---|---|
-| R01 | 100 | 4,376 | 9 | 0 | 823 | 472 s | pass |
-| R02 | 100 | 4,569 | 8 | 1 | 894 | 407 s | pass |
-| R03 | 100 | 4,417 | 8 | 0 | 864 | 425 s | pass |
-| R04 | 100 | 4,546 | 11 | 0 | 816 | 413 s | pass |
-| R05 | 102 | 4,507 | 12 | 0 | 880 | 407 s | pass (2 invalid inputs get failed envelopes) |
-| R06 | 100 | 5,512 | 31 | 0 | 921 | 502 s | pass |
-| R07 | 100 | 5,533 | 43 | 2 | 1,058 | 429 s | pass |
-| R08 | 100 | 4,189 | 0 | 0 | 300 | 39 s | pass (cap held exactly; 300 sections blocked with reason) |
-| R09 | 100 | 4,306 | 0 | 0 | 524 | 136 s | pass (finished within the 180 s limit) |
-| R10 | 100 | 4,376 | 9 | 0 | 828 | 470 s | pass (0 false changes) |
-| R11 | 100 | 4,451 | 5 | 1 | 891 | 428 s | pass |
-| R12 | 100 | 4,589 | 8 | 0 | 898 | 453 s | pass |
-| R13 | 100 | 4,402 | 7 | 0 | 822 | 452 s | pass |
+| R01 | 100 | 4,376 | 8 | 0 | 832 | 470 s | pass |
+| R02 | 100 | 4,563 | 7 | 1 | 892 | 407 s | pass |
+| R03 | 100 | 4,416 | 8 | 0 | 867 | 429 s | pass |
+| R04 | 100 | 4,541 | 11 | 0 | 815 | 405 s | pass |
+| R05 | 102 | 4,500 | 12 | 1 | 883 | 413 s | pass (2 invalid inputs get failed envelopes) |
+| R06 | 100 | 5,512 | 32 | 1 | 925 | 508 s | pass |
+| R07 | 100 | 5,505 | 40 | 4 | 1,045 | 422 s | pass |
+| R08 | 100 | 4,189 | 0 | 0 | 300 | 40 s | pass (cap held exactly; 300 sections blocked with reason) |
+| R09 | 100 | 4,305 | 0 | 0 | 523 | 135 s | pass (finished within the 180 s limit) |
+| R10 | 100 | 4,376 | 8 | 0 | 831 | 463 s | pass (0 false changes) |
+| R11 | 100 | 4,451 | 5 | 0 | 885 | 426 s | pass |
+| R12 | 100 | 4,583 | 7 | 0 | 899 | 457 s | pass |
+| R13 | 100 | 4,401 | 7 | 0 | 819 | 441 s | pass |
 
 Coverage per section across the seven random batches, as the number of companies (out of 100) with `available`:
 
@@ -346,23 +352,23 @@ Coverage per section across the seven random batches, as the number of companies
 | Public activity | 100 |
 | Contact | 28–39 |
 | Website | 5–11 |
-| Social profiles | 3–7 |
+| Social profiles | 3–6 |
 | Jobs | 0–1 |
 
-On employer-heavy and website-heavy batches, website coverage rises to 31–43 per 100.
+On employer-heavy and website-heavy batches, website coverage rises to 32–40 per 100.
 
-**Source yield** (smoke run): Brønnøysund 501 requests → 4,337 claims (8.7 per request); company websites 228 requests → 39 claims (0.17 per request);
-NAV feed 94 requests → 0 claims in that batch.
+**Source yield** (smoke run): Brønnøysund 501 requests → 4,339 claims; company websites 237 requests → 37 claims; NAV feed 94 requests → 0 claims in that batch.
 
-**Identity audit:** 142 unique websites were published across the suite:
-- 31 on sites the company declared to an official source;
-- 35 with the number in the site's own identity block;
-- 55 with the exact legal name plus the registry's own phone or address;
-- 21 declared sites carrying the company's name.
+**Identity audit:** 137 unique websites were published across the suite:
+- 30 with the organisation number on sites the company declared to an official source;
+- 36 with the number in the site's own identity block;
+- 56 with the exact legal name plus the registry's own phone or address;
+- 7 declared sites carrying the exact legal name;
+- 8 declared sites carrying the brand name plus the registry's own phone or address.
 
 None is a wrong-company match.
 
-**Dataset:** `profiles/profiles.jsonl.gz` holds 1,000 unique companies (46,902 claims and as many evidence records), merged only from runs that passed verification.
+**Dataset:** `profiles/profiles.jsonl.gz` holds 1,000 unique companies (46,848 claims and as many evidence records), merged only from runs that passed verification.
 The manifest records the commit and the content SHA-256. The agent never reads this dataset when researching a batch.
 
 ## 14. Defects found and fixed
@@ -381,6 +387,7 @@ The manifest records the commit and the content SHA-256. The agent never reads t
 | 15 | cost ceiling only reported, not enforced | contract | external review |
 | 16 | HTTP 429 caused a false removal; refusals mislabelled | false change / state | refresh run and audits |
 | 17 | inconsistent section states, incomplete fallback envelopes, junk news, mislabelled fallback evidence | contract / quality | verifier |
+| 18 | brand-only proof for declared group/brand sites; parent-domain socials, news and jobs; brand-named social handles; contact pages and demo posts as news; careers landing pages as jobs | wrong company (facts) | **Builderr audit of version 1** |
 
 Every defect has a regression test or a dedicated suite run.
 
@@ -428,7 +435,7 @@ python tests/test_agent.py
 The 13-run test harness was used for validation and is kept outside the submitted repository; its results are reported in sections 12 and 13 and in `TEST_REPORT.md`.
 
 **What gets submitted:** the git repository (agent code, docs, the smoke test with its refresh run, the 1,000-profile dataset, the offline tests and the
-tools, including the contract verifier). The run harness, raw run outputs, the local virtual environment and development scratch files are excluded. The agent code is frozen at `afc3f0a`;
+tools, including the contract verifier). The run harness, raw run outputs, the local virtual environment and development scratch files are excluded. The agent code (version 2) is at `a96e0f1`;
 later commits change documentation and data only.
 
 ## Appendix A: Offline test inventory
@@ -437,8 +444,8 @@ These tests are in `tests/test_agent.py` and were run against the frozen code.
 
 | Area | Tests |
 |---|---|
-| Identity gate | `test_orgnr_on_page_is_exact`, `test_conflicting_orgnr_rejected_even_with_name`, `test_parked_domain_rejected`, `test_name_only_on_unrelated_domain_is_not_published`, `test_name_plus_phone_is_exact`, `test_brand_without_corroboration_on_guessed_domain_is_ambiguous`, `test_english_as_does_not_satisfy_legal_suffix`, `test_same_name_other_company_on_matching_domain_is_not_exact`, `test_shared_phone_on_registry_site_is_not_exact`, `test_orgnr_on_group_listing_page_is_ambiguous`, `test_orgnr_only_in_hidden_chain_data_is_not_exact`, `test_orgnr_validity`, `test_orgnr_on_third_party_page_is_not_official_website`, `test_orgnr_in_own_footer_on_brand_domain_is_exact`, `test_name_matching_domain_with_orgnr_only_in_article_is_ambiguous`, `test_recruiter_email_domain_is_not_declared_website`, `test_group_page_on_undeclared_name_matching_domain_is_ambiguous`, `test_group_page_declared_by_the_company_on_its_name_domain_is_exact` |
-| Discovery and extraction | `test_declared_site_redirecting_to_other_domain_loses_trust`, `test_domain_guesses_skip_generic_names`, `test_social_normalisation_rejects_share_links`, `test_site_pages_are_not_news` |
+| Identity gate | `test_orgnr_on_page_is_exact`, `test_conflicting_orgnr_rejected_even_with_name`, `test_parked_domain_rejected`, `test_name_only_on_unrelated_domain_is_not_published`, `test_name_plus_phone_is_exact`, `test_brand_without_corroboration_on_guessed_domain_is_ambiguous`, `test_english_as_does_not_satisfy_legal_suffix`, `test_same_name_other_company_on_matching_domain_is_not_exact`, `test_shared_phone_on_registry_site_is_not_exact`, `test_orgnr_on_group_listing_page_is_ambiguous`, `test_orgnr_only_in_hidden_chain_data_is_not_exact`, `test_orgnr_validity`, `test_orgnr_on_third_party_page_is_not_official_website`, `test_orgnr_in_own_footer_on_brand_domain_is_exact`, `test_name_matching_domain_with_orgnr_only_in_article_is_ambiguous`, `test_recruiter_email_domain_is_not_declared_website`, `test_group_page_on_undeclared_name_matching_domain_is_ambiguous`, `test_group_page_declared_by_the_company_on_its_name_domain_is_exact`, `test_declared_brand_site_needs_org_number_or_exact_name` |
+| Discovery and extraction | `test_declared_site_redirecting_to_other_domain_loses_trust`, `test_domain_guesses_skip_generic_names`, `test_social_normalisation_rejects_share_links`, `test_site_pages_are_not_news`, `test_section_of_larger_site_detection`, `test_section_site_publishes_no_parent_socials_news_or_jobs`, `test_social_handle_must_name_the_company`, `test_news_must_be_a_real_dated_post`, `test_modified_dates_are_not_publish_dates`, `test_job_posting_must_name_this_company_and_careers_pages_are_not_jobs` |
 | Network security | `test_ssrf_guard`, `test_redirect_to_loopback_metadata_or_private_host_blocked`, `test_credentials_never_cross_origin_on_redirect`, `test_nav_pagination_https_downgrade_rejected`, `test_redirect_chain_is_bounded`, `test_nav_pagination_never_leaves_feed_host`, `test_dns_rebinding_cannot_reach_private_address`, `test_oversized_response_not_accepted`, `test_page_text_is_data_not_instructions` |
 | Budgets and states | `test_deadline_reserve_blocks_new_requests`, `test_cost_ceiling_enforced_before_paid_call`, `test_site_refusing_requests_is_blocked_not_absent`, `test_unrelated_dotcom_bot_wall_is_not_reported_as_blocked` |
 | Refresh | `test_refresh_idempotent_change_and_stale_carry`, `test_rate_limited_site_keeps_site_facts_stale_not_removed`, `test_registry_change_summary_drops_housekeeping` |

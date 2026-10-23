@@ -2,8 +2,8 @@
   "run": {
     "run_id": "R10",
     "agent_version": "1.0.0",
-    "started_at": "2026-10-16T14:19:03Z",
-    "completed_at": "2026-10-16T14:26:52Z",
+    "started_at": "2026-10-23T05:57:56Z",
+    "completed_at": "2026-10-23T06:05:39Z",
     "terminal_status": "completed"
   },
   "input_rows": 100,
@@ -28,16 +28,15 @@
     },
     "website": {
       "not_available": 69,
-      "blocked": 3,
-      "ambiguous": 19,
+      "blocked": 2,
+      "ambiguous": 20,
       "available": 8,
       "failed": 1
     },
     "social_profiles": {
-      "not_available": 94,
+      "not_available": 95,
       "available": 4,
-      "failed": 1,
-      "blocked": 1
+      "failed": 1
     },
     "contact": {
       "available": 28,
@@ -52,49 +51,49 @@
   },
   "claims_total": 4376,
   "changes_total": 0,
-  "runtime_s": 469.9,
+  "runtime_s": 462.8,
   "operations": {
-    "requests": 828,
+    "requests": 831,
     "max_requests": 2000,
-    "bytes": 54726045,
+    "bytes": 54575189,
     "requests_by_host_top": {
       "data.brreg.no": 501,
-      "pam-stilling-feed.nav.no": 94,
+      "pam-stilling-feed.nav.no": 93,
       "www.pfve.com": 10,
       "showdevida.no": 8,
       "flexipod.no": 6,
       "krimat.com": 6,
       "sollifjellet.no": 5,
+      "www.hugedomains.com": 5,
       "www.cwsca.com": 5,
-      "vizer.no": 5,
       "www.tool.com": 5,
       "www.nht-co.com": 5,
       "thi-holding.com": 4,
-      "gjoviktannlegekontor.no": 4,
       "vora.no": 4,
-      "www.gjoviktannlegekontor.no": 4
+      "www.lonepinecapital.com": 4,
+      "blueline.com": 4
     },
-    "p50_ms": 2076,
-    "p95_ms": 3289,
+    "p50_ms": 818,
+    "p95_ms": 8507,
     "third_party_cost_usd": 0.0,
-    "nav_feed_pages": 93,
-    "nav_feed_entries": 29649
+    "nav_feed_pages": 92,
+    "nav_feed_entries": 29206
   },
   "source_yield": {
     "brreg_registry": {
       "requests": 501,
-      "claims": 4337,
+      "claims": 4339,
       "companies": 100,
       "claims_per_request": 8.66
     },
     "company_websites": {
-      "requests": 233,
-      "claims": 39,
-      "companies": 9,
-      "claims_per_request": 0.17
+      "requests": 237,
+      "claims": 37,
+      "companies": 8,
+      "claims_per_request": 0.16
     },
     "nav_job_feed": {
-      "requests": 94,
+      "requests": 93,
       "claims": 0,
       "companies": 0,
       "claims_per_request": 0.0

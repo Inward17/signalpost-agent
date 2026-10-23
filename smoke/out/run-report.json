@@ -2,8 +2,8 @@
   "run": {
     "run_id": "R01",
     "agent_version": "1.0.0",
-    "started_at": "2026-10-16T14:11:10Z",
-    "completed_at": "2026-10-16T14:19:02Z",
+    "started_at": "2026-10-23T05:50:06Z",
+    "completed_at": "2026-10-23T05:57:55Z",
     "terminal_status": "completed"
   },
   "input_rows": 100,
@@ -29,8 +29,8 @@
     "website": {
       "not_available": 69,
       "blocked": 2,
-      "ambiguous": 19,
-      "available": 9,
+      "ambiguous": 20,
+      "available": 8,
       "failed": 1
     },
     "social_profiles": {
@@ -51,11 +51,11 @@
   },
   "claims_total": 4376,
   "changes_total": 0,
-  "runtime_s": 472.4,
+  "runtime_s": 470.1,
   "operations": {
-    "requests": 823,
+    "requests": 832,
     "max_requests": 2000,
-    "bytes": 55286142,
+    "bytes": 54566141,
     "requests_by_host_top": {
       "data.brreg.no": 501,
       "pam-stilling-feed.nav.no": 94,
@@ -64,8 +64,8 @@
       "flexipod.no": 6,
       "krimat.com": 6,
       "sollifjellet.no": 5,
+      "www.hugedomains.com": 5,
       "www.cwsca.com": 5,
-      "vizer.no": 5,
       "www.tool.com": 5,
       "www.nht-co.com": 5,
       "thi-holding.com": 4,
@@ -73,24 +73,24 @@
       "www.lonepinecapital.com": 4,
       "blueline.com": 4
     },
-    "p50_ms": 2066,
-    "p95_ms": 3309,
+    "p50_ms": 2033,
+    "p95_ms": 3233,
     "third_party_cost_usd": 0.0,
     "nav_feed_pages": 93,
-    "nav_feed_entries": 29647
+    "nav_feed_entries": 29206
   },
   "source_yield": {
     "brreg_registry": {
       "requests": 501,
-      "claims": 4337,
+      "claims": 4339,
       "companies": 100,
       "claims_per_request": 8.66
     },
     "company_websites": {
-      "requests": 228,
-      "claims": 39,
-      "companies": 9,
-      "claims_per_request": 0.17
+      "requests": 237,
+      "claims": 37,
+      "companies": 8,
+      "claims_per_request": 0.16
     },
     "nav_job_feed": {
       "requests": 94,

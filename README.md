@@ -41,7 +41,7 @@ Outputs:
 Useful flags: `--state-dir` (refresh baseline, default `state/`), `--previous envelopes.jsonl` (explicit previous snapshot),
 `--max-requests 2000`, `--deadline-minutes 42`, `--max-cost-usd 10`, `--workers 16`, `--jobs-window-days 45`, `--no-domain-guessing`, `--run-id`.
 
-Offline tests: `python tests/test_agent.py` (40 tests, no network needed; also runs under pytest). To check any run's output against the contract: `python tools/verify_run.py --input companies.jsonl --output out`. The 13-run test harness is kept outside this repository; its results are in [TEST_REPORT.md](TEST_REPORT.md).
+Offline tests: `python tests/test_agent.py` (47 tests, no network needed; also runs under pytest). To check any run's output against the contract: `python tools/verify_run.py --input companies.jsonl --output out`. The 13-run test harness is kept outside this repository; its results are in [TEST_REPORT.md](TEST_REPORT.md).
 
 ## Envelope
 
@@ -86,7 +86,8 @@ Breadth-first phases so every company gets the high-value official baseline befo
    name; each candidate ad is re-fetched and published only if `employer.orgnr` is the company or one of its subunits.
 6. **Website** — candidates from the registry, NAV ads and name-derived domains (DNS-checked first), each passed through the identity
    gate in [SOURCES_AND_SECURITY.md](SOURCES_AND_SECURITY.md). Only an exact match is crawled for description, brand, social profiles,
-   contact points, dated news (JSON-LD articles, `<time>` on the news page), careers page and JobPosting markup.
+   contact points, social accounts whose handle names the company, dated news posts (JSON-LD articles, `<time>` on the news page)
+   and JobPosting markup naming the company. Careers landing pages are not published.
 7. **Envelope** — claims get stable IDs (`hash(org, claim key, value)`), so re-running an unchanged snapshot produces zero changes;
    changed values emit typed changes (`new_job`, `closed_job`, `new_role`, `new_location`, `new_filing`, `changed_description`, `changed_<field>`)
    with the previous evidence attached; a source that fails on refresh keeps its last value marked `stale` instead of being deleted.
@@ -108,10 +109,10 @@ pages + ~0–8 website requests per company. Measured: 100 companies use 775–9
 ## Smoke test, verification and 1,000 profiles
 
 - `smoke/`: 100-company smoke batch, envelopes, run report, HTML viewer, `verification.json`. 100/100 envelopes, 4,376 claims,
-  823 requests, 472 s, $0. `smoke/out-refresh/` (envelopes and run report) is a second run against the first run's output: 0 false changes. Its HTML viewer is omitted because it duplicates `smoke/out/report.html`.
-- `profiles/profiles.jsonl.gz`: **1,000 unique company profiles** (46,902 claims, each with evidence) merged from verified runs; see the manifest.
+  832 requests, 470 s, $0. `smoke/out-refresh/` (envelopes and run report) is a second run against the first run's output: 0 false changes. Its HTML viewer is omitted because it duplicates `smoke/out/report.html`.
+- `profiles/profiles.jsonl.gz`: **1,000 unique company profiles** (46,848 claims, each with evidence) merged from verified runs; see the manifest.
 - 13 verification runs (input formats, duplicates and invalid numbers, employer-heavy batches, 300 never-seen companies, budget and deadline
-  stress, refresh) all pass the 13 contract rule groups in `tools/verify_run.py` at commit `afc3f0a`. See [TEST_REPORT.md](TEST_REPORT.md).
+  stress, refresh) all pass the 14 contract rule groups in `tools/verify_run.py` at commit `a96e0f1`. See [TEST_REPORT.md](TEST_REPORT.md).
 - Privacy operations: `python tools/purge.py --person "Name" | --org <number> | --older-than-days 365` (see SOURCES_AND_SECURITY.md).
 
 ## Limitations

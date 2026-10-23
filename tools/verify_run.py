@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from run import read_inputs  # noqa: E402
 from signalpost.registry import FIN_FIELDS as FIN_PATHS  # noqa: E402
+from signalpost.website import is_news_item, social_handle_matches  # noqa: E402
 
 STATES = {"available", "not_available", "blocked", "not_applicable", "ambiguous", "failed"}
 SECTIONS = {"identity", "financials", "leadership", "locations", "website", "social_profiles", "contact", "jobs", "public_activity"}
@@ -105,6 +106,17 @@ def main() -> int:
                 if v.get("identity_score", 0) < 0.9 or not v.get("identity_method"):
                     fail(f"R7 {tag} website published below exact threshold")
                 counts["websites"].append((org, e["legal_identity"].get("legal_name"), v["url"], v["identity_method"]))
+        for c in e.get("claims", []):  # R14 Builderr audit rules: company-named socials, real posts, single job ads, no landing pages
+            v = c["value"]
+            if c["field"] == "social_profile" and not social_handle_matches(e["legal_identity"].get("legal_name") or "", v["url"]):
+                fail(f"R14 {tag} social handle does not name the company: {v['url']}")
+            if c["field"] == "company_news" and not is_news_item(v.get("title", ""), v.get("url", ""), ""):
+                fail(f"R14 {tag} news item is not a dated post: {v.get('url')}")
+            if c["field"] == "careers_page":
+                fail(f"R14 {tag} careers landing page published as a fact")
+            if c["field"] == "job_posting" and v.get("source") == "NAV Arbeidsplassen" and not re.fullmatch(
+                    r"https://arbeidsplassen\.nav\.no/stillinger/stilling/[0-9a-f-]{36}", str(v.get("url"))):
+                fail(f"R14 {tag} NAV job is not a single-ad URL: {v.get('url')}")
         for p in e.get("summary", {}).get("points", []):  # R8 synthesis cites real claims
             if not p.get("claim_ids") or any(i not in claim_ids for i in p["claim_ids"]):
                 fail(f"R8 {tag} summary point cites unknown claim")

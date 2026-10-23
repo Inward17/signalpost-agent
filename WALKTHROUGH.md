@@ -39,7 +39,7 @@ signalpost/website.py      website discovery, identity gate, company-owned extra
 signalpost/envelope.py     envelope assembly, refresh diff, cited synthesis
 signalpost/report.py       self-contained HTML viewer
 smoke/                     100-company batch, first run (out/, with HTML viewer), refresh run (out-refresh/), logs
-tests/test_agent.py        40 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats)
+tests/test_agent.py        47 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats)
                            (the 13-run harness is kept outside the repository; results in TEST_REPORT.md)
 README.md  SOURCES_AND_SECURITY.md  SUBMISSION.md  WALKTHROUGH.md
 ```
@@ -119,7 +119,7 @@ At most 6 domains per company.
 domain makes the section `blocked`. A timeout or 5xx on a declared or previously verified site makes it `failed`, and its last facts are
 kept `stale`. Errors on random guesses (for example a `.com` bot wall) leave it `not_available`.
 
-**Crawl**: robots check, homepage, then contact/about pages only while proof is still missing. After a match, news and careers pages are fetched too.
+**Crawl**: robots check, homepage, then contact/about pages only while proof is still missing. After a match, the news page is fetched too (not for a company whose site is a section of a larger site).
 At most about 8 requests per site.
 
 **Identity gate** (`assess_identity`), in priority order:
@@ -140,7 +140,9 @@ At most about 8 requests per site.
 **Extraction from an exact site**: the website claim with its identity method and score; the description (meta/og or first paragraph), labelled as
 company copy; the brand (`og:site_name`); social profiles linked from the site, kept only if the handle matches the name or domain or the profile is listed in
 the site's JSON-LD `sameAs` (other links are counted and withheld); generic mailboxes on the company's own domain; phone numbers from `tel:` links on the home and contact pages;
-dated news from JSON-LD articles and `<time>` elements on the news page; the careers page; JSON-LD `JobPosting` entries.
+dated news posts from JSON-LD articles and `<time>` elements on the news page (post-like URLs only; modified dates ignored); JSON-LD
+`JobPosting` entries that name this company as employer. Social accounts are published only when the handle names the company, and careers
+landing pages are not published (version 2, after Builderr's audit).
 
 ### 3.8 Refresh (`envelope.py: diff`)
 The previous snapshot comes from `--previous envelopes.jsonl` or from `state/<org>.json`. For each claim key:
@@ -188,11 +190,11 @@ Each of the identity-gate failures has a regression test.
 
 ## 5. Results
 
-**13 verification runs at `afc3f0a`** (see [TEST_REPORT.md](TEST_REPORT.md)): all pass the 13 contract rule groups; 142 unique published
+**13 verification runs at `a96e0f1`** (see [TEST_REPORT.md](TEST_REPORT.md)): all pass the 14 contract rule groups; 137 unique published
 websites manually audited by proof type; 1,400 financial values (65 companies) matched the live filing by exact field, statement, period and currency; 1,000-profile dataset in `profiles/`.
 
 **Earlier smoke test (first code version, before the final gate fixes):** 100/100 envelopes, 4,621 claims, 870 of 2,000 requests, 482 s, $0.
-The current `smoke/` folder holds the final-code run (R01): 4,376 claims, 823 requests, 472 s.
+The current `smoke/` folder holds the final-code run (R01): 4,376 claims, 832 requests, 470 s.
 - Identity, financials, leadership, locations, public activity: available for 100/100.
 - Website: 13 verified, 39 withheld as ambiguous, 46 not available, 2 blocked by robots.txt. After the fixes, every published site is proven by
   org number (9), or by exact legal name plus phone/address on a matching or registry-declared domain (4).
@@ -203,7 +205,7 @@ The current `smoke/` folder holds the final-code run (R01): 4,376 claims, 823 re
 unchanged. Offline tests also cover real change, removal, and stale-carry.
 
 **Reproducibility**: fresh clone at the pinned commit, empty venv, `pip install -r requirements.txt`, run command → 3/3 envelopes (including
-one deliberately invalid input) and all offline tests pass (40 in the current suite).
+one deliberately invalid input) and all offline tests pass (47 in the current suite).
 
 ## 6. Plan checklist status
 

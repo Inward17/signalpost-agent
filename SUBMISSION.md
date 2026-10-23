@@ -2,12 +2,12 @@
 
 Subject: Signalpost Round 1 submission
 
-- Agent name: Signalpost registry-anchored agent
+- Agent name: Signalpost registry-anchored agent (version 2: addresses Builderr's audit of version 1, `f49124a`)
 - Repository URL: https://github.com/Inward17/signalpost-agent
-- Exact commit hash: the submission commit is the `main` HEAD named in the submission email (a hash cannot be written inside the commit it identifies). Agent code last changed and fully tested at `afc3f0a` (code freeze); later commits are docs/data only.
+- Exact commit hash: the submission commit is the `main` HEAD named in the submission email (a hash cannot be written inside the commit it identifies). Agent code last changed and fully tested at `a96e0f1` (version 2 code); later commits are docs/data only.
 - 1,000 company profiles: `profiles/profiles.jsonl.gz` (+ `profiles-manifest.json`)
 - 100-company smoke-test result: `smoke/out/envelopes.jsonl`, `smoke/out/run-report.json`, `smoke/out/report.html`, `smoke/out/verification.json`; refresh run in `smoke/out-refresh/`
-- Tests: `python tests/test_agent.py` (40 offline tests); contract verifier `tools/verify_run.py`
+- Tests: `python tests/test_agent.py` (47 offline tests); contract verifier `tools/verify_run.py`
 - One-command run instruction (after `python -m venv .venv && .venv/bin/pip install -r requirements.txt`):
   `.venv/bin/python run.py --input <batch.jsonl> --output out`
   (Windows: `.venv\Scripts\python.exe -m pip install -r requirements.txt`, then `.venv\Scripts\python.exe run.py --input <batch.jsonl> --output out`)
