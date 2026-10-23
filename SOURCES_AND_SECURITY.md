@@ -33,6 +33,14 @@ or contact-email domain for an orgnr-matched ad, name-derived domain, optional s
 Social profiles are published only when linked from the verified site *and* the handle is the company's name: every distinctive word of the legal
 name must be in it, and anything left over may only be a harmless affix (`as`, `no`, `norge`, `official`), another legal-name word or a page ID.
 Footer links often belong to a parent group, a sister or subsidiary, a brand, the web agency or the theme, so a shared word is never enough. Platform paths (`accounts`, `login`, `hashtag`, `pages`) and opaque channel IDs are rejected.
+A matching name is not enough: the company must present the account as its own, in the site's header, footer, navigation or
+address block, on its contact or about page, repeated on two or more of its pages, or in the `sameAs` of the site's structured-data
+record for this company. A link inside an article, or in another organisation's structured data, is withheld.
+A declared website can be valid for the company without the site being the company's own: a subsidiary may be registered with its
+parent's root domain. Description, brand, social accounts, site contacts, news and jobs are taken only when the site is shown to be the
+company's own (domain matches the company name; org number or exact legal name in the site's own footer/address block, or the number on
+its contact/about page, with no other organisation's number there; or the site's structured data is this company). Otherwise only the URL
+is published, with the reason.
 When the company's site is only a section of a larger site (for example a regional page on a national organisation's domain), no social accounts,
 news or jobs are taken from that domain. News must be a real post with its own publication date: the date must belong to exactly one article (never a date shared by a
 list or found elsewhere on the page), be plausible, and never be a "modified"/"updated" date; contact, product and shop pages, menu labels

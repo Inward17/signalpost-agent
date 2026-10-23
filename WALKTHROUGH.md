@@ -39,7 +39,7 @@ signalpost/website.py      website discovery, identity gate, company-owned extra
 signalpost/envelope.py     envelope assembly, refresh diff, cited synthesis
 signalpost/report.py       self-contained HTML viewer
 smoke/                     100-company batch, first run (out/, with HTML viewer), refresh run (out-refresh/), logs
-tests/test_agent.py        51 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats)
+tests/test_agent.py        56 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats)
                            (the 13-run harness is kept outside the repository; results in TEST_REPORT.md)
 README.md  SOURCES_AND_SECURITY.md  SUBMISSION.md  WALKTHROUGH.md
 ```
@@ -139,12 +139,14 @@ At most about 8 requests per site.
    because shared phones point to related companies.
 6. Anything weaker → `ambiguous`, recorded with the reason and the candidate list, and nothing published.
 
-**Extraction from an exact site** (version 2.1 rules, after Builderr's audit and a second review; see [CHANGES_V2.md](CHANGES_V2.md)):
+**Extraction from an exact site** (version 2.2 rules, after Builderr's audit, a second review and the residual-risk review; see [CHANGES_V2.md](CHANGES_V2.md)):
 - the website claim with its identity method and score; the description (meta/og or first paragraph), labelled as company copy; the brand (`og:site_name`);
 - social profiles linked from the site **whose handle is the company's name** (`social_handle_matches`): every distinctive word of the legal name
   must be in the handle, and anything left over may only be a harmless affix (`as`, `no`, `norge`, `official`, …), another legal-name word or a
   page ID. A sister's, parent's, subsidiary's, group's or brand's account is counted and withheld, and platform paths (`accounts`, `login`,
-  `hashtag`, `pages`) are rejected;
+  `hashtag`, `pages`) are rejected. The company must also present the account as its own (`in_site_chrome`): header, footer, navigation or
+  address block, its contact or about page, the same link on two or more of its pages, or the `sameAs` of its own structured-data record
+  (`org_node_is_company`). A link inside an article or another organisation's markup is withheld;
 - generic mailboxes on the company's own domain; phone numbers from `tel:` links on the home and contact pages;
 - dated news posts: from JSON-LD, the article node's own `datePublished` (never `dateModified`); from the news page, a `<time>` only when its
   container holds exactly one date and links to exactly one article (`news_list_item`). Dates must be plausible (1995 to tomorrow) and not marked
@@ -155,6 +157,10 @@ At most about 8 requests per site.
   are not published.
 - If the verified site is only a section of a larger site (`section_of_larger_site`, e.g. `dnt.no/nordtrondelag`), the URL is published but no
   social accounts, news or jobs are taken from that domain, because they belong to the site's owner.
+- A subsidiary can be declared with its parent's **root** domain, where there is no path to detect. So all of the above is extracted only when
+  `site_owner_proven` shows the site is the company's own: the domain matches the company name, the org number or exact legal name is in the
+  site's own footer/address block (or the number on its contact/about page) with no other organisation's number there, or the site's
+  structured data is this company. Otherwise only the URL is published, with the reason in `site_owner`.
 
 ### 3.8 Refresh (`envelope.py: diff`)
 The previous snapshot comes from `--previous envelopes.jsonl` or from `state/<org>.json`. For each claim key:
@@ -205,17 +211,19 @@ workplaces, verified website, linked profiles, hiring, latest news, and recent r
 | Sister, parent, subsidiary and group accounts accepted because handles shared words with the company | **second review of v2.0** | every distinctive word required; leftovers only harmless affixes |
 | A date shared by several articles pinned to the first; news with unusual URLs dropped | **second review of v2.0** | date bound to exactly one article; explicit news types and list entries may use any URL |
 | Website job accepted for a similar employer name | **second review of v2.0** | this org number or exact legal name including legal form |
+| Subsidiary declared with its parent's root domain got the parent's description, accounts, news and jobs | **residual-risk review** | site content only when the site is shown to be the company's own |
+| A full-name account linked only in article text or another organisation's `sameAs` was published | **residual-risk review** | only accounts the company presents as its own |
 
 Each of the identity-gate failures has a regression test. The version 2 changes are documented before/after, with verification steps, in
 [CHANGES_V2.md](CHANGES_V2.md).
 
 ## 5. Results
 
-**13 verification runs at `1f2ad26`** (see [TEST_REPORT.md](TEST_REPORT.md)): all pass the 14 contract rule groups; 136 unique published
+**13 verification runs at `70cfcf0`** (see [TEST_REPORT.md](TEST_REPORT.md)): all pass the 14 contract rule groups; 137 unique published
 websites manually audited by proof type; 1,400 financial values (65 companies) matched the live filing by exact field, statement, period and currency; 1,000-profile dataset in `profiles/`.
 
 **Earlier smoke test (first code version, before the final gate fixes):** 100/100 envelopes, 4,621 claims, 870 of 2,000 requests, 482 s, $0.
-The current `smoke/` folder holds the final-code run (R01): 4,372 claims, 832 requests, 479 s.
+The current `smoke/` folder holds the final-code run (R01): 4,367 claims, 827 requests, 473 s.
 - Identity, financials, leadership, locations, public activity: available for 100/100.
 - Website: 13 verified, 39 withheld as ambiguous, 46 not available, 2 blocked by robots.txt. After the fixes, every published site is proven by
   org number (9), or by exact legal name plus phone/address on a matching or registry-declared domain (4).
@@ -226,7 +234,7 @@ The current `smoke/` folder holds the final-code run (R01): 4,372 claims, 832 re
 unchanged. Offline tests also cover real change, removal, and stale-carry.
 
 **Reproducibility**: fresh clone at the pinned commit, empty venv, `pip install -r requirements.txt`, run command → 3/3 envelopes (including
-one deliberately invalid input) and all offline tests pass (51 in the current suite).
+one deliberately invalid input) and all offline tests pass (56 in the current suite).
 
 ## 6. Plan checklist status
 

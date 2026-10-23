@@ -7,7 +7,8 @@ and a refresh diff against the previous run.
 
 Registry-anchored and deterministic: no LLM. The default configuration uses no paid API and has an expected third-party cost of $0. The optional Brave Search integration (off unless `BRAVE_API_KEY` is set) costs about $0.005 per company when enabled, and its spend is capped by `--max-cost-usd`.
 
-**Version 2.1** (current) addresses Builderr's audit of version 1 and a second review of version 2.0: own-site proof for websites, company-named social handles, real dated
+**Version 2.2** (current) addresses Builderr's audit of version 1, a second review of version 2.0 and two residual risks raised after it
+(parent root domains, attributable social accounts): own-site proof for websites, company-named social handles, real dated
 news posts and single job ads. What changed, why, and how to verify it: [CHANGES_V2.md](CHANGES_V2.md).
 
 ## Install and run (one command)
@@ -44,7 +45,7 @@ Outputs:
 Useful flags: `--state-dir` (refresh baseline, default `state/`), `--previous envelopes.jsonl` (explicit previous snapshot),
 `--max-requests 2000`, `--deadline-minutes 42`, `--max-cost-usd 10`, `--workers 16`, `--jobs-window-days 45`, `--no-domain-guessing`, `--run-id`.
 
-Offline tests: `python tests/test_agent.py` (51 tests, no network needed; also runs under pytest). To check any run's output against the contract: `python tools/verify_run.py --input companies.jsonl --output out`. The 13-run test harness is kept outside this repository; its results are in [TEST_REPORT.md](TEST_REPORT.md). To replay Builderr's audit cases or scan a dataset for the four audit problems: `python tools/verify_v2_fixes.py` (add `--dataset profiles/profiles.jsonl.gz` to scan).
+Offline tests: `python tests/test_agent.py` (56 tests, no network needed; also runs under pytest). To check any run's output against the contract: `python tools/verify_run.py --input companies.jsonl --output out`. The 13-run test harness is kept outside this repository; its results are in [TEST_REPORT.md](TEST_REPORT.md). To replay Builderr's audit cases or scan a dataset for the four audit problems: `python tools/verify_v2_fixes.py` (add `--dataset profiles/profiles.jsonl.gz` to scan).
 
 ## Envelope
 
@@ -112,10 +113,10 @@ pages + ~0–8 website requests per company. Measured: 100 companies use 775–9
 ## Smoke test, verification and 1,000 profiles
 
 - `smoke/`: 100-company smoke batch, envelopes, run report, HTML viewer, `verification.json`. 100/100 envelopes, 4,376 claims,
-  832 requests, 479 s, $0. `smoke/out-refresh/` (envelopes and run report) is a second run against the first run's output: 0 false changes. Its HTML viewer is omitted because it duplicates `smoke/out/report.html`.
-- `profiles/profiles.jsonl.gz`: **1,000 unique company profiles** (46,808 claims, each with evidence) merged from verified runs; see the manifest.
+  827 requests, 473 s, $0. `smoke/out-refresh/` (envelopes and run report) is a second run against the first run's output: 0 false changes. Its HTML viewer is omitted because it duplicates `smoke/out/report.html`.
+- `profiles/profiles.jsonl.gz`: **1,000 unique company profiles** (46,780 claims, each with evidence) merged from verified runs; see the manifest.
 - 13 verification runs (input formats, duplicates and invalid numbers, employer-heavy batches, 300 never-seen companies, budget and deadline
-  stress, refresh) all pass the 14 contract rule groups in `tools/verify_run.py` at commit `1f2ad26`. See [TEST_REPORT.md](TEST_REPORT.md).
+  stress, refresh) all pass the 14 contract rule groups in `tools/verify_run.py` at commit `70cfcf0`. See [TEST_REPORT.md](TEST_REPORT.md).
 - Privacy operations: `python tools/purge.py --person "Name" | --org <number> | --older-than-days 365` (see SOURCES_AND_SECURITY.md).
 
 ## Limitations

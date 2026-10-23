@@ -2,8 +2,8 @@
   "run": {
     "run_id": "R01",
     "agent_version": "1.0.0",
-    "started_at": "2026-10-23T07:35:07Z",
-    "completed_at": "2026-10-23T07:43:05Z",
+    "started_at": "2026-10-23T09:09:50Z",
+    "completed_at": "2026-10-23T09:17:43Z",
     "terminal_status": "completed"
   },
   "input_rows": 100,
@@ -34,9 +34,9 @@
       "failed": 1
     },
     "social_profiles": {
-      "not_available": 95,
-      "available": 4,
-      "failed": 1
+      "not_available": 96,
+      "failed": 1,
+      "available": 3
     },
     "contact": {
       "available": 28,
@@ -49,35 +49,35 @@
       "available": 100
     }
   },
-  "claims_total": 4372,
+  "claims_total": 4367,
   "changes_total": 0,
-  "runtime_s": 478.6,
+  "runtime_s": 473.0,
   "operations": {
-    "requests": 832,
+    "requests": 827,
     "max_requests": 2000,
-    "bytes": 54584241,
+    "bytes": 54265896,
     "requests_by_host_top": {
       "data.brreg.no": 501,
-      "pam-stilling-feed.nav.no": 94,
+      "pam-stilling-feed.nav.no": 93,
       "www.pfve.com": 10,
       "showdevida.no": 8,
       "flexipod.no": 6,
       "krimat.com": 6,
-      "sollifjellet.no": 5,
-      "www.hugedomains.com": 5,
       "www.cwsca.com": 5,
       "www.tool.com": 5,
       "www.nht-co.com": 5,
       "thi-holding.com": 4,
+      "sollifjellet.no": 4,
       "vora.no": 4,
       "www.lonepinecapital.com": 4,
-      "blueline.com": 4
+      "blueline.com": 4,
+      "vizer.no": 4
     },
-    "p50_ms": 820,
-    "p95_ms": 8768,
+    "p50_ms": 848,
+    "p95_ms": 7024,
     "third_party_cost_usd": 0.0,
-    "nav_feed_pages": 93,
-    "nav_feed_entries": 29264
+    "nav_feed_pages": 92,
+    "nav_feed_entries": 29332
   },
   "source_yield": {
     "brreg_registry": {
@@ -87,13 +87,13 @@
       "claims_per_request": 8.66
     },
     "company_websites": {
-      "requests": 237,
-      "claims": 33,
+      "requests": 233,
+      "claims": 28,
       "companies": 8,
-      "claims_per_request": 0.14
+      "claims_per_request": 0.12
     },
     "nav_job_feed": {
-      "requests": 94,
+      "requests": 93,
       "claims": 0,
       "companies": 0,
       "claims_per_request": 0.0

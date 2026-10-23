@@ -1,9 +1,10 @@
 # Version 2: what changed after Builderr's audit, and how to verify it
 
-This document explains every change made after Builderr audited version 1. It covers two rounds:
+This document explains every change made after Builderr audited version 1. It covers three rounds:
 
 - **Version 2.0**: Builderr's audit (websites, social links, news, jobs).
 - **Version 2.1**: a second review of version 2.0 (social handles shared by similar names, news dates and unusual URLs, jobs matched by employer name).
+- **Version 2.2**: two residual risks raised after version 2.1 (a subsidiary using its parent's root domain, social accounts not clearly attributable).
 
 For each point it shows:
 - what the agent did before (with real examples and the exact old code);
@@ -11,16 +12,16 @@ For each point it shows:
 - how the code was changed;
 - how you can check it yourself.
 
-| | Version 1 (audited) | Version 2.0 | Version 2.1 (current) |
-|---|---|---|---|
-| Agent code commit | `afc3f0ab3858b86889a07b7deff73bc1685edc21` | `a96e0f1d38e1db2c2323be8494de1f790ac855ab` | `1f2ad26cfdbbd270c252cc4fc15f01c3154cb0eb` |
-| Submission commit | `f49124a` | `7a3ade2` | the commit that contains this file, or a later documentation-only commit |
-| Offline tests | 40 | 47 | 51 |
+| | Version 1 (audited) | Version 2.0 | Version 2.1 | Version 2.2 (current) |
+|---|---|---|---|---|
+| Agent code commit | `afc3f0ab3858b86889a07b7deff73bc1685edc21` | `a96e0f1d38e1db2c2323be8494de1f790ac855ab` | `1f2ad26cfdbbd270c252cc4fc15f01c3154cb0eb` | `70cfcf091640d4742684a036f988d08624d1d69d` |
+| Submission commit | `f49124a` | `7a3ade2` | `4c79c38` | the commit that contains this file, or a later documentation-only commit |
+| Offline tests | 40 | 47 | 51 | 56 |
 
 See every code change since version 1:
 
 ```bash
-git diff afc3f0a 1f2ad26 -- signalpost/
+git diff afc3f0a 70cfcf0 -- signalpost/
 ```
 
 Only `signalpost/website.py` and `signalpost/jobs.py` changed (plus tests and the verification tools).
@@ -30,23 +31,23 @@ Only `signalpost/website.py` and `signalpost/jobs.py` changed (plus tests and th
 The counts below come from `python tools/verify_v2_fixes.py --dataset <file>`, which applies the **current** rules to each version's published
 1,000-profile dataset:
 
-| # | Point | v1 dataset | v2.0 dataset | v2.1 dataset |
-|---|---|---|---|---|
-| 1 | Website is the company's own | 14 | 0 | 0 |
-| 2 | Social handles belong to this company | 47 | 38 | 0 |
-| 3 | News are real, dated posts | 2 | 0 | 0 |
-| 4 | Jobs are single ads for this company | 26 | 0 | 0 |
-| | **Total** | **89** | **38** | **0** |
+| # | Point | v1 dataset | v2.0 dataset | v2.1 dataset | v2.2 dataset |
+|---|---|---|---|---|---|
+| 1 | Website is the company's own | 14 | 0 | 0 | 0 |
+| 2 | Social handles belong to this company | 47 | 38 | 0 | 0 |
+| 3 | News are real, dated posts | 2 | 0 | 0 | 0 |
+| 4 | Jobs are single ads for this company | 26 | 0 | 0 | 0 |
+| | **Total** | **89** | **38** | **0** | **0** |
 
 Published claims in the dataset:
 
-| Claim | v1 | v2.0 | v2.1 |
-|---|---|---|---|
-| Websites | 142 | 137 | 136 |
-| Social profiles | 175 | 163 | 124 |
-| News items | 5 | 3 | 3 |
-| Careers pages | 26 | 0 | 0 |
-| NAV job ads | 4 | 7 | 8 (live ads change daily) |
+| Claim | v1 | v2.0 | v2.1 | v2.2 |
+|---|---|---|---|---|
+| Websites | 142 | 137 | 136 | 137 (8 as URL only) |
+| Social profiles | 175 | 163 | 124 | 113 |
+| News items | 5 | 3 | 3 | 3 |
+| Careers pages | 26 | 0 | 0 | 0 |
+| NAV job ads | 4 | 7 | 8 | 8 (live ads change daily) |
 
 ---
 
@@ -311,6 +312,180 @@ return bool(name) and bool(legal) and tokens(str(name)) == tokens(legal)   # exa
 
 **Tests:** `test_website_job_needs_exact_employer_not_a_similar_name`, `test_nav_job_with_similar_employer_name_is_not_published`.
 
+# Part 3: version 2.2 (residual risks raised after version 2.1)
+
+> 1. Root-level parent websites. A subsidiary could use a parent domain without having a distinct URL path. Test that case explicitly.
+> 2. Social handles can still be ambiguous. If the account is not clearly attributable to the company, withholding it is safer.
+
+Both were raised as risks to test, not confirmed defects. Testing showed both were real gaps in version 2.1, so both are now fixed.
+
+## E. A subsidiary declared with its parent's root domain
+
+### Before (v2.1)
+
+Parent sites were only caught when the company's URL was a **section** of a larger site (`section_of_larger_site`, for example
+`dnt.no/nordtrondelag`). A subsidiary registered with its parent's **root** domain has no path to detect.
+
+Tested directly on the v2.1 code: Brønnøysund declares `https://elgruppen.no/` for SANDNES ELEKTRISKE SERVICE AS, and the parent's page lists
+"Sandnes Elektriske Service AS (org.nr 912 345 674)" in its body text. The identity gate accepts it, which is correct: it is the company's
+declared site and carries its number. But `extract_site` then took everything on the parent's site as the subsidiary's own:
+- the description;
+- the `og:site_name` brand;
+- footer social links;
+- contact e-mails and phones;
+- the parent's news;
+- JobPosting markup.
+
+```python
+shared = section_of_larger_site(verdict["homepage"])    # v2.1: only a URL path could mark a shared site
+```
+
+### The fix
+
+There are now two separate questions:
+- **Is this the company's website?** This is the URL claim. It works as before.
+- **Is the site the company's own?** This decides whether the site's content is the company's.
+
+Site content is taken only when the site is shown to be the company's own:
+- the domain matches the company name; or
+- the org number is in the site's own footer, address or colophon block, or on its contact or about page, and **no other organisation's number**
+  is in that block (a group footer listing several companies proves nothing); or
+- the exact legal name, with its legal form, is in the site's own footer block, and no other organisation's number is there; or
+- the site's JSON-LD `Organization` record is this company (its org number, or its exact legal name).
+
+Otherwise only the URL is published. The website claim records why in `site_owner`: "site not shown to belong to this company (shared,
+parent or brand site): only its URL is published". The following are all withheld:
+- description and brand;
+- social accounts;
+- contacts from the site;
+- news;
+- jobs.
+
+The registry phone still fills the contact section.
+
+### How it was made
+
+`site_owner_proven()` in `signalpost/website.py` (called from `try_site` for every exact match):
+
+```python
+if name_matches_domain(legal, domain):
+    return True, "domain matches the company name"
+for page in pages:
+    texts = [(b.get_text(" ", strip=True), True) for b in page.soup.find_all(["footer", "address"]) + page.soup.select(IDENTITY_BLOCKS)]
+    if page.kind in ("contact", "about"):
+        texts.append((page.text, False))
+    for text, is_block in texts:
+        if {re.sub(r"\D", "", f) for f in _ORG_LABELLED.findall(text)} - {d.org} - d.subunit_orgs:
+            continue                                   # another organisation is named here: not proof
+        if org_re.search(text):
+            return True, "organisation number in the site's own footer/contact block"
+        if is_block and name_re and name_re.search(text):
+            return True, "exact legal name in the site's own footer"
+    if any(org_node_is_company(node, d) for node in walk_jsonld(page.jsonld, ORG_TYPES)):
+        return True, "the site's own structured data names this company"
+return False, "site not shown to belong to this company (shared, parent or brand site): only its URL is published"
+```
+
+and in `extract_site`:
+
+```python
+shared = section or not verdict.get("owner_proven", True)   # shared, parent or brand site: URL only
+```
+
+**Tests:**
+- `test_subsidiary_declared_with_parent_root_domain_gets_no_parent_facts` (the case above);
+- `test_subsidiarys_own_root_site_keeps_its_facts` (the company's own root site keeps everything);
+- `test_footer_listing_several_companies_does_not_prove_site_owner`.
+
+All three fail on the v2.1 code. The verifier (`tools/verify_run.py`, R14) now also fails any run that publishes a claim taken from a site
+not shown to be the company's own.
+
+### Effect on real data
+
+137 unique websites were published across the 13 runs:
+
+| Site ownership shown by | Websites |
+|---|---|
+| domain matches the company name | 105 |
+| org number in the site's own footer or contact block | 14 |
+| exact legal name in the site's own footer | 10 |
+| **not shown: URL only** | **8** |
+
+Of the 8, `vif-fotball.no` (VÅLERENGA FOTBALL ELITE) is a genuinely shared site: the club Vålerenga Fotball and the separate entity Vålerenga
+Fotball Elite use it. That is exactly the case the review described.
+
+The other 7 look like the companies' own sites, but their footers carry neither the org number nor the exact legal name: `sollifjellet.no`,
+`obf.no`, `aasemontessori.no`, `arealpluss.no`, `hellekhagen.no`, `kndt.no` and `borealisfestival.no`. Withholding their site facts is the
+price of the safer rule.
+
+Changes in the dataset compared with v2.1:
+
+| Claim | v2.1 | v2.2 |
+|---|---|---|
+| Descriptions | 131 | 123 |
+| Brands | 57 | 54 |
+| Contact e-mails | 64 | 61 |
+| Contact phones | 71 | 67 |
+
+## F. Social accounts that cannot be attributed to the company
+
+### Before (v2.1)
+
+Any link on any fetched page was published if its handle matched the company name. That included:
+- a link inside article text (for example "follow our partner here");
+- the `sameAs` list of **any** `Organization` record in the page's JSON-LD, including another organisation's (a parent's or partner's).
+
+A matching name was treated as proof that the company owns the account.
+
+### The fix
+
+A matching handle is still required, but it is no longer enough. The company must present the account as its own:
+- in the site's header, footer, navigation or address block (or an element whose class or id says footer, header or social);
+- on its contact or about page;
+- as the same link on **two or more of its pages**: site-wide chrome on page builders such as Framer or Wix, whose footers are unlabelled `<div>`s;
+- in the `sameAs` of the site's JSON-LD record **for this company** (`org_node_is_company`).
+
+The site must also be the company's own (point E). A link that appears only inside an article on one page, or only in another organisation's
+structured data, is withheld.
+
+### How it was made
+
+The social collection loop in `extract_site`:
+
+```python
+for node in walk_jsonld(page.jsonld, ORG_TYPES):
+    if not org_node_is_company(node, d):
+        continue                                      # another organisation's sameAs is not this company's
+    ...
+for a in page.soup.select("a[href]"):
+    s = normalize_social(urllib.parse.urljoin(page.resp.final_url, str(a.get("href"))))
+    if not s:
+        continue
+    if page.kind in ("contact", "about") or in_site_chrome(a):
+        socials.setdefault(s["url"], (s, page))
+    else:
+        repeated.setdefault(s["url"], {})[page.resp.final_url] = (s, page)
+for url, seen in repeated.items():                   # the same link on two or more pages is site-wide chrome
+    if len(seen) >= 2:
+        socials.setdefault(url, next(iter(seen.values())))
+```
+
+**Tests:**
+- `test_social_account_must_be_attributable_not_just_name_matching`: an article link, another organisation's `sameAs`, and the company's own `sameAs`;
+- `test_social_link_repeated_across_site_pages_counts_as_site_chrome`.
+
+### Effect on real data
+
+Social profiles in the dataset went from 124 to **113**. The 11 withheld accounts:
+
+- **6 are on the 8 URL-only sites.** One of them is `linkedin.com/company/oslo-og-omegn-boligforvaltning-as`, listed for a BBL: the "-as" handle
+  belongs to a different legal entity.
+- **5 were linked only in the body of a single page:** `tindeq`, `stork-as`, `oslovedhandel`, `norskvannskjaering` and `elektrikernbodo`.
+
+All 113 remaining accounts were reviewed by hand. Each is:
+- the company's name, optionally with `as`, `no`, `norge`, a country word or a page number;
+- presented by the company itself.
+
 ---
 
 ## The checks are now automatic
@@ -319,9 +494,10 @@ The contract verifier `tools/verify_run.py` includes rule group **R14**, applied
 - every social handle belongs to the company;
 - every news item is a real post;
 - no careers landing pages;
-- every NAV job links to a single ad.
+- every NAV job links to a single ad;
+- no claim is taken from a site not shown to be the company's own (version 2.2).
 
-All 13 verification runs at `1f2ad26` pass R1–R14, with 1,400 financial values matching the live filings exactly ([TEST_REPORT.md](TEST_REPORT.md)).
+All 13 verification runs at `70cfcf0` pass R1–R14, with 1,400 financial values matching the live filings exactly ([TEST_REPORT.md](TEST_REPORT.md)).
 
 ## How to verify it yourself
 
@@ -332,6 +508,7 @@ From the repository folder, with the virtual environment set up as in the README
 ```bash
 git diff afc3f0a a96e0f1 -- signalpost/    # version 2.0
 git diff a96e0f1 1f2ad26 -- signalpost/    # version 2.1
+git diff 1f2ad26 70cfcf0 -- signalpost/    # version 2.2
 ```
 
 **2. Run the tests**
@@ -340,7 +517,7 @@ git diff a96e0f1 1f2ad26 -- signalpost/    # version 2.1
 python tests/test_agent.py
 ```
 
-Expected: `51 passed`.
+Expected: `56 passed`.
 
 **3. Replay the audit and review cases against the current code**
 
@@ -348,20 +525,27 @@ Expected: `51 passed`.
 python tools/verify_v2_fixes.py
 ```
 
-Expected: `27/27 audit cases behave as Builderr asked.` This covers similar-name social handles, shared news dates, unusual news URLs, and
-sister, parent and brand employers.
+Expected: `29/29 audit cases behave as Builderr asked.` This covers:
+- similar-name social handles;
+- shared news dates and unusual news URLs;
+- sister, parent and brand employers;
+- a subsidiary declared with its parent's root domain;
+- an account linked only inside an article.
 
 **4. Count the problems in each version's dataset with the current rules**
 
 ```bash
 git show f49124a:profiles/profiles.jsonl.gz > v1.jsonl.gz
 git show 7a3ade2:profiles/profiles.jsonl.gz > v20.jsonl.gz
+git show 4c79c38:profiles/profiles.jsonl.gz > v21.jsonl.gz
 python tools/verify_v2_fixes.py --dataset v1.jsonl.gz
 python tools/verify_v2_fixes.py --dataset v20.jsonl.gz
+python tools/verify_v2_fixes.py --dataset v21.jsonl.gz
 python tools/verify_v2_fixes.py --dataset profiles/profiles.jsonl.gz
 ```
 
-Expected: v1 89 problems, v2.0 38 (all social handles), current 0.
+Expected: v1 89 problems, v2.0 38 (all social handles), v2.1 0, current 0. The v2.1 dataset predates the `site_owner` field, so the
+version 2.2 points are checked by the tests, the replay and verifier rule R14 rather than by this scan.
 
 **5. Run the agent on the audited companies**
 
