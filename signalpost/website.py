@@ -456,29 +456,34 @@ def extract_site(client: Client, d: Dossier, verdict: dict[str, Any], pages: lis
     # dated activity: JSON-LD articles and <time> elements on the news page, plus company job postings
     activity = 0
     seen: set[str] = set()
+    today = home.resp.retrieved_at[:10]
     for page in pages:
+        # JSON-LD: the date is the article node's own datePublished (never dateModified). Explicit news types (NewsArticle,
+        # BlogPosting, PressRelease) may use any URL; a generic "Article" (CMSs put it on ordinary pages) needs a post-like URL.
         for node in walk_jsonld(page.jsonld, {"NewsArticle", "Article", "BlogPosting", "PressRelease"}):
             date = str(node.get("datePublished") or "")[:10]
             title = str(node.get("headline") or node.get("name") or "").strip()
             url = node.get("url") or page.resp.final_url
-            if date and isinstance(url, str) and url not in seen and is_news_item(title, url, page.resp.final_url):
+            kinds = node.get("@type") if isinstance(node.get("@type"), list) else [node.get("@type")]
+            explicit = bool(set(kinds) & {"NewsArticle", "BlogPosting", "PressRelease"})
+            if plausible_publish_date(date, today) and isinstance(url, str) and url not in seen \
+                    and is_news_item(title, url, page.resp.final_url, require_post_url=not explicit):
                 seen.add(url)
-                ev = d.add_evidence(page.resp, "company_owned", f"{date} {title}")
+                ev = d.add_evidence(page.resp, "company_owned", f"{date} {title} (datePublished of this article's own JSON-LD node)")
                 d.claim("company_news", "public_activity", {"date": date, "title": title[:200], "url": url, "date_type": "published"},
                         [ev], key=f"news|{url}", effective_date=date, method="jsonld_article")
                 activity += 1
         if page.kind == "news":
             for t in page.soup.find_all("time")[:20]:
                 date = str(t.get("datetime") or "")[:10]
-                if not is_publish_date(t):
-                    continue  # "modified"/"updated" dates are not publication dates
-                container = t.find_parent(["article", "li", "div"])
-                link = container.find("a", href=True) if container else None
-                if not (re.match(r"\d{4}-\d{2}-\d{2}$", date) and link):
-                    continue
-                url = urllib.parse.urljoin(page.resp.final_url, link["href"])
-                title = link.get_text(" ", strip=True) or (container.find(["h2", "h3"]).get_text(" ", strip=True) if container.find(["h2", "h3"]) else "")
-                if url in seen or registered_domain(url) != domain or not is_news_item(title, url, page.resp.final_url):
+                if not is_publish_date(t) or not plausible_publish_date(date, today):
+                    continue  # "modified"/"updated" dates are not publication dates; future or ancient dates are not either
+                item = news_list_item(t, page.resp.final_url, domain)
+                if not item:
+                    continue  # the date cannot be tied to exactly one article on the page
+                url, title = item
+                # a structured news-list entry (one date, one article link) is news even with an unusual URL pattern
+                if url in seen or not is_news_item(title, url, page.resp.final_url, require_post_url=False):
                     continue
                 seen.add(url)
                 ev = d.add_evidence(page.resp, "company_owned", f"{date} {title}")
@@ -512,6 +517,37 @@ NOT_POST_SEGMENTS = ("produkt", "product", "products", "shop", "butikk", "nettbu
 SITE_ROOT_SEGMENTS = {"no", "nb", "nn", "en", "se", "dk", "home", "hjem", "forside", "start", "index.html", "index.php", "default.aspx", "main"}
 
 
+def plausible_publish_date(date: str, today: str) -> bool:
+    """An ISO date that is not in the future (beyond tomorrow) and not before 1995."""
+    from datetime import date as _date, timedelta
+    try:
+        published = _date.fromisoformat(date)
+        latest = _date.fromisoformat(today[:10]) + timedelta(days=1)
+    except (TypeError, ValueError):
+        return False
+    return _date(1995, 1, 1) <= published <= latest
+
+
+def news_list_item(time_tag: Any, page_url: str, domain: str) -> tuple[str, str] | None:
+    """Tie a <time> to exactly one article: its nearest item container must hold this one date and links to one article only.
+    A date shared by a block of several articles (or a page-level date) is never assigned to the first link it happens to precede."""
+    container = time_tag.find_parent(["article", "li", "div"])
+    if container is None or len(container.find_all("time")) != 1:
+        return None
+    targets = {}
+    for a in container.find_all("a", href=True):
+        url = urllib.parse.urljoin(page_url, a["href"]).split("#")[0]
+        if registered_domain(url) == domain and urllib.parse.urlparse(url).path.strip("/"):
+            targets.setdefault(url, a.get_text(" ", strip=True))
+    if len(targets) != 1:
+        return None
+    url, title = next(iter(targets.items()))
+    if not title:
+        heading = container.find(["h1", "h2", "h3", "h4"])
+        title = heading.get_text(" ", strip=True) if heading else ""
+    return url, title
+
+
 def section_of_larger_site(homepage: str) -> bool:
     """True when the verified 'homepage' is a sub-path of a bigger site (e.g. dnt.no/nordtrondelag), not the site root or a
     language/home landing path like /no/ or /home."""
@@ -519,18 +555,38 @@ def section_of_larger_site(homepage: str) -> bool:
     return bool(path) and ascii_fold(path.split("/")[0]) not in SITE_ROOT_SEGMENTS
 
 
+HANDLE_AFFIXES = {"as", "asa", "sa", "da", "no", "nor", "norge", "norway", "official", "offisiell", "hq", "ltd", "the"}
+
+
+def _strip_affixes(rest: str, allowed: set[str]) -> bool:
+    """True when `rest` is empty or is made up only of allowed affix words (e.g. 'as', 'no', 'norge', 'official')."""
+    ok = [True] + [False] * len(rest)
+    for i in range(len(rest)):
+        if ok[i]:
+            for w in allowed:
+                if w and rest.startswith(w, i):
+                    ok[i + len(w)] = True
+    return ok[len(rest)]
+
+
 def social_handle_matches(legal_name: str, url: str) -> bool:
-    """The account's handle must name this company: its joined distinctive name, its single distinctive word (4+ letters),
-    or at least two of its distinctive words. Brand, parent-group, agency or theme accounts and opaque IDs do not."""
+    """The account's handle must BE this company's name: every distinctive word of the legal name must be in it (a word may be
+    shortened to its first 6+ letters, e.g. 'advokat' for 'advokatene'), and whatever is left over may only be harmless affixes
+    ('as', 'no', 'norge', 'official', ...) or other words of the legal name. So a sister's or parent's account
+    ('sandneselektriske' on Sandnes Elektriske Service AS), a different company containing the name ('akerbp' for Aker AS),
+    a subsidiary's account ('dipsfront' for DIPS AS) and group accounts ('nordictoyteamgroup') are all rejected."""
     handle = re.sub(r"[^a-z0-9]", "", ascii_fold(urllib.parse.urlparse(url).path.rstrip("/").split("/")[-1]))
+    all_words = [t for t in tokens(legal_name)]
     words = [t for t in core_tokens(legal_name) if t not in GENERIC and t not in {"stiftelsen", "stiftelse", "co"} and len(t) >= 3]
-    if not handle or not words:
+    if not handle or not words or (len(words) == 1 and len(words[0]) < 4):
         return False
-    if "".join(words) in handle:
-        return True
-    if len(words) == 1:
-        return len(words[0]) >= 4 and words[0] in handle
-    return sum(1 for w in words if w in handle) >= 2
+    rest = handle
+    for w in words:
+        match = next((w[:n] for n in range(len(w), min(len(w), 6) - 1, -1) if w[:n] in rest), None)
+        if match is None:
+            return False
+        rest = rest.replace(match, "", 1)
+    return _strip_affixes(rest, HANDLE_AFFIXES | set(all_words))
 
 
 def is_publish_date(time_tag: Any) -> bool:
@@ -543,19 +599,27 @@ def is_publish_date(time_tag: Any) -> bool:
 
 
 def hiring_org_is_company(node: dict[str, Any], d: Dossier) -> bool:
-    """A JobPosting counts only when its hiringOrganization is this company (org number or exact legal name)."""
+    """A JobPosting counts only when its hiringOrganization is THIS company: its org number, or its exact registered legal name
+    including the legal form. A similar name is never enough: 'Sandnes Elektriske' (could be the group's brand),
+    'Sandnes Elektriske DA' (another legal entity) or 'Sandnes Elektriske Service AS' (a sister) are all rejected, and any
+    other organisation number in the hiringOrganization rejects it outright."""
     org = node.get("hiringOrganization")
     blob = json.dumps(org, ensure_ascii=False) if org is not None else ""
-    if d.org in re.sub(r"\D", "", blob):
+    numbers = set(re.findall(r"(?<!\d)(\d{9})(?!\d)", re.sub(r"(?<=\d)[\s. ]+(?=\d)", "", blob)))
+    if d.org in numbers:
         return True
+    if numbers:
+        return False  # carries another organisation's number
     name = org.get("name") if isinstance(org, dict) else org if isinstance(org, str) else ""
     legal = d.entity.get("navn") or ""
-    return bool(name) and set(core_tokens(str(name))) == set(core_tokens(legal)) and bool(core_tokens(legal))
+    return bool(name) and bool(legal) and tokens(str(name)) == tokens(legal)
 
 
-def is_news_item(title: str, url: str, page_url: str) -> bool:
+def is_news_item(title: str, url: str, page_url: str, require_post_url: bool = True) -> bool:
     """A dated post, not a site page that happens to carry Article markup ('Kontakt oss', a product page, the homepage)
-    or a menu label ('Se flere nyheter'). The URL must look like a post: a /YYYY/MM/ date path or a news/blog/press section."""
+    or a menu label ('Se flere nyheter'). When require_post_url is True (a generic 'Article' found on an ordinary page), the URL
+    must look like a post: a /YYYY/MM/ date path or a news/blog/press section. Items whose news status is shown some other way
+    (an explicit NewsArticle/BlogPosting/PressRelease type, or a structured news-list entry) may use any URL pattern."""
     title = title.strip()
     path = urllib.parse.urlparse(url).path.strip("/")
     if len(title) < 15 or title.casefold() in NAV_WORDS or MENU_TITLE.search(title) or not path:
@@ -569,6 +633,8 @@ def is_news_item(title: str, url: str, page_url: str) -> bool:
         return False  # theme/demo placeholder posts
     if any(seg in NOT_POST_SEGMENTS or seg.startswith(NOT_POST_SEGMENTS) for seg in segments):
         return False
+    if not require_post_url:
+        return True
     dated = re.search(r"(^|/)(19|20)\d{2}/\d{1,2}(/|$)", path) is not None
     in_section = any(seg.startswith(POST_SECTIONS) for seg in segments[:-1])
     return (dated or in_section) and last.count("-") >= 1

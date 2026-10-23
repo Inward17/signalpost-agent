@@ -110,7 +110,7 @@ def main() -> int:
             v = c["value"]
             if c["field"] == "social_profile" and not social_handle_matches(e["legal_identity"].get("legal_name") or "", v["url"]):
                 fail(f"R14 {tag} social handle does not name the company: {v['url']}")
-            if c["field"] == "company_news" and not is_news_item(v.get("title", ""), v.get("url", ""), ""):
+            if c["field"] == "company_news" and not is_news_item(v.get("title", ""), v.get("url", ""), "", require_post_url=False):
                 fail(f"R14 {tag} news item is not a dated post: {v.get('url')}")
             if c["field"] == "careers_page":
                 fail(f"R14 {tag} careers landing page published as a fact")

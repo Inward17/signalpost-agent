@@ -56,7 +56,11 @@ def replay() -> int:
         ("PARASOLLFIX AS", "https://instagram.com/smartfootoriginals", False, "website-name account"),
         ("WALL-IT AS", "https://youtube.com/channel/UCRSZiaTAF2LY9RWUv4Qe-PA", False, "opaque channel ID"),
         ("DIPS AS", "https://linkedin.com/company/dips-as", True, "company-named account"),
-        ("STIFTELSEN DANVIK", "https://facebook.com/danvikfhs", True, "company-named account"),
+        ("SODVIN AS", "https://facebook.com/SodvinAS", True, "company-named account"),
+        ("SANDNES ELEKTRISKE SERVICE AS", "https://facebook.com/sandneselektriske", False, "sister/parent account on a subsidiary site"),
+        ("AKER AS", "https://linkedin.com/company/akerbp", False, "another company whose handle contains the name"),
+        ("DIPS AS", "https://linkedin.com/company/dipsfront", False, "a subsidiary's account on the parent site"),
+        ("NORDIC TOY TEAM AS", "https://facebook.com/nordictoyteamgroup", False, "group account"),
     ]:
         checks.append(("2 socials", f"{url} for {name} ({why}) -> {'published' if expected else 'withheld'}",
                        social_handle_matches(name, url) is expected))
@@ -75,7 +79,25 @@ def replay() -> int:
                  "<article>Oppdatert <time datetime='2026-03-04'>4. mars</time></article>", "https://x.no/nyheter").soup.find_all("time")
     checks.append(("3 news", "a publish date is accepted, an 'Oppdatert' (updated) date is not", [is_publish_date(t) for t in times] == [True, False]))
 
+    from signalpost.http import Client
+    from signalpost.website import extract_site
+    html = ("<div><a href='/nyheter/forste-sak-om-noe'>Første sak om noe viktig</a><a href='/nyheter/andre-sak-om-noe'>Andre sak om noe viktig</a>"
+            "<time datetime='2026-10-01'>1. okt</time></div><ul><li><a href='/p/12345'>Ny avtale med Statens vegvesen signert</a>"
+            "<time datetime='2026-09-12'>12. sep</time></li></ul>")
+    d = dossier("SANDNES ELEKTRISKE AS")
+    extract_site(Client(max_requests=0), d, {"verdict": "exact", "score": 1.0, "reason": "r", "domain": "x.no", "homepage": "https://x.no/", "links": {}},
+                 [parse_page("news", Response("https://x.no/nyheter", "https://x.no/nyheter", 200, html.encode(), "text/html"))])
+    news = [(c["value"]["date"], c["value"]["url"]) for c in d.claims if c["field"] == "company_news"]
+    checks.append(("3 news", "a date shared by several articles is not given to any of them; a list entry with its own date and an unusual URL is kept",
+                   news == [("2026-09-12", "https://x.no/p/12345")]))
+
     # 4. Jobs must be single ads for this company
+    from signalpost.website import hiring_org_is_company
+    d = dossier("SANDNES ELEKTRISKE AS")
+    for employer, expected in [("Sandnes Elektriske AS", True), ("Sandnes Elektriske", False), ("Sandnes Elektriske DA", False),
+                               ("Sandnes Elektriske Service AS", False), ("Sandnes Elektriske Holding AS", False)]:
+        checks.append(("4 jobs", f"website job for employer {employer!r} -> {'published' if expected else 'withheld'} for Sandnes Elektriske AS",
+                       hiring_org_is_company({"hiringOrganization": {"name": employer}}, d) is expected))
     from signalpost.jobs import single_ad_url
     checks.append(("4 jobs", "a NAV search link is replaced by the single-ad URL",
                    single_ad_url({"uuid": "b9aa6260-4ed4-481f-ab32-af5996fe8e55", "link": "https://arbeidsplassen.nav.no/stillinger?q=x"}).endswith("/b9aa6260-4ed4-481f-ab32-af5996fe8e55")))
@@ -115,7 +137,7 @@ def scan(path: Path) -> int:
                 v = c["value"]
                 if c["field"] == "social_profile" and not social_handle_matches(name, v["url"]):
                     problems["2 socials"].append(f"{name}: {v['url']}")
-                if c["field"] == "company_news" and not is_news_item(v.get("title", ""), v.get("url", ""), ""):
+                if c["field"] == "company_news" and not is_news_item(v.get("title", ""), v.get("url", ""), "", require_post_url=False):
                     problems["3 news"].append(f"{name}: {v.get('title', '')[:50]!r} {v.get('url')}")
                 if c["field"] == "careers_page":
                     problems["4 jobs"].append(f"{name}: careers landing page {v}")

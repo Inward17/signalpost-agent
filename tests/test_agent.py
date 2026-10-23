@@ -207,7 +207,16 @@ def test_social_handle_must_name_the_company():
         ("PARASOLLFIX AS", "https://instagram.com/smartfootoriginals", False),
         ("WALL-IT AS", "https://youtube.com/channel/UCRSZiaTAF2LY9RWUv4Qe-PA", False),
         ("DIPS AS", "https://linkedin.com/company/dips-as", True),
-        ("STIFTELSEN DANVIK", "https://facebook.com/danvikfhs", True),
+        ("STIFTELSEN DANVIK", "https://facebook.com/danvikfhs", False),   # 'fhs' (the school) is not part of the legal name
+        # similar names and subsidiaries sharing a brand (second review of version 2)
+        ("SANDNES ELEKTRISKE SERVICE AS", "https://facebook.com/sandneselektriske", False),  # sister/parent account on a subsidiary's site
+        ("SANDNES ELEKTRISKE SERVICE AS", "https://facebook.com/sandneselektriskeservice", True),
+        ("AKER AS", "https://linkedin.com/company/akerbp", False),                           # another company containing the name
+        ("DIPS AS", "https://linkedin.com/company/dipsfront", False),                        # a subsidiary's account on the parent's site
+        ("DIPS FRONT AS", "https://linkedin.com/company/dips-as", False),                     # the parent's account on a subsidiary's site
+        ("RINGO BERGEN AS", "https://facebook.com/ringonorge", False),                        # chain brand on a franchise site
+        ("NORDIC TOY TEAM AS", "https://facebook.com/nordictoyteamgroup", False),             # group account
+        ("WALL-IT AS", "https://facebook.com/wallitnorway", True),                            # harmless country affix
         ("ADVOKATENE CHRISTIAN WIIG & CO AS", "https://facebook.com/advokatchristianwiig", True),
         ("SANDNES ELEKTRISKE AS", "https://facebook.com/sandneselektriske", True),
     ]
@@ -257,6 +266,77 @@ def test_job_posting_must_name_this_company_and_careers_pages_are_not_jobs():
     assert not [c for c in d.claims if c["field"] == "careers_page"]
     search = {"uuid": "b9aa6260-4ed4-481f-ab32-af5996fe8e55", "link": "https://arbeidsplassen.nav.no/stillinger?q=elektriker"}
     assert single_ad_url(search) == "https://arbeidsplassen.nav.no/stillinger/stilling/b9aa6260-4ed4-481f-ab32-af5996fe8e55"
+
+
+def test_website_job_needs_exact_employer_not_a_similar_name():
+    from signalpost.website import hiring_org_is_company
+    d = dossier()
+    for employer, expected in [("Sandnes Elektriske AS", True),
+                               ("Sandnes Elektriske", False),             # brand without legal form: could be the group
+                               ("Sandnes Elektriske DA", False),          # another legal entity with the same words
+                               ("Sandnes Elektriske Service AS", False),  # sister company
+                               ("Sandnes Elektriske Holding AS", False)]: # parent
+        assert hiring_org_is_company({"hiringOrganization": {"name": employer}}, d) is expected, employer
+    assert hiring_org_is_company({"hiringOrganization": {"name": "X", "identifier": "810 034 882"}}, d)
+    assert not hiring_org_is_company({"hiringOrganization": {"name": "Sandnes Elektriske AS", "identifier": "912 345 678"}}, d)
+
+
+def test_nav_job_with_similar_employer_name_is_not_published():
+    import json as _json
+    import os
+    from signalpost.http import Client
+    from signalpost.jobs import FEED, JobIndex, collect_jobs
+    def ad(uuid, employer, orgnr):
+        return {"uuid": uuid, "status": "ACTIVE", "ad_content": {"uuid": uuid, "title": "Elektriker", "employer": {"name": employer, "orgnr": orgnr},
+                "link": f"https://arbeidsplassen.nav.no/stillinger/stilling/{uuid}"}}
+    ads = {"00000000-0000-0000-0000-000000000001": ad("00000000-0000-0000-0000-000000000001", "Sandnes Elektriske Service AS", "912345678"),
+           "00000000-0000-0000-0000-000000000002": ad("00000000-0000-0000-0000-000000000002", "Sandnes Elektriske", None),
+           "00000000-0000-0000-0000-000000000003": ad("00000000-0000-0000-0000-000000000003", "SANDNES ELEKTRISKE AS", "810034882")}
+    routes = {f"{FEED}/api/v1/feedentry/{u}": (200, {"content-type": "application/json"}, _json.dumps(a).encode()) for u, a in ads.items()}
+    web, restore = _with_fake_network(routes)
+    index = JobIndex()
+    index.token = "TOKEN"
+    index.by_name = {"sandnes elektriske service as": [], "sandnes elektriske": [], "sandnes elektriske as": []}
+    for u, a in ads.items():
+        entry = {"uuid": u, "status": "ACTIVE", "businessName": a["ad_content"]["employer"]["name"], "entry_url": f"{FEED}/api/v1/feedentry/{u}",
+                 "sistEndret": "2026-10-01"}
+        index.by_name.setdefault(" ".join(a["ad_content"]["employer"]["name"].casefold().split()), []).append(entry)
+    try:
+        d = dossier()
+        d.entity = {"navn": "SANDNES ELEKTRISKE AS"}
+        collect_jobs(Client(), d, index)
+        got = [c["value"]["employer_name"] for c in d.claims if c["field"] == "job_posting"]
+        assert got == ["SANDNES ELEKTRISKE AS"], got   # sister (other orgnr) and the bare brand name (no orgnr) are not published
+    finally:
+        restore()
+
+
+def test_news_date_must_belong_to_one_article():
+    from signalpost.http import Client
+    from signalpost.website import extract_site, plausible_publish_date
+    html = ("<body><div class='news'><a href='/nyheter/forste-sak-om-noe'>Første sak om noe viktig</a>"
+            "<a href='/nyheter/andre-sak-om-noe'>Andre sak om noe viktig</a><time datetime='2026-10-01'>1. okt</time></div>"  # one date, two articles
+            "<ul><li><a href='/p/12345'>Ny avtale med Statens vegvesen signert</a> <time datetime='2026-09-12'>12. sep</time></li>"  # unusual URL, own date
+            "<li><a href='/p/99999'>Melding fra fremtiden om noe stort</a> <time datetime='2031-01-01'>2031</time></li></ul></body>")  # future date
+    d = dossier()
+    p = parse_page("news", Response("https://x.no/nyheter", "https://x.no/nyheter", 200, html.encode(), "text/html"))
+    extract_site(Client(max_requests=0), d, {"verdict": "exact", "score": 1.0, "reason": "r", "domain": "x.no", "homepage": "https://x.no/", "links": {}}, [p])
+    got = [(c["value"]["date"], c["value"]["url"]) for c in d.claims if c["field"] == "company_news"]
+    assert got == [("2026-09-12", "https://x.no/p/12345")], got
+    assert not plausible_publish_date("2026-02-30", "2026-10-23") and not plausible_publish_date("1990-01-01", "2026-10-23")
+
+
+def test_explicit_news_types_accept_unusual_urls_but_generic_articles_do_not():
+    from signalpost.http import Client
+    from signalpost.website import extract_site
+    nodes = [{"@type": "NewsArticle", "headline": "Ny avtale med Statens vegvesen signert", "datePublished": "2026-09-12", "dateModified": "2026-10-20", "url": "https://x.no/p/12345"},
+             {"@type": "Article", "headline": "Om våre tjenester innen elektro", "datePublished": "2019-01-01", "url": "https://x.no/tjenester-elektro"}]
+    html = "<body><footer>Sandnes Elektriske AS org.nr 810 034 882</footer><script type='application/ld+json'>" + json.dumps(nodes) + "</script></body>"
+    d = dossier()
+    extract_site(Client(max_requests=0), d, {"verdict": "exact", "score": 1.0, "reason": "r", "domain": "x.no", "homepage": "https://x.no/", "links": {}},
+                 [page(html, "https://x.no/")])
+    got = [(c["value"]["date"], c["value"]["url"]) for c in d.claims if c["field"] == "company_news"]
+    assert got == [("2026-09-12", "https://x.no/p/12345")], got   # datePublished, not dateModified; the generic page Article is ignored
 
 
 def test_domain_guesses_skip_generic_names():
