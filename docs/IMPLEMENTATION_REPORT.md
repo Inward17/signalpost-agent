@@ -7,7 +7,7 @@ Evidence-backed research of Norwegian companies from an organisation number
 | Challenge | Signalpost (Builderr): build an agent that finds company information |
 | Agent code version | commit `a96e0f1d38e1db2c2323be8494de1f790ac855ab` (version 2, after Builderr's audit of version 1; all results in this report were produced at this commit) |
 | Report date | 16 October 2026 |
-| Code size | about 2,030 lines of agent code, 340 lines of tooling and a 660-line offline test suite in the repository; an 82-line run harness was used for validation |
+| Code size | about 2,030 lines of agent code, 480 lines of tooling and a 660-line offline test suite in the repository; an 82-line run harness was used for validation |
 | Third-party cost per run | $0.00 (no LLM, no paid API in the default configuration) |
 
 ## 1. Executive summary
@@ -98,6 +98,7 @@ Modules:
 | `signalpost/report.py` | 79 | self-contained HTML viewer |
 | `tools/verify_run.py` | 195 | contract verifier (14 rule groups) with live financial spot-checks |
 | `tools/purge.py` | 78 | erasure, correction and retention operations |
+| `tools/verify_v2_fixes.py` | 140 | replays Builderr's audit cases; scans a dataset for the four audit problems |
 | `tools/build_dataset.py` | 69 | deduplicated 1,000-profile dataset from verified runs |
 | `tests/test_agent.py` | 662 | 47 offline regression tests |
 
@@ -404,6 +405,16 @@ Every defect has a regression test or a dedicated suite run.
 - **Network-security tests use stand-ins** rather than a live hostile server.
 
 ## 16. Reproduction and submission
+
+Version 2 changes are documented before/after, with the old and new code and verification steps, in `CHANGES_V2.md`. To check them:
+
+```bash
+python tools/verify_v2_fixes.py
+python tools/verify_v2_fixes.py --dataset profiles/profiles.jsonl.gz
+```
+
+Expected: 17/17 audit cases pass, and 0 audit problems in the version 2 dataset (the version 1 dataset shows 57).
+
 
 Install and run (Linux/macOS):
 

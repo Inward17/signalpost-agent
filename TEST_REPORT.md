@@ -11,6 +11,8 @@ repository; its results are recorded here. The contract verifier `tools/verify_r
 
 ## What changed in version 2 (Builderr audit)
 
+Full before/after detail, old and new code, and step-by-step verification: [CHANGES_V2.md](CHANGES_V2.md).
+
 | Builderr's finding | What version 1 did | Version 2 |
 |---|---|---|
 | Website must be the company's own, not a parent group or brand site | a site declared to Brønnøysund was accepted when its brand title appeared (for example ASK Spekehus AS → `askgard.no`); facts were harvested from a whole domain even when the company only owns a section of it (DNT Nord-Trøndelag on `dnt.no`) | a declared site needs the org number or the exact legal name (or brand plus the registry's own phone or address); a company site that is a section of a larger site yields no social accounts, news or jobs from that domain |

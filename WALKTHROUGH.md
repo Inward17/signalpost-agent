@@ -134,15 +134,21 @@ At most about 8 requests per site.
 3. A parked, for-sale or placeholder page → **rejected**.
 4. The exact legal name *with its legal suffix in capitals* (`Sandnes Elektriske AS`, so the English word "as" can't satisfy it) plus the registry phone
    or the registered street and postcode → exact 0.97, but only on a name-matching domain or an officially declared site.
-5. An officially declared site plus the legal or brand name on the page → exact 0.92. A contact detail alone is **not** enough, because shared phones point to related companies.
+5. An officially declared site plus the **exact legal name** on the page, or the brand name plus the registry's own phone or address → exact 0.92.
+   A brand title alone is **not** enough, because a declared domain can be a group or brand site (version 2). A contact detail alone isn't either,
+   because shared phones point to related companies.
 6. Anything weaker → `ambiguous`, recorded with the reason and the candidate list, and nothing published.
 
-**Extraction from an exact site**: the website claim with its identity method and score; the description (meta/og or first paragraph), labelled as
-company copy; the brand (`og:site_name`); social profiles linked from the site, kept only if the handle matches the name or domain or the profile is listed in
-the site's JSON-LD `sameAs` (other links are counted and withheld); generic mailboxes on the company's own domain; phone numbers from `tel:` links on the home and contact pages;
-dated news posts from JSON-LD articles and `<time>` elements on the news page (post-like URLs only; modified dates ignored); JSON-LD
-`JobPosting` entries that name this company as employer. Social accounts are published only when the handle names the company, and careers
-landing pages are not published (version 2, after Builderr's audit).
+**Extraction from an exact site** (version 2 rules, after Builderr's audit; see [CHANGES_V2.md](CHANGES_V2.md)):
+- the website claim with its identity method and score; the description (meta/og or first paragraph), labelled as company copy; the brand (`og:site_name`);
+- social profiles linked from the site **whose handle contains the company's distinctive name** (`social_handle_matches`); links that name a brand,
+  a parent group, the web agency or the theme are counted and withheld, and platform paths (`accounts`, `login`, `hashtag`, `pages`) are rejected;
+- generic mailboxes on the company's own domain; phone numbers from `tel:` links on the home and contact pages;
+- dated news posts from JSON-LD articles and `<time>` elements on the news page, only when the URL looks like a post (`is_news_item`: date path or
+  news/blog/press section; not contact, product or shop pages, menu labels or demo posts) and the date is not marked modified/updated (`is_publish_date`);
+- JSON-LD `JobPosting` entries that name this company as employer (`hiring_org_is_company`). Careers landing pages are not published.
+- If the verified site is only a section of a larger site (`section_of_larger_site`, e.g. `dnt.no/nordtrondelag`), the URL is published but no
+  social accounts, news or jobs are taken from that domain, because they belong to the site's owner.
 
 ### 3.8 Refresh (`envelope.py: diff`)
 The previous snapshot comes from `--previous envelopes.jsonl` or from `state/<org>.json`. For each claim key:
@@ -185,8 +191,14 @@ workplaces, verified website, linked profiles, hiring, latest news, and recent r
 | HTTP 429 on a verified site produced a false `removed_official_website` | 10-run refresh (R10) | outage on a declared or previously verified site → `blocked`/`failed`, site facts kept `stale` |
 | Further state and contract gaps (invalid-input envelopes, careers page, budget-cut locations, junk news) | `tools/verify_run.py` | see TEST_REPORT.md |
 | Field-less "Ukjent" change-log rows showing up as activity | smoke review | only rows with real changes, or new/deleted rows, are kept |
+| Declared group/brand site accepted on its brand title (ASK Spekehus → askgard.no) | **Builderr audit of v1** | declared sites need org number or exact legal name |
+| Parent's social accounts and careers page taken for a section site (DNT Nord-Trøndelag on dnt.no) | **Builderr audit of v1** | section sites yield no socials, news or jobs |
+| Brand-named or junk social accounts (Ringo for Nordic Toy Team, `instagram.com/accounts`) | **Builderr audit of v1** | handle must name the company |
+| Contact page and demo post published as news | **Builderr audit of v1** | post-like URLs only; modified dates ignored |
+| 26 careers landing pages published as facts | **Builderr audit of v1** | careers pages dropped; JobPosting must name the company |
 
-Each of the identity-gate failures has a regression test.
+Each of the identity-gate failures has a regression test. The version 2 changes are documented before/after, with verification steps, in
+[CHANGES_V2.md](CHANGES_V2.md).
 
 ## 5. Results
 
