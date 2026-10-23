@@ -117,6 +117,12 @@ def main() -> int:
             if c["field"] == "job_posting" and v.get("source") == "NAV Arbeidsplassen" and not re.fullmatch(
                     r"https://arbeidsplassen\.nav\.no/stillinger/stilling/[0-9a-f-]{36}", str(v.get("url"))):
                 fail(f"R14 {tag} NAV job is not a single-ad URL: {v.get('url')}")
+        site = next((c["value"] for c in e.get("claims", []) if c["field"] == "official_website"), None)
+        if site and site.get("site_owner", "").startswith("site not shown"):  # R14 shared/parent site: only its URL may be published
+            ev_url = {x["id"]: x.get("source_url", "") for x in e.get("evidence", [])}
+            for c in e["claims"]:
+                if c["field"] != "official_website" and any(site["domain"] in ev_url.get(i, "") for i in c.get("evidence_ids", [])):
+                    fail(f"R14 {tag} {c['field']} taken from a site not shown to be the company's own ({site['domain']})")
         for p in e.get("summary", {}).get("points", []):  # R8 synthesis cites real claims
             if not p.get("claim_ids") or any(i not in claim_ids for i in p["claim_ids"]):
                 fail(f"R8 {tag} summary point cites unknown claim")

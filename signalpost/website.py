@@ -259,7 +259,8 @@ def in_site_chrome(tag: Any) -> bool:
     """Inside the site's own header, footer, navigation or address block (where a company lists its own accounts)."""
     if tag.find_parent(["footer", "header", "nav", "address"]):
         return True
-    return tag.find_parent(attrs={"class": re.compile(r"footer|header|social|some-|follow", re.I)}) is not None         or tag.find_parent(attrs={"id": re.compile(r"footer|header|social", re.I)}) is not None
+    return (tag.find_parent(attrs={"class": re.compile(r"footer|header|social|some-|follow", re.I)}) is not None
+            or tag.find_parent(attrs={"id": re.compile(r"footer|header|social", re.I)}) is not None)
 
 
 def site_owner_proven(d: Dossier, pages: list[Page], domain: str) -> tuple[bool, str]:
@@ -473,9 +474,10 @@ def extract_site(client: Client, d: Dossier, verdict: dict[str, Any], pages: lis
     # social profiles: linked from the verified site AND the handle names this company. Footer links often belong to a
     # parent group, a brand, the web agency or the theme, so a link alone (or the site's sameAs markup) is not enough.
     # Attribution: a matching name is not proof of ownership. Only links the company itself presents as its own count: in the
-    # site's header, footer, navigation or address block, on its contact/about page, or in the sameAs of THIS company's
-    # structured data. A link inside an article or another organisation's markup is not attributable.
+    # site's header, footer, navigation or address block, on its contact/about page, repeated on two or more of its pages (site-wide
+    # chrome with unrecognised markup), or in the sameAs of THIS company's structured data. A link inside an article or another organisation's markup is not attributable.
     socials: dict[str, tuple[dict[str, str], Page]] = {}
+    repeated: dict[str, dict[str, tuple[dict[str, str], Page]]] = {}
     for page in pages:
         for node in walk_jsonld(page.jsonld, ORG_TYPES):
             if not org_node_is_company(node, d):
@@ -485,11 +487,16 @@ def extract_site(client: Client, d: Dossier, verdict: dict[str, Any], pages: lis
                 if isinstance(url, str) and (s := normalize_social(url)):
                     socials.setdefault(s["url"], (s, page))
         for a in page.soup.select("a[href]"):
-            if page.kind not in ("contact", "about") and not in_site_chrome(a):
-                continue
             s = normalize_social(urllib.parse.urljoin(page.resp.final_url, str(a.get("href"))))
-            if s:
+            if not s:
+                continue
+            if page.kind in ("contact", "about") or in_site_chrome(a):
                 socials.setdefault(s["url"], (s, page))
+            else:
+                repeated.setdefault(s["url"], {})[page.resp.final_url] = (s, page)
+    for url, seen in repeated.items():   # the same link on two or more of the site's pages is site-wide chrome, not article content
+        if len(seen) >= 2:
+            socials.setdefault(url, next(iter(seen.values())))
     published = 0
     for url, (s, page) in socials.items():
         if social_handle_matches(d.entity.get("navn") or "", url):

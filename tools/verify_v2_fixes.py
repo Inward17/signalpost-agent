@@ -102,6 +102,19 @@ def replay() -> int:
     checks.append(("4 jobs", "a NAV search link is replaced by the single-ad URL",
                    single_ad_url({"uuid": "b9aa6260-4ed4-481f-ab32-af5996fe8e55", "link": "https://arbeidsplassen.nav.no/stillinger?q=x"}).endswith("/b9aa6260-4ed4-481f-ab32-af5996fe8e55")))
 
+    # Residual risks (third review): a parent's ROOT domain declared for a subsidiary; accounts not attributable to the company
+    from tests.test_agent import _site_case
+    parent = ("<title>Elgruppen</title><body><p>Våre selskaper: Sandnes Elektriske Service AS (org.nr 912 345 674)</p>"
+              "<footer>© Elgruppen AS <a href='https://facebook.com/sandneselektriskeservice'>fb</a></footer></body>")
+    v, d = _site_case("https://elgruppen.no/", parent, "official_registry")
+    checks.append(("1 website", "subsidiary declared with its parent's root domain: only the URL is published, no facts from the parent site",
+                   v["verdict"] == "exact" and {c["field"] for c in d.claims} == {"official_website"}))
+    article = ("<body><footer>Sandnes Elektriske Service AS org.nr 912 345 674</footer>"
+               "<article><a href='https://facebook.com/sandneselektriskeservice'>partner</a></article></body>")
+    _, d = _site_case("https://sse.no/", article, "name_derived_domain")
+    checks.append(("2 socials", "a full-name account linked only inside an article is not attributable -> withheld",
+                   not [c for c in d.claims if c["field"] == "social_profile"]))
+
     failed = 0
     for point, text, ok in checks:
         print(f"  {'PASS' if ok else 'FAIL'}  [{point}] {text}")
@@ -128,6 +141,10 @@ def scan(path: Path) -> int:
                 if "declared" in method and "registry phone" not in method and "registered address" not in method \
                         and not re.search(r"\d{3}\s?\d{3}\s?\d{3}", span) and not (name_re and name_re.search(span)):
                     problems["1 website"].append(f"{name}: {site['value']['url']} accepted on a brand title ({span[:60]!r})")
+                if site["value"].get("site_owner", "").startswith("site not shown") and any(
+                        c["field"] in ("social_profile", "company_news", "website_description", "public_brand", "contact_email")
+                        or (c["field"] == "job_posting" and c["value"].get("source") == "company website") for c in e["claims"]):
+                    problems["1 website"].append(f"{name}: {site['value']['url']} not shown to be the company's own but site facts published")
                 if section_of_larger_site(site["value"]["url"]):
                     owned = [c["field"] for c in e["claims"] if c["field"] in ("social_profile", "company_news")
                              or (c["field"] == "job_posting" and c["value"].get("source") == "company website")]

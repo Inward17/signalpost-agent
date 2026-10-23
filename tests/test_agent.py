@@ -807,6 +807,26 @@ def test_social_account_must_be_attributable_not_just_name_matching():
     assert [c["value"]["url"] for c in d.claims if c["field"] == "social_profile"] == ["https://facebook.com/sandneselektriskeservice"]
 
 
+def test_social_link_repeated_across_site_pages_counts_as_site_chrome():
+    # page builders (Framer, Wix) render the footer as hashed <div>s; a link on every page is still the site's own chrome
+    from signalpost.http import Client
+    from signalpost.website import extract_site
+    body = ("<body><div class='framer-x1'>Sandnes Elektriske Service AS · org.nr 912 345 674</div>"
+            "<div class='framer-x2'><a href='https://facebook.com/sandneselektriskeservice'>fb</a></div></body>")
+    d = dossier()
+    d.org = "912345674"
+    d.entity = {"navn": "SANDNES ELEKTRISKE SERVICE AS"}
+    v = {"verdict": "exact", "score": 1.0, "reason": "r", "domain": "sse.no", "homepage": "https://sse.no/", "links": {}, "owner_proven": True}
+    one = [page(body, "https://sse.no/")]
+    extract_site(Client(max_requests=0), d, v, one)
+    assert not [c for c in d.claims if c["field"] == "social_profile"]          # one page: could be content, withheld
+    d = dossier()
+    d.org = "912345674"
+    d.entity = {"navn": "SANDNES ELEKTRISKE SERVICE AS"}
+    extract_site(Client(max_requests=0), d, v, one + [page(body, "https://sse.no/tjenester")])
+    assert [c["value"]["url"] for c in d.claims if c["field"] == "social_profile"] == ["https://facebook.com/sandneselektriskeservice"]
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_")]
     for name, fn in tests:
