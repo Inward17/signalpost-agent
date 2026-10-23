@@ -30,12 +30,14 @@ or contact-email domain for an orgnr-matched ad, name-derived domain, optional s
 5. **Exact (0.92)** — the site was declared by an official source (registry `hjemmeside`, or the employer homepage of a NAV ad whose `employer.orgnr` equals the company; not a contact e-mail domain) *and* the exact legal name appears on the page, or the brand name plus the registry's own phone or address. A declared domain can be a group or brand site, so a brand title alone is never enough. A matching phone alone is not enough (shared phones point to related companies).
 6. Anything else with a name hit → `ambiguous`, recorded with the reason, **not published**.
 
-Social profiles are published only when linked from the verified site *and* the handle contains the company's distinctive name (footer links
-often belong to a parent group, a brand, the web agency or the theme). Platform paths (`accounts`, `login`, `hashtag`, `pages`) and opaque channel IDs are rejected.
+Social profiles are published only when linked from the verified site *and* the handle is the company's name: every distinctive word of the legal
+name must be in it, and anything left over may only be a harmless affix (`as`, `no`, `norge`, `official`), another legal-name word or a page ID.
+Footer links often belong to a parent group, a sister or subsidiary, a brand, the web agency or the theme, so a shared word is never enough. Platform paths (`accounts`, `login`, `hashtag`, `pages`) and opaque channel IDs are rejected.
 When the company's site is only a section of a larger site (for example a regional page on a national organisation's domain), no social accounts,
-news or jobs are taken from that domain. News must be a dated post (date path or news/blog/press section), never a contact, product or shop page,
-a menu label or a demo post, and "modified"/"updated" dates are not publish dates. Careers landing pages are not published; website JobPosting
-markup counts only when it names this company as employer, and NAV jobs always link to the single ad.
+news or jobs are taken from that domain. News must be a real post with its own publication date: the date must belong to exactly one article (never a date shared by a
+list or found elsewhere on the page), be plausible, and never be a "modified"/"updated" date; contact, product and shop pages, menu labels
+and demo posts are never news. Careers landing pages are not published; website JobPosting
+markup counts only when its employer carries this org number or the exact legal name including the legal form (a similar name never does), and NAV jobs always link to the single ad.
 
 ## Personal data
 
