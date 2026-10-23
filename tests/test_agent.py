@@ -741,6 +741,72 @@ def test_missing_financials_never_zero():
     assert env["sections"]["financials"]["state"] == "not_available"
 
 
+def _site_case(url, html, origin):
+    from signalpost.http import Client
+    from signalpost.website import extract_site, try_site
+    web, restore = _with_fake_network({url: (200, {}, html.encode())})
+    try:
+        d = dossier()
+        d.org = "912345674"
+        d.entity = {"navn": "SANDNES ELEKTRISKE SERVICE AS", "organisasjonsform": {"kode": "AS"}}
+        verdict, pages = try_site(Client(), d, {"url": url, "origin": origin})
+        if verdict["verdict"] == "exact":
+            extract_site(Client(max_requests=0), d, verdict, pages)
+        return verdict, d
+    finally:
+        restore()
+
+
+_PARENT_NEWS = json.dumps([{"@type": "NewsArticle", "headline": "Elgruppen kjøper nytt selskap i Bergen", "datePublished": "2026-10-01",
+                            "url": "https://elgruppen.no/nyheter/kjop-bergen"}])
+
+
+def test_subsidiary_declared_with_parent_root_domain_gets_no_parent_facts():
+    # residual-risk review: subsidiary registered with its PARENT's root domain, so there is no distinct path to detect
+    html = ("<title>Elgruppen</title><body><h1>Elgruppen - elektro i hele Norge</h1>"
+            "<p>Våre selskaper: Sandnes Elektriske Service AS (org.nr 912 345 674)</p><p>" + "Elgruppen leverer elektro over hele landet. " * 3 + "</p>"
+            "<footer>© Elgruppen AS · <a href='https://facebook.com/sandneselektriskeservice'>fb</a></footer>"
+            "<script type='application/ld+json'>" + _PARENT_NEWS + "</script></body>")
+    verdict, d = _site_case("https://elgruppen.no/", html, "official_registry")
+    assert verdict["verdict"] == "exact" and verdict["owner_proven"] is False, verdict
+    fields = {c["field"] for c in d.claims}
+    assert "official_website" in fields
+    assert not fields & {"website_description", "public_brand", "social_profile", "company_news", "job_posting", "contact_email"}, fields
+
+
+def test_subsidiarys_own_root_site_keeps_its_facts():
+    html = ("<title>Sandnes Elektriske Service</title><body><footer>Sandnes Elektriske Service AS · org.nr 912 345 674 · "
+            "<a href='https://facebook.com/sandneselektriskeservice'>fb</a></footer>"
+            "<script type='application/ld+json'>" + _PARENT_NEWS.replace("elgruppen.no", "sse.no") + "</script></body>")
+    verdict, d = _site_case("https://sse.no/", html, "name_derived_domain")
+    assert verdict["owner_proven"] is True, verdict
+    assert {"social_profile", "company_news"} <= {c["field"] for c in d.claims}
+
+
+def test_footer_listing_several_companies_does_not_prove_site_owner():
+    from signalpost.website import site_owner_proven
+    html = ("<body><p>Sandnes Elektriske Service AS</p><footer>Elgruppen AS org.nr 923 609 016 · "
+            "Sandnes Elektriske Service AS org.nr 912 345 674</footer></body>")
+    d = dossier()
+    d.org = "912345674"
+    d.entity = {"navn": "SANDNES ELEKTRISKE SERVICE AS"}
+    assert site_owner_proven(d, [page(html, "https://elgruppen.no/")], "elgruppen.no")[0] is False
+
+
+def test_social_account_must_be_attributable_not_just_name_matching():
+    # residual-risk review: a handle with the full company name is not proof; the company must present it as its own
+    footer = "<title>Sandnes Elektriske Service</title><body><footer>Sandnes Elektriske Service AS · org.nr 912 345 674</footer>"
+    in_article = footer + "<article><p>Følg vår samarbeidspartner <a href='https://facebook.com/sandneselektriskeservice'>her</a></p></article></body>"
+    _, d = _site_case("https://sse.no/", in_article, "name_derived_domain")
+    assert not [c for c in d.claims if c["field"] == "social_profile"]          # only linked inside an article: withheld
+    other = json.dumps({"@type": "Organization", "name": "Elgruppen AS", "sameAs": ["https://facebook.com/sandneselektriskeservice"]})
+    _, d = _site_case("https://sse.no/", footer + "<script type='application/ld+json'>" + other + "</script></body>", "name_derived_domain")
+    assert not [c for c in d.claims if c["field"] == "social_profile"]          # sameAs of ANOTHER organisation: withheld
+    own = other.replace("Elgruppen AS", "Sandnes Elektriske Service AS")
+    _, d = _site_case("https://sse.no/", footer + "<script type='application/ld+json'>" + own + "</script></body>", "name_derived_domain")
+    assert [c["value"]["url"] for c in d.claims if c["field"] == "social_profile"] == ["https://facebook.com/sandneselektriskeservice"]
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_")]
     for name, fn in tests:

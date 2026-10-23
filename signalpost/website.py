@@ -237,6 +237,58 @@ def assess_identity(d: Dossier, pages: list[Page], origin: str, domain: str) -> 
     return best
 
 
+IDENTITY_BLOCKS = '[class*="footer" i], [id*="footer" i], [class*="colophon" i]'
+
+
+def name_matches_domain(legal: str, domain: str) -> bool:
+    core = core_tokens(legal)
+    label = domain.split(".")[0].replace("-", "")
+    return bool(core) and label in {"".join(core), "".join(t for t in core if t not in GENERIC), "".join(core[:2])}
+
+
+def org_node_is_company(node: dict[str, Any], d: Dossier) -> bool:
+    """A JSON-LD Organization node that is THIS company: its org number in vatID/taxID/identifier, or its exact legal name."""
+    ids = re.sub(r"\D", "", json.dumps([node.get(k) for k in ("vatID", "taxID", "identifier", "leiCode")], ensure_ascii=False))
+    if d.org in ids:
+        return True
+    legal = tokens(d.entity.get("navn") or "")
+    return bool(legal) and any(tokens(str(node.get(k) or "")) == legal for k in ("legalName", "name"))
+
+
+def in_site_chrome(tag: Any) -> bool:
+    """Inside the site's own header, footer, navigation or address block (where a company lists its own accounts)."""
+    if tag.find_parent(["footer", "header", "nav", "address"]):
+        return True
+    return tag.find_parent(attrs={"class": re.compile(r"footer|header|social|some-|follow", re.I)}) is not None         or tag.find_parent(attrs={"id": re.compile(r"footer|header|social", re.I)}) is not None
+
+
+def site_owner_proven(d: Dossier, pages: list[Page], domain: str) -> tuple[bool, str]:
+    """Is the SITE this company's own (not only a site that mentions it)? A subsidiary can be declared with its parent's root
+    domain, so a declared site that carries the number in body text is a valid website claim but not proof that the site's
+    news, accounts and vacancies are this company's. Proof: the domain matches the company name, or the org number / exact
+    legal name sits in the site's own identity block (footer/address; contact or about page for the number) that names no
+    other organisation, or the site's own structured data is this company."""
+    legal = d.entity.get("navn") or ""
+    if name_matches_domain(legal, domain):
+        return True, "domain matches the company name"
+    org_re, name_re = _orgnr_regex(d.org), legal_name_regex(legal)
+    for page in pages:
+        texts = [(b.get_text(" ", strip=True), True) for b in page.soup.find_all(["footer", "address"]) + page.soup.select(IDENTITY_BLOCKS)]
+        if page.kind in ("contact", "about"):
+            texts.append((page.text, False))
+        for text, is_block in texts:
+            others = {re.sub(r"\D", "", f) for f in _ORG_LABELLED.findall(text)} - {d.org} - d.subunit_orgs
+            if others:
+                continue  # a block listing several organisations (group footer, "our companies") proves nothing
+            if org_re.search(text):
+                return True, "organisation number in the site's own footer/contact block"
+            if is_block and name_re and name_re.search(text):
+                return True, "exact legal name in the site's own footer"
+        if any(org_node_is_company(node, d) for node in walk_jsonld(page.jsonld, ORG_TYPES)):
+            return True, "the site's own structured data names this company"
+    return False, "site not shown to belong to this company (shared, parent or brand site): only its URL is published"
+
+
 def ownership_context(page: Page, org_re: re.Pattern[str]) -> bool:
     """True when the org number appears where a site states its OWN identity: footer/address block, a contact or
     about page, or the page's JSON-LD Organization node."""
@@ -318,6 +370,8 @@ def try_site(client: Client, d: Dossier, candidate: dict[str, str]) -> tuple[dic
                 verdict = assess_identity(d, pages, origin, final_domain)
     verdict["domain"] = final_domain
     verdict["homepage"] = resp.final_url
+    if verdict["verdict"] == "exact":
+        verdict["owner_proven"], verdict["owner_reason"] = site_owner_proven(d, pages, final_domain)
     verdict["links"] = links
     return verdict, pages
 
@@ -374,14 +428,19 @@ def extract_site(client: Client, d: Dossier, verdict: dict[str, Any], pages: lis
     home = pages[0]
     proof_page = next((p for p in pages if p.resp.final_url == verdict.get("page")), home)
     proof_ev = d.add_evidence(proof_page.resp, "company_owned", verdict.get("span") or verdict["reason"])
+    owner_ok = verdict.get("owner_proven", True)
     d.claim("official_website", "website", {"url": verdict["homepage"], "domain": domain, "identity_method": verdict["reason"],
-            "identity_score": verdict["score"]}, [proof_ev], key="official_website", confidence=verdict["score"])
+            "identity_score": verdict["score"], "site_owner": verdict.get("owner_reason", "")}, [proof_ev], key="official_website",
+            confidence=verdict["score"])
     d.section("website", "available", f"{verdict['homepage']} verified: {verdict['reason']}")
     # A company whose site is a section of a larger site (e.g. a regional branch page on a national organisation's domain):
     # the domain's footer, social accounts, news and vacancies belong to the site owner, not to this company.
     section = section_of_larger_site(verdict["homepage"])
+    # Likewise a site that is not shown to BELONG to this company (e.g. a subsidiary declared with its parent's root domain):
+    # the URL is a valid website claim, but the site's description, accounts, news and vacancies are the owner's.
+    shared = section or not owner_ok
     links = verdict.get("links") or {}
-    if "news" in links and not section and client.remaining() > 50:
+    if "news" in links and not shared and client.remaining() > 50:
         page = fetch_page(client, links["news"], "news", domain)
         if page:
             pages.append(page)
@@ -393,40 +452,49 @@ def extract_site(client: Client, d: Dossier, verdict: dict[str, Any], pages: lis
         about = next((p for p in pages if p.kind == "about"), None)
         para = next((p.get_text(" ", strip=True) for p in (about or home).soup.find_all("p") if len(p.get_text(strip=True)) > 80), "")
         description = para
-    if description:
+    if description and not shared:
         description = re.sub(r"\s+", " ", description)[:400]
         ev = d.add_evidence(home.resp, "company_owned", description)
         d.claim("website_description", "website", description, [ev], method="meta_description_or_first_paragraph",
                 note="company's own description (promotional copy, not an independent claim)")
     site_name = home.soup.select_one('meta[property="og:site_name"]')
     brand = str(site_name.get("content") or "").strip() if site_name else ""
-    if brand and not section and set(tokens(brand)) != set(tokens(d.entity.get("navn") or "")) and len(brand) < 80:
+    if brand and not shared and set(tokens(brand)) != set(tokens(d.entity.get("navn") or "")) and len(brand) < 80:
         ev = d.add_evidence(home.resp, "company_owned", f'og:site_name = "{brand}"')
         d.claim("public_brand", "identity", brand, [ev], method="og:site_name")
 
-    if section:
-        d.section("social_profiles", "not_available", "company's site is a section of a larger site; accounts linked there belong to the site owner")
+    if shared:
+        why = ("company's site is a section of a larger site" if section else verdict.get("owner_reason", "site not shown to belong to this company"))
+        d.section("social_profiles", "not_available", f"{why}; accounts linked there belong to the site owner")
         if d.values("registry_phone"):
             d.section("contact", "available", "phone number registered in Enhetsregisteret")
         return
 
     # social profiles: linked from the verified site AND the handle names this company. Footer links often belong to a
     # parent group, a brand, the web agency or the theme, so a link alone (or the site's sameAs markup) is not enough.
+    # Attribution: a matching name is not proof of ownership. Only links the company itself presents as its own count: in the
+    # site's header, footer, navigation or address block, on its contact/about page, or in the sameAs of THIS company's
+    # structured data. A link inside an article or another organisation's markup is not attributable.
     socials: dict[str, tuple[dict[str, str], Page]] = {}
     for page in pages:
         for node in walk_jsonld(page.jsonld, ORG_TYPES):
+            if not org_node_is_company(node, d):
+                continue
             same = node.get("sameAs")
             for url in same if isinstance(same, list) else [same]:
                 if isinstance(url, str) and (s := normalize_social(url)):
                     socials.setdefault(s["url"], (s, page))
         for a in page.soup.select("a[href]"):
+            if page.kind not in ("contact", "about") and not in_site_chrome(a):
+                continue
             s = normalize_social(urllib.parse.urljoin(page.resp.final_url, str(a.get("href"))))
             if s:
                 socials.setdefault(s["url"], (s, page))
     published = 0
     for url, (s, page) in socials.items():
         if social_handle_matches(d.entity.get("navn") or "", url):
-            ev = d.add_evidence(page.resp, "company_owned", f"verified site links to {url}; handle matches the company name")
+            ev = d.add_evidence(page.resp, "company_owned", f"the company's own site presents {url} as its account (site chrome, contact page or "
+                                                         f"its structured data); handle matches the company name")
             d.claim("social_profile", "social_profiles", s, [ev], key=f"social|{url}", method="outbound_link_with_matching_handle")
             published += 1
     d.section("social_profiles", "available" if published else "not_available",
