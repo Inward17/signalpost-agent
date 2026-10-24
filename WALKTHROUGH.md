@@ -38,7 +38,7 @@ signalpost/jobs.py         NAV vacancy feed index + orgnr-verified matching
 signalpost/website.py      website discovery, identity gate, company-owned extraction
 signalpost/envelope.py     envelope assembly, refresh diff, cited synthesis
 signalpost/report.py       self-contained HTML viewer
-smoke/                     100-company batch, first run (out/, with HTML viewer), refresh run (out-refresh/), logs
+smoke/                     100-company batch, first run (out/, with HTML viewer), refresh run (out-refresh/, with HTML viewer), logs
 tests/test_agent.py        56 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats)
                            (the 13-run harness is kept outside the repository; results in TEST_REPORT.md)
 README.md  SOURCES_AND_SECURITY.md  SUBMISSION.md  WALKTHROUGH.md
@@ -222,15 +222,16 @@ Each of the identity-gate failures has a regression test. The version 2 changes 
 **13 verification runs at `70cfcf0`** (see [TEST_REPORT.md](TEST_REPORT.md)): all pass the 14 contract rule groups; 137 unique published
 websites manually audited by proof type; 1,400 financial values (65 companies) matched the live filing by exact field, statement, period and currency; 1,000-profile dataset in `profiles/`.
 
-**Earlier smoke test (first code version, before the final gate fixes):** 100/100 envelopes, 4,621 claims, 870 of 2,000 requests, 482 s, $0.
-The current `smoke/` folder holds the final-code run (R01): 4,367 claims, 827 requests, 473 s.
+**Smoke test** (`smoke/`, the final-code run R01 at `70cfcf0`): 100/100 envelopes, 4,367 claims, 827 of 2,000 requests, 473 s, $0.
+The verifier re-fetched the financials of all 100 companies live: 2,061 values match. (The first code version's smoke test had 4,621 claims.)
 - Identity, financials, leadership, locations, public activity: available for 100/100.
-- Website: 13 verified, 39 withheld as ambiguous, 46 not available, 2 blocked by robots.txt. After the fixes, every published site is proven by
-  org number (9), or by exact legal name plus phone/address on a matching or registry-declared domain (4).
-- Social profiles: 5. Contact points: 45. Jobs: 0 in this sample, which has only 16 companies with any employees. The matcher was verified separately on two
-  companies with live NAV ads; both got their ad matched by orgnr.
+- Website: 8 verified, 20 withheld as ambiguous, 69 not available, 2 blocked by robots.txt, 1 failed. Every published site is proven by org
+  number (4: on a declared site or in the site's own identity block), by exact legal name plus the registry's phone/address (3), or by a declared
+  site carrying the brand plus the registry's phone/address (1).
+- Social profiles: 4 accounts for 3 companies. Contact points: 28 companies. Jobs: 0 in this sample. The matcher was verified separately on
+  companies with live NAV ads, which got their ad matched by orgnr.
 
-**Refresh run** (`smoke/out-refresh/`, same companies, the first run's state as baseline): 0 changes, so no false changes, and all 4,621 claims
+**Refresh run** (`smoke/out-refresh/`, same companies, the first run's state as baseline): 0 changes, so no false changes, and all 4,367 claims
 unchanged. Offline tests also cover real change, removal, and stale-carry.
 
 **Reproducibility**: fresh clone at the pinned commit, empty venv, `pip install -r requirements.txt`, run command → 3/3 envelopes (including

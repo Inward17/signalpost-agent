@@ -112,8 +112,8 @@ pages + ~0–8 website requests per company. Measured: 100 companies use 775–9
 
 ## Smoke test, verification and 1,000 profiles
 
-- `smoke/`: 100-company smoke batch, envelopes, run report, HTML viewer, `verification.json`. 100/100 envelopes, 4,376 claims,
-  827 requests, 473 s, $0. `smoke/out-refresh/` (envelopes and run report) is a second run against the first run's output: 0 false changes. Its HTML viewer is omitted because it duplicates `smoke/out/report.html`.
+- `smoke/`: 100-company smoke batch, envelopes, run report, HTML viewer, `verification.json`. 100/100 envelopes, 4,367 claims,
+  827 requests, 473 s, $0. `smoke/out-refresh/` (envelopes, run report, HTML viewer, `verification.json`) is a second run against the first run's output: 0 false changes.
 - `profiles/profiles.jsonl.gz`: **1,000 unique company profiles** (46,780 claims, each with evidence) merged from verified runs; see the manifest.
 - 13 verification runs (input formats, duplicates and invalid numbers, employer-heavy batches, 300 never-seen companies, budget and deadline
   stress, refresh) all pass the 14 contract rule groups in `tools/verify_run.py` at commit `70cfcf0`. See [TEST_REPORT.md](TEST_REPORT.md).
