@@ -826,6 +826,15 @@ def test_run_command_takes_frozen_registry_file():
     assert report["registry_snapshot"]["batch_rows_found"] == 2
 
 
+def test_registry_change_date_is_the_norwegian_date_whatever_the_offset():
+    # Brønnøysund's update log sent the same entry as UTC ("Z") in one run and as local time in the next: one date, not two
+    from signalpost.registry import oslo_date
+    assert oslo_date("2025-10-15T22:02:53.585Z") == oslo_date("2025-10-16T00:02:53.585+02:00") == "2025-10-16"   # summer time
+    assert oslo_date("2026-02-12T23:07:45.995Z") == oslo_date("2026-02-13T00:07:45.995+01:00") == "2026-02-13"   # winter time
+    assert oslo_date("2026-03-29T00:30:00Z") == "2026-03-29" and oslo_date("2026-10-24T22:30:00Z") == "2026-10-25"  # DST edges
+    assert oslo_date("2025-09-13T15:19:15.161Z") == "2025-09-13" and oslo_date("2025-09-13") == "2025-09-13"
+
+
 def test_missing_financials_never_zero():
     d = dossier()
     env = _envelope(d)

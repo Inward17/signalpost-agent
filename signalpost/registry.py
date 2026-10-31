@@ -7,7 +7,7 @@ import hashlib
 import io
 import json
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
@@ -343,8 +343,24 @@ def summarize_changes(ops: list[dict]) -> list[dict[str, Any]]:
     return list(out.values())
 
 
+def oslo_date(stamp: str) -> str:
+    """Calendar date in Norway of an ISO timestamp, whatever offset the API sends it with (it has sent both "Z" and local time).
+    Taking the first 10 characters instead shifted late-evening entries by a day between runs: a false refresh change."""
+    try:
+        t = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+    except ValueError:
+        return stamp[:10]
+    if t.tzinfo is None:
+        return t.date().isoformat()   # no offset given: already local
+    t = t.astimezone(timezone.utc)
+    # EU summer time (CEST, UTC+2) from 01:00 UTC on the last Sunday of March to 01:00 UTC on the last Sunday of October; else CET (UTC+1)
+    def last_sunday(month: int) -> datetime:
+        day = datetime(t.year, month, 31, 1, tzinfo=timezone.utc)
+        return day - timedelta(days=(day.weekday() + 1) % 7)
+    return (t + timedelta(hours=2 if last_sunday(3) <= t < last_sunday(10) else 1)).date().isoformat()
+
+
 def fetch_registry_updates(client: Client, d: Dossier, months: int = 24, limit: int = 10) -> None:
-    from datetime import datetime, timedelta, timezone
     since = (datetime.now(timezone.utc) - timedelta(days=30 * months)).strftime("%Y-%m-%dT00:00:00.000Z")
     resp = client.get(UPDATES.format(org=d.org, since=since), accept=JSON)
     if not resp.ok:
@@ -359,7 +375,7 @@ def fetch_registry_updates(client: Client, d: Dossier, months: int = 24, limit: 
         if changes or row.get("endringstype") in ("Ny", "Sletting"):
             events.append((row, changes))
     for row, changes in events[-limit:]:
-        date = str(row.get("dato") or "")[:10]
+        date = oslo_date(str(row.get("dato") or ""))
         text = "; ".join(f"{c['field']} → {c['value']}" for c in changes) or str(row.get("endringstype"))
         ev = d.add_evidence(resp, "official_registry_changelog", f"{date} oppdateringsid {row.get('oppdateringsid')}: {text}"[:400])
         d.claim("registry_change", "public_activity", {"date": date, "type": row.get("endringstype"), "changes": changes,
