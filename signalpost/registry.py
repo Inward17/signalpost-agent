@@ -1,8 +1,15 @@
 """Brønnøysund collectors (NLOD 2.0): entity, annual accounts, roles, subunits, announcements."""
 from __future__ import annotations
 
+import csv
+import gzip
+import hashlib
+import io
+import json
 import re
-from typing import Any
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Iterator
 
 from .dossier import Dossier
 from .http import Client
@@ -15,6 +22,8 @@ ANNOUNCEMENTS = "https://w2.brreg.no/kunngjoring/hent_nr.jsp?orgnr={org}"
 ANNOUNCEMENT_ITEM = "https://w2.brreg.no/kunngjoring/hent_en.jsp?kid={kid}&sokeverdi={org}&spraak=nb"
 JSON = "application/json"
 SUPPRESSED_PERSONS: set[str] = set()  # filled by run.py from <state-dir>/suppressed_persons.txt
+BULK_URL = "https://data.brreg.no/enhetsregisteret/api/enheter/lastned/csv"
+SNAPSHOT: dict[str, Any] = {}  # metadata of the frozen registry file passed with the batch (filled by load_frozen_registry)
 
 
 def _get(value: Any, *path: str) -> Any:
@@ -42,29 +51,120 @@ def _state_for(resp, what: str) -> tuple[str, str]:
     return "failed", f"{what}: {resp.error or resp.status}"
 
 
+# -- frozen registry file -----------------------------------------------------
+# The bulk CSV (enheter/lastned/csv) names its columns after the API fields, a few with different casing.
+_ALIASES = {"registreringsdatoantallansatteNAVAaregisteret": "registreringsdatoAntallAnsatteNAVAaregisteret",
+            "registreringsdatoenhetsregisteret": "registreringsdatoEnhetsregisteret",
+            "registrertIMvaRegisteret": "registrertIMvaregisteret"}
+_LISTS = ("adresse", "aktivitet", "vedtektsfestetFormaal")   # lists in the API, one joined string in the CSV
+_NUMBERS = ("antallAnsatte", "belop", "antallAksjer")
+
+
+def _api_shape(row: dict[str, Any]) -> dict[str, Any]:
+    """A bulk CSV row ("forretningsadresse.kommune": "...") or an API-shaped JSON record -> the live API's entity shape."""
+    if "organisasjonsnummer" not in row and "organisation_number" in row:  # starter-kit universe row
+        row = {"organisasjonsnummer": row["organisation_number"], "navn": row.get("name"), "organisasjonsform.kode": row.get("legal_form"),
+               "antallAnsatte": row.get("employees"), "konkurs": row.get("bankrupt"), "underAvvikling": row.get("liquidating"),
+               "forretningsadresse.kommune": row.get("municipality"), "forretningsadresse.kommunenummer": row.get("municipality_number"),
+               "naeringskode1.kode": row.get("industry_code"), "naeringskode1.beskrivelse": row.get("industry_label"),
+               "hjemmeside": row.get("website"), "sisteInnsendteAarsregnskap": row.get("latest_submitted_accounts")}
+    out: dict[str, Any] = {}
+    for key, value in row.items():
+        if not key or value in (None, ""):
+            continue
+        if isinstance(value, str):
+            value = {"true": True, "false": False}.get(value, value)
+        *parents, leaf = _ALIASES.get(key, key).split(".")
+        if leaf in _LISTS and isinstance(value, str):
+            value = [line.strip() for line in value.split("\n") if line.strip()] if leaf == "adresse" else [value]
+        if leaf in _NUMBERS and isinstance(value, str):
+            try:
+                value = float(value) if "." in value else int(value)
+            except ValueError:
+                pass
+        node = out
+        for parent in parents:
+            node = node.setdefault(parent, {})
+        node[leaf] = value
+    return out
+
+
+def _text(path: Path) -> io.TextIOWrapper:
+    raw = path.open("rb")
+    gz = raw.read(2) == b"\x1f\x8b"   # Brreg serves the bulk CSV gzip-compressed whatever the file is called
+    raw.seek(0)
+    return io.TextIOWrapper(gzip.GzipFile(fileobj=raw) if gz else raw, encoding="utf-8-sig", errors="replace", newline="")
+
+
+def _rows(path: Path) -> Iterator[dict[str, Any]]:
+    with _text(path) as fh:
+        head = fh.read(65536)
+    first = head.lstrip()[:1]
+    with _text(path) as fh:
+        if first == "[":    # JSON array (enheter/lastned JSON)  # ponytail: loaded whole; stream it if the full JSON dump is passed
+            yield from json.load(fh)
+        elif first == "{":  # JSONL
+            yield from (json.loads(line) for line in fh if line.strip())
+        else:               # CSV with standard "" quote escaping; Brreg uses "," but ";" and tab exports are accepted
+            header = head.split("\n", 1)[0]
+            yield from csv.DictReader(fh, delimiter=max(",;\t", key=header.count))
+
+
+def load_frozen_registry(path: Path, orgs: set[str]) -> dict[str, dict[str, Any]]:
+    """This batch's rows from the frozen registry snapshot, in the live API's shape. Fallback only: used when the live call fails."""
+    digest = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            digest.update(chunk)
+    found: dict[str, dict[str, Any]] = {}
+    scanned = 0
+    for row in _rows(path):
+        scanned += 1
+        org = re.sub(r"\D", "", str(row.get("organisasjonsnummer") or row.get("organisation_number") or ""))
+        if org in orgs and org not in found:
+            found[org] = _api_shape(row)
+            if len(found) == len(orgs):
+                break
+    SNAPSHOT.update({"file": path.name, "content_sha256": digest.hexdigest(), "rows_scanned": scanned, "batch_rows_found": len(found),
+                     "file_modified_at": datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")})
+    return found
+
+
 # -- identity -----------------------------------------------------------------
 def fetch_entity(client: Client, d: Dossier) -> None:
     resp = client.get(ENTITY.format(org=d.org), accept=JSON)
-    if not resp.ok:
+    if resp.ok:
+        body = resp.json()
+        if body.get("organisasjonsnummer") == d.org:  # identity anchor must match exactly
+            _publish_entity(d, body, lambda span: d.add_evidence(resp, "official_registry", span))
+            d.section("identity", "available", "live Brønnøysund entity record matched by exact organisation number")
+            return
+        state, reason = "failed", "registry response organisation number mismatch"
+    else:
         state, reason = _state_for(resp, "live entity")
-        if d.seed.get("name"):
-            # fall back to the frozen registry snapshot row supplied with the batch
-            _seed_identity(d)
-            d.section("identity", "available", f"{reason}; identity from frozen registry snapshot row")
-        else:
-            d.section("identity", state, reason)
-        return
-    body = resp.json()
-    if body.get("organisasjonsnummer") != d.org:  # identity anchor must match exactly
-        d.section("identity", "failed", "registry response organisation number mismatch")
-        return
+    if d.snapshot_entity.get("navn"):
+        # the same registry record from the frozen file supplied with the batch: every field, cited to that file
+        _publish_entity(d, d.snapshot_entity, lambda span: d.add_evidence(
+            None, "official_registry_snapshot", f"frozen registry file {SNAPSHOT.get('file')}, row {d.org}: {span}", url=BULK_URL,
+            extraction="frozen_registry_file", content_sha256=SNAPSHOT.get("content_sha256"), retrieved_at=SNAPSHOT.get("file_modified_at")))
+        d.section("identity", "available", f"{reason}; identity from the frozen registry file supplied with the batch "
+                                           f"({SNAPSHOT.get('file')}, sha256 {str(SNAPSHOT.get('content_sha256'))[:12]})")
+    elif d.seed.get("name"):
+        # no registry file: fall back to the snapshot fields in the input row
+        _seed_identity(d)
+        d.section("identity", "available", f"{reason}; identity from frozen registry snapshot row")
+    else:
+        d.section("identity", state, reason)
+
+
+def _publish_entity(d: Dossier, body: dict[str, Any], evidence: Any) -> None:
+    """Identity, location and contact claims from one registry record (live API response or frozen-file row)."""
     d.entity = body
-    src = "official_registry"
 
     def add(field: str, value: Any, span_key: str, **kw: Any) -> None:
         if value in (None, "", [], {}):
             return
-        ev = d.add_evidence(resp, src, f"{span_key}: {value if not isinstance(value, (dict, list)) else str(value)[:300]}")
+        ev = evidence(f"{span_key}: {value if not isinstance(value, (dict, list)) else str(value)[:300]}")
         d.claim(field, kw.pop("section", "identity"), value, [ev], **kw)
 
     add("legal_name", body.get("navn"), "navn")
@@ -75,7 +175,8 @@ def fetch_entity(client: Client, d: Dossier) -> None:
     add("registered_business_address", _address(body.get("forretningsadresse")), "forretningsadresse", section="locations")
     add("postal_address", _address(body.get("postadresse")), "postadresse")
     add("municipality", _get(body, "forretningsadresse", "kommune"), "forretningsadresse.kommune")
-    industries = [{"code": body[k]["kode"], "label": body[k].get("beskrivelse")} for k in ("naeringskode1", "naeringskode2", "naeringskode3") if body.get(k)]
+    industries = [{"code": body[k]["kode"], "label": body[k].get("beskrivelse")} for k in ("naeringskode1", "naeringskode2", "naeringskode3")
+                  if isinstance(body.get(k), dict) and body[k].get("kode")]
     add("industry", industries, "naeringskode")
     if body.get("harRegistrertAntallAnsatte") or body.get("antallAnsatte") is not None:
         add("registered_employees", body.get("antallAnsatte"), "antallAnsatte",
@@ -99,7 +200,6 @@ def fetch_entity(client: Client, d: Dossier) -> None:
         d.website_candidates.append({"url": body["hjemmeside"], "origin": "official_registry"})
     if d.values("registered_business_address"):
         d.section("locations", "available", "registered business address")
-    d.section("identity", "available", "live Brønnøysund entity record matched by exact organisation number")
 
 
 def _seed_identity(d: Dossier) -> None:

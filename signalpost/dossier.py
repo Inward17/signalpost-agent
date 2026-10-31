@@ -23,6 +23,7 @@ class Dossier:
         self.org = org
         self.seed = seed or {}
         self.entity: dict[str, Any] = {}       # raw live registry entity (identity anchor)
+        self.snapshot_entity: dict[str, Any] = {}  # this company's row in the frozen registry file (fallback)
         self.subunit_orgs: set[str] = set()
         self.subunit_names: list[str] = []
         self.website_candidates: list[dict[str, str]] = []
@@ -38,9 +39,9 @@ class Dossier:
 
     # -- evidence & claims -------------------------------------------------
     def add_evidence(self, resp: Response | None, source_class: str, span: str, *, url: str | None = None,
-                     extraction: str = "deterministic") -> str:
+                     extraction: str = "deterministic", content_sha256: str | None = None, retrieved_at: str | None = None) -> str:
         source_url = url or (resp.final_url if resp else "")
-        content = resp.sha256 if resp else sha256(span)
+        content = resp.sha256 if resp else content_sha256 or sha256(span)
         ev_id = "ev-" + sha256(f"{source_url}|{content}|{span}")[:14]
         with self.lock:
             self.evidence.setdefault(ev_id, {
@@ -48,7 +49,7 @@ class Dossier:
                 "source_url": source_url,
                 "requested_url": resp.url if resp else source_url,
                 "source_class": source_class,
-                "retrieved_at": resp.retrieved_at if resp else utc_now(),
+                "retrieved_at": resp.retrieved_at if resp else retrieved_at or utc_now(),
                 "http_status": resp.status if resp else None,
                 "content_sha256": content,
                 "claim_span": span[:500],

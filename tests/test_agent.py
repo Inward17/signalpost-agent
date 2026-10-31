@@ -734,6 +734,98 @@ def test_input_formats():
             assert read_inputs(path)[0] == ["979543883"], name
 
 
+_BULK_CSV = ('"organisasjonsnummer","navn","organisasjonsform.kode","organisasjonsform.beskrivelse","antallAnsatte","harRegistrertAntallAnsatte",'
+             '"telefon","forretningsadresse.adresse","forretningsadresse.postnummer","forretningsadresse.poststed","forretningsadresse.kommune",'
+             '"aktivitet","konkurs","registrertIMvaRegisteret","kapital.belop","kapital.valuta","kapital.type"\n'
+             '"923609016","ANNET AS","AS","Aksjeselskap","3","true","","Vei 1","0150","OSLO","OSLO","Annet","false","false","","",""\n'
+             '"810034882","SANDNES ELEKTRISKE AS","AS","Aksjeselskap","11","true","51 68 57 00","c/o Elgruppen AS\nStrandgata 21","4307","SANDNES",'
+             '"SANDNES","Drift av ""Elektro"" og handel","false","true","100000.00","NOK","Aksjekapital"\n')
+
+
+def test_frozen_registry_file_formats():
+    # Brreg's bulk export (gzip whatever the name, "" quote escapes, multi-line addresses), JSONL and the starter-kit universe row
+    import gzip
+    import tempfile
+    from signalpost import registry
+    universe = '{"organisation_number": "810034882", "name": "SANDNES ELEKTRISKE AS", "legal_form": "AS", "municipality": "SANDNES"}\n'
+    with tempfile.TemporaryDirectory() as tmp:
+        csv_gz, semi, rows = Path(tmp) / "enheter.csv", Path(tmp) / "semi.csv", Path(tmp) / "universe.jsonl"
+        csv_gz.write_bytes(gzip.compress(_BULK_CSV.encode()))
+        semi.write_text(_BULK_CSV.replace('","', '";"'), encoding="utf-8")
+        rows.write_text(universe, encoding="utf-8")
+        for path in (csv_gz, semi):
+            e = registry.load_frozen_registry(path, {"810034882"})["810034882"]
+            assert e["navn"] == "SANDNES ELEKTRISKE AS" and e["organisasjonsform"] == {"kode": "AS", "beskrivelse": "Aksjeselskap"}, e
+            assert e["forretningsadresse"]["adresse"] == ["c/o Elgruppen AS", "Strandgata 21"] and e["antallAnsatte"] == 11
+            assert e["aktivitet"] == ['Drift av "Elektro" og handel'] and e["registrertIMvaregisteret"] is True and e["kapital"]["belop"] == 100000.0
+            assert registry.SNAPSHOT["batch_rows_found"] == 1 and len(registry.SNAPSHOT["content_sha256"]) == 64
+        e = registry.load_frozen_registry(rows, {"810034882"})["810034882"]
+        assert e["navn"] == "SANDNES ELEKTRISKE AS" and e["forretningsadresse"] == {"kommune": "SANDNES"}, e
+
+
+def test_failed_live_registry_call_falls_back_to_frozen_registry_file():
+    import gzip
+    import tempfile
+    from signalpost import registry
+    from signalpost.http import Client
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "enheter.csv.gz"
+        path.write_bytes(gzip.compress(_BULK_CSV.encode()))
+        row = registry.load_frozen_registry(path, {"810034882"})["810034882"]
+    live_url = registry.ENTITY.format(org="810034882")
+    web, restore = _with_fake_network({live_url: (503, {}, b"")})            # live call fails
+    try:
+        d = Dossier("810034882")
+        d.snapshot_entity = row
+        registry.fetch_entity(Client(), d)
+    finally:
+        restore()
+    assert d.sections["identity"]["state"] == "available" and "frozen registry file" in d.sections["identity"]["reason"]
+    values = {c["field"]: c["value"] for c in d.claims}
+    assert values["legal_name"] == "SANDNES ELEKTRISKE AS" and values["registered_business_address"] == "c/o Elgruppen AS, Strandgata 21, 4307 SANDNES"
+    assert values["registered_employees"] == 11 and values["registry_phone"] == "51 68 57 00" and d.entity["navn"] == "SANDNES ELEKTRISKE AS"
+    ev = list(d.evidence.values())
+    assert {e["source_class"] for e in ev} == {"official_registry_snapshot"} and {e["content_sha256"] for e in ev} == {registry.SNAPSHOT["content_sha256"]}
+    assert all(e["source_url"] == registry.BULK_URL and "row 810034882" in e["claim_span"] for e in ev)
+    # a working live call wins: the snapshot is a fallback, never a source of its own
+    live = json.dumps({"organisasjonsnummer": "810034882", "navn": "SANDNES ELEKTRISKE AS (LIVE)", "organisasjonsform": {"kode": "AS"}}).encode()
+    web, restore = _with_fake_network({live_url: (200, {"content-type": "application/json"}, live)})
+    try:
+        d = Dossier("810034882")
+        d.snapshot_entity = row
+        registry.fetch_entity(Client(), d)
+    finally:
+        restore()
+    assert [c["value"] for c in d.claims if c["field"] == "legal_name"] == ["SANDNES ELEKTRISKE AS (LIVE)"]
+    assert {e["source_class"] for e in d.evidence.values()} == {"official_registry"}
+
+
+def test_run_command_takes_frozen_registry_file():
+    # the one run command with --registry: every live source down, each company still gets its registry identity
+    import gzip
+    import tempfile
+    import run
+    from signalpost import registry
+    web, restore = _with_fake_network({})        # every request answers 404
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            (tmp / "in.txt").write_text("810034882\n923609016\n987654321\n", encoding="utf-8")
+            (tmp / "enheter.csv").write_bytes(gzip.compress(_BULK_CSV.encode()))
+            code = run.main(["--input", str(tmp / "in.txt"), "--output", str(tmp / "out"), "--state-dir", str(tmp / "state"),
+                             "--registry", str(tmp / "enheter.csv"), "--max-requests", "40", "--workers", "2", "--no-domain-guessing"])
+            envs = {e["organisation_number"]: e for e in map(json.loads, (tmp / "out" / "envelopes.jsonl").read_text(encoding="utf-8").splitlines())}
+            report = json.loads((tmp / "out" / "run-report.json").read_text(encoding="utf-8"))
+    finally:
+        restore()
+        registry.SNAPSHOT.clear()
+    assert code == 0 and len(envs) == 3
+    assert envs["810034882"]["legal_identity"]["legal_name"] == "SANDNES ELEKTRISKE AS"
+    assert envs["923609016"]["sections"]["identity"]["state"] == "available"
+    assert envs["987654321"]["sections"]["identity"]["state"] == "not_available"     # not in the file: honest state, no invented identity
+    assert report["registry_snapshot"]["batch_rows_found"] == 2
+
+
 def test_missing_financials_never_zero():
     d = dossier()
     env = _envelope(d)

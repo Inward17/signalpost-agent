@@ -131,6 +131,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workers", type=int, default=16)
     ap.add_argument("--jobs-window-days", type=int, default=45)
     ap.add_argument("--no-domain-guessing", action="store_true")
+    ap.add_argument("--registry", "--bulk", dest="registry", type=Path,
+                    help="frozen Brønnøysund registry file passed with the batch (bulk CSV, JSON or JSONL, optionally gzip): "
+                         "identity fallback when the live entity call fails")
     args = ap.parse_args(argv)
 
     started_at, t0 = utc_now(), time.monotonic()
@@ -139,6 +142,12 @@ def main(argv: list[str] | None = None) -> int:
     margin = min(90.0, args.deadline_minutes * 60 * 0.25)  # tail kept free for envelope building and writing
     client = Client(max_requests=args.max_requests, deadline_s=args.deadline_minutes * 60, reserve_s=margin, max_cost_usd=args.max_cost_usd)
     dossiers = {org: Dossier(org, seeds[org]) for org in orgs}
+    if args.registry:
+        frozen = registry.load_frozen_registry(args.registry, set(orgs))
+        for org, row in frozen.items():
+            dossiers[org].snapshot_entity = row
+        print(f"[signalpost] frozen registry {args.registry.name}: {len(frozen)}/{len(orgs)} batch companies found, "
+              f"{registry.SNAPSHOT['rows_scanned']} rows scanned", file=sys.stderr)
     previous = load_previous(args.state_dir, args.previous)
     suppressed = args.state_dir / "suppressed_persons.txt"
     if suppressed.exists():
@@ -235,6 +244,7 @@ def main(argv: list[str] | None = None) -> int:
         "operations": {**client.stats(), "third_party_cost_usd": round(client.third_party_cost_usd, 4),
                        "nav_feed_pages": jobs.pages, "nav_feed_entries": len(jobs.entries)},
         "source_yield": source_yield(envelopes, client.by_host),
+        "registry_snapshot": dict(registry.SNAPSHOT) or None,
         "per_company_requests": sorted(e["operations"]["requests"] for e in envelopes)[len(envelopes) // 2] if envelopes else 0,
     }
     atomic_write(out / "run-report.json", json.dumps(report, ensure_ascii=False, indent=2))
