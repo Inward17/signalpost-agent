@@ -2,15 +2,16 @@
 
 Subject: Signalpost Round 1 submission
 
-- Agent name: Signalpost registry-anchored agent (version 2.2: addresses Builderr's audit of version 1, `f49124a`, a second review and two residual risks)
+- Agent name: Signalpost registry-anchored agent (version 2.3: addresses Builderr's audit of version 1, `f49124a`, a second review, two residual risks, and takes the frozen registry file as identity fallback)
 - Repository URL: https://github.com/Inward17/signalpost-agent
-- Exact commit hash: the submission commit is the `main` HEAD named in the submission email (a hash cannot be written inside the commit it identifies). Agent code last changed and fully tested at `70cfcf0` (version 2 code); later commits are docs/data only.
+- Exact commit hash: the submission commit is the `main` HEAD named in the submission email (a hash cannot be written inside the commit it identifies). Agent code last changed and fully tested at `e7b04ad` (version 2.3 code); later commits are docs/data only.
 - 1,000 company profiles: `profiles/profiles.jsonl.gz` (+ `profiles-manifest.json`)
 - 100-company smoke-test result: `smoke/out/envelopes.jsonl`, `smoke/out/run-report.json`, `smoke/out/report.html`, `smoke/out/verification.json`; refresh run in `smoke/out-refresh/`
-- Tests: `python tests/test_agent.py` (56 offline tests); contract verifier `tools/verify_run.py`
+- Tests: `python tests/test_agent.py` (62 offline tests); contract verifier `tools/verify_run.py`
 - Version 2 changes and how to verify them: `CHANGES_V2.md`; audit replay and dataset scan: `python tools/verify_v2_fixes.py`
 - One-command run instruction (after `python -m venv .venv && .venv/bin/pip install -r requirements.txt`):
   `.venv/bin/python run.py --input <batch.jsonl> --output out`
+  With the batch's frozen registry file (recommended): add `--registry <registry file>` (alias `--bulk`; Brreg bulk CSV/JSON or JSONL, gzip auto-detected).
   (Windows: `.venv\Scripts\python.exe -m pip install -r requirements.txt`, then `.venv\Scripts\python.exe run.py --input <batch.jsonl> --output out`)
 - Models / APIs / licences: no LLM. Brønnøysund Enhetsregisteret + Regnskapsregisteret open APIs (NLOD 2.0); NAV Arbeidsplassen
   public job-vacancy feed (public token fetched at run time); company-owned websites (robots.txt honoured). Optional Brave Search API

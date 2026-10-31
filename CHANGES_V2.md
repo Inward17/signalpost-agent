@@ -1,10 +1,12 @@
 # Version 2: what changed after Builderr's audit, and how to verify it
 
-This document explains every change made after Builderr audited version 1. It covers three rounds:
+This document explains every change made after Builderr audited version 1. It covers four rounds:
 
 - **Version 2.0**: Builderr's audit (websites, social links, news, jobs).
 - **Version 2.1**: a second review of version 2.0 (social handles shared by similar names, news dates and unusual URLs, jobs matched by employer name).
 - **Version 2.2**: two residual risks raised after version 2.1 (a subsidiary using its parent's root domain, social accounts not clearly attributable).
+- **Version 2.3**: Builderr's note on version 2.2 (use the frozen registry file passed with a batch as identity fallback), plus two fixes found
+  while testing it (registry change dates, deadline on stalled networks).
 
 For each point it shows:
 - what the agent did before (with real examples and the exact old code);
@@ -12,42 +14,43 @@ For each point it shows:
 - how the code was changed;
 - how you can check it yourself.
 
-| | Version 1 (audited) | Version 2.0 | Version 2.1 | Version 2.2 (current) |
-|---|---|---|---|---|
-| Agent code commit | `afc3f0ab3858b86889a07b7deff73bc1685edc21` | `a96e0f1d38e1db2c2323be8494de1f790ac855ab` | `1f2ad26cfdbbd270c252cc4fc15f01c3154cb0eb` | `70cfcf091640d4742684a036f988d08624d1d69d` |
-| Submission commit | `f49124a` | `7a3ade2` | `4c79c38` | `3f5cd76` (or a later documentation-only commit) |
-| Offline tests | 40 | 47 | 51 | 56 |
+| | Version 1 (audited) | Version 2.0 | Version 2.1 | Version 2.2 | Version 2.3 (current) |
+|---|---|---|---|---|---|
+| Agent code commit | `afc3f0ab3858b86889a07b7deff73bc1685edc21` | `a96e0f1d38e1db2c2323be8494de1f790ac855ab` | `1f2ad26cfdbbd270c252cc4fc15f01c3154cb0eb` | `70cfcf091640d4742684a036f988d08624d1d69d` | `e7b04add47f08b603eb413b9618989b7ee431266` |
+| Submission commit | `f49124a` | `7a3ade2` | `4c79c38` | `bb3eeaa` (on record as version 2 of 5) | the commit that contains this file, or a later documentation-only commit |
+| Offline tests | 40 | 47 | 51 | 56 | 62 |
 
 See every code change since version 1:
 
 ```bash
-git diff afc3f0a 70cfcf0 -- signalpost/
+git diff afc3f0a e7b04ad -- signalpost/ run.py
 ```
 
-Only `signalpost/website.py` and `signalpost/jobs.py` changed (plus tests and the verification tools).
+Versions 2.0–2.2 changed only `signalpost/website.py` and `signalpost/jobs.py`; version 2.3 changed `signalpost/registry.py`,
+`signalpost/dossier.py` and `run.py` (plus tests and the verification tools in each round).
 
 ## Summary
 
 The counts below come from `python tools/verify_v2_fixes.py --dataset <file>`, which applies the **current** rules to each version's published
 1,000-profile dataset:
 
-| # | Point | v1 dataset | v2.0 dataset | v2.1 dataset | v2.2 dataset |
-|---|---|---|---|---|---|
-| 1 | Website is the company's own | 14 | 0 | 0 | 0 |
-| 2 | Social handles belong to this company | 47 | 38 | 0 | 0 |
-| 3 | News are real, dated posts | 2 | 0 | 0 | 0 |
-| 4 | Jobs are single ads for this company | 26 | 0 | 0 | 0 |
-| | **Total** | **89** | **38** | **0** | **0** |
+| # | Point | v1 dataset | v2.0 dataset | v2.1 dataset | v2.2 dataset | v2.3 dataset |
+|---|---|---|---|---|---|---|
+| 1 | Website is the company's own | 14 | 0 | 0 | 0 | 0 |
+| 2 | Social handles belong to this company | 47 | 38 | 0 | 0 | 0 |
+| 3 | News are real, dated posts | 2 | 0 | 0 | 0 | 0 |
+| 4 | Jobs are single ads for this company | 26 | 0 | 0 | 0 | 0 |
+| | **Total** | **89** | **38** | **0** | **0** | **0** |
 
 Published claims in the dataset:
 
-| Claim | v1 | v2.0 | v2.1 | v2.2 |
-|---|---|---|---|---|
-| Websites | 142 | 137 | 136 | 137 (8 as URL only) |
-| Social profiles | 175 | 163 | 124 | 113 |
-| News items | 5 | 3 | 3 | 3 |
-| Careers pages | 26 | 0 | 0 | 0 |
-| NAV job ads | 4 | 7 | 8 | 8 (live ads change daily) |
+| Claim | v1 | v2.0 | v2.1 | v2.2 | v2.3 |
+|---|---|---|---|---|---|
+| Websites | 142 | 137 | 136 | 137 (8 as URL only) | 138 (8 as URL only) |
+| Social profiles | 175 | 163 | 124 | 113 | 114 |
+| News items | 5 | 3 | 3 | 3 | 3 |
+| Careers pages | 26 | 0 | 0 | 0 | 0 |
+| NAV job ads | 4 | 7 | 8 | 8 | 8 (live data changes daily) |
 
 ---
 
@@ -492,6 +495,202 @@ All 113 remaining accounts were reviewed by hand. Each is:
 
 ---
 
+# Part 4: version 2.3 (Builderr's note on version 2.2)
+
+> Your README says that if the live registry lookup fails, the agent falls back only to snapshot fields in the input row. If your command can
+> also take the frozen registry file we pass with a batch, and use it as the fallback, a failed live call won't leave a company with no registry
+> facts at all.
+
+## G. The frozen registry file as identity fallback
+
+### Before (v2.2)
+
+If the live call to `api/enheter/{org}` failed (timeout, 5xx, 429, block), the company got identity only from the snapshot fields in its input
+row: name, municipality and website, if the row had them. With a plain list of organisation numbers it got **nothing**: identity `failed`, and
+every later registry phase (accounts, roles, workplaces, change log) skipped the company because it had no identity.
+
+```python
+if not resp.ok:
+    if d.seed.get("name"):
+        _seed_identity(d)          # name, municipality, website from the input row only
+    else:
+        d.section("identity", state, reason)
+```
+
+### The fix
+
+The run command takes the frozen registry file passed with the batch:
+
+```bash
+python run.py --input companies.jsonl --output out --registry brreg-enheter.csv     # --bulk is an alias
+```
+
+Accepted formats:
+- Brønnøysund's bulk export (`enheter/lastned/csv`), which Brønnøysund serves gzip-compressed whatever the file is called;
+- its JSON dump;
+- JSONL rows, either API-shaped or like the public universe file.
+
+When the live call fails or answers for the wrong organisation number, the company's row from the file is used. It goes through the **same
+code as a live record**, so it gives the same claims:
+- name, legal form, status;
+- addresses, municipality, industry;
+- employees, founding and registration dates, VAT and group flags;
+- share capital, registered activity;
+- phone, and the website as a candidate.
+
+The later phases then run as usual.
+
+Every claim cites the file:
+- source class `official_registry_snapshot`;
+- the bulk export URL;
+- the file's SHA-256 and the row's organisation number in the span.
+
+The identity reason says what happened: "live entity: …; identity from the frozen registry file supplied with the batch (brreg-enheter.csv,
+sha256 …)".
+
+The fallback order is: live API, then the frozen registry file, then the input row's snapshot fields. A company in none of them keeps its
+honest `failed`/`not_available` state; nothing is invented. A working live call always wins, so the file is never a source of its own.
+
+### How it was made
+
+New in `signalpost/registry.py`:
+- `load_frozen_registry()`: reads the file once at start-up, hashes it, keeps only this batch's rows and stops when all are found;
+- `_api_shape()`: maps a CSV row onto the API's shape. It handles dotted column names, the few columns spelled differently from the API, a
+  multi-line address split into its lines, `true`/`false` and numbers;
+- `_publish_entity()`: the identity code shared by live records and snapshot rows.
+
+```python
+if d.snapshot_entity.get("navn"):
+    _publish_entity(d, d.snapshot_entity, lambda span: d.add_evidence(
+        None, "official_registry_snapshot", f"frozen registry file {SNAPSHOT['file']}, row {d.org}: {span}", url=BULK_URL,
+        extraction="frozen_registry_file", content_sha256=SNAPSHOT["content_sha256"], retrieved_at=SNAPSHOT["file_modified_at"]))
+elif d.seed.get("name"):
+    _seed_identity(d)
+```
+
+`run.py` gained `--registry` (alias `--bulk`). `run-report.json` records the file name, SHA-256, rows scanned and batch rows found.
+
+**Tests:**
+- `test_frozen_registry_file_formats`: gzip CSV with `""` quote escapes and a multi-line address, a `;`-separated CSV, and a universe JSONL row;
+- `test_failed_live_registry_call_falls_back_to_frozen_registry_file`: claims, evidence and reason; a working live call wins;
+- `test_run_command_takes_frozen_registry_file`: the run command with every live source down; a company not in the file stays `not_available`.
+
+### Checked on real data
+
+The full Brønnøysund bulk export of 31 October 2026 was used: 155 MB gzip, 1,178,489 rows, scanned in about 22 s.
+
+- **Same facts as the live API.** For the 100 smoke companies, every identity claim built from the bulk row was compared with the live claim.
+  All were equal except:
+  - one VAT flag that had changed in the register between the two dates (the live record now agrees with the file);
+  - historical names, which the bulk export doesn't carry.
+- **A run with the live API down.** The smoke batch was run with the live entity endpoint made to fail and `--registry` given
+  (`smoke/out-registry-fallback/`):
+  - 100/100 companies have identity `available`;
+  - 1,227 identity claims against 1,248 live;
+  - financials, roles, workplaces and the change log as in the normal run;
+  - all R1–R14 checks pass, with 2,061 financial values matching the live filings.
+- **No effect when the live API works.** The 13 verification runs at `e7b04ad` pass as before, with 0 false changes (see point H).
+
+A first version sniffed the CSV dialect and misread Brønnøysund's `""` quote escapes, which shifted columns in one row of the 100. The
+comparison caught it, and the loader now uses standard CSV quoting with only the delimiter detected. The format test covers it.
+
+## H. Registry change dates moved by a day between runs
+
+Found by the 13-run suite at `fae0b19`, not by a review. It is unrelated to point G, but it is fixed in the same version.
+
+### Before
+
+The refresh run R10 (the R01 batch rerun 8 minutes later) reported **22 changes** where every earlier suite had 0. All 22 were
+`changed_registry_change`: the same update-log entry (same `oppdateringsid`), dated one day earlier. Example, entry 22142364 of 852829052:
+- R01: `2025-10-16`;
+- R10: `2025-10-15`.
+
+Brønnøysund's update log sends `dato` as an ISO timestamp. Within minutes it sent the same entry in UTC (`2025-10-15T22:02:53Z`) and in
+local time (00:02 on 16 October). The agent cut the first 10 characters of the string:
+
+```python
+date = str(row.get("dato") or "")[:10]
+```
+
+So an entry made late in the evening, Norwegian time, got two different dates depending on the format. That made a false change on refresh.
+
+### The fix
+
+Every update-log timestamp is converted to the **calendar date in Norway**, whatever offset it is sent with. `oslo_date()` uses the EU
+summer-time rule (UTC+2 from the last Sunday of March to the last Sunday of October, UTC+1 otherwise), which avoids a time-zone database
+dependency on Windows:
+
+```python
+date = oslo_date(str(row.get("dato") or ""))
+```
+
+**Test:** `test_registry_change_date_is_the_norwegian_date_whatever_the_offset`. It covers the same entry in UTC and local time, winter and
+summer, and both summer-time edges.
+
+**Result:** the 13 runs at `e7b04ad` pass with **0 false changes** in R10 again.
+
+## I. A stalled connection could hold a run past its deadline
+
+Also found by the 13-run suite (at `7a5c43b`), during a period when the network stalled.
+
+### Before
+
+- **R09** (`--deadline-minutes 3`) took **512 s**: one NAV feed page kept the connection open for about 7 minutes before it was reset.
+- **R04** (default 42-minute deadline) took **3.5 hours** in its website phase.
+
+All envelopes were still written correctly, but far too late. Two causes:
+
+1. **The socket timeout bounds each read, not the whole response.** A server that sends a few bytes now and then never trips it, and
+   `HTTPResponse.read(n)` keeps waiting until it has all n bytes:
+
+   ```python
+   with _OPENER.open(request, timeout=timeout) as resp:
+       body = resp.read(max_bytes + 1)          # no limit on total time
+   ```
+
+2. **Phases waited for stuck requests.** The phase stopped waiting at the deadline, but leaving `with ThreadPoolExecutor(...)` waits for
+   every worker thread, and so does interpreter exit.
+
+### The fix
+
+- Each response is read with `read1` (what has arrived after one socket read) under a **total time cap**: 4 × the request timeout (60 s),
+  and never past the run deadline. A slower response fails as "response too slow" and is handled like any other timeout (`failed`/`blocked`
+  states, retries within budget).
+- A request never waits for a per-host slot past the deadline.
+- Each phase shuts its worker pool down without waiting. `run.py` exits as soon as all output is written atomically, instead of waiting for
+  a straggling thread.
+
+### How it was made
+
+`_read_bounded()` in `signalpost/http.py`:
+
+```python
+read = getattr(resp, "read1", resp.read)
+while size < limit:
+    if time.monotonic() > until:
+        raise TimeoutError("response too slow: total read time limit reached")
+    part = read(min(65536, limit - size))
+    ...
+```
+
+In `run.py`:
+
+```python
+pool.shutdown(wait=False, cancel_futures=True)   # was: leaving `with ThreadPoolExecutor(...)`, which waits for every thread
+...
+os._exit(code)                                   # was: sys.exit(main()), which waits for straggling threads
+```
+
+**Tests:**
+- `test_trickling_server_cannot_hold_a_request_past_its_time_cap`: a server sending one byte at a time. The new code gives up within the
+  cap; the old code was still waiting when the test was stopped after 20 s.
+- `test_run_meets_its_deadline_when_every_server_trickles`: the run command with a 6-second deadline finishes in about 4.5 s, with every
+  envelope written.
+
+**Result:** the 13 runs at `e7b04ad` pass, R09 within its 3-minute limit.
+
+---
+
 ## The checks are now automatic
 
 The contract verifier `tools/verify_run.py` includes rule group **R14**, applied to every run:
@@ -501,7 +700,7 @@ The contract verifier `tools/verify_run.py` includes rule group **R14**, applied
 - every NAV job links to a single ad;
 - no claim is taken from a site not shown to be the company's own (version 2.2).
 
-All 13 verification runs at `70cfcf0` pass R1–R14, with 1,400 financial values matching the live filings exactly ([TEST_REPORT.md](TEST_REPORT.md)).
+All 13 verification runs at `e7b04ad` pass R1–R14, with 1,400 financial values matching the live filings exactly ([TEST_REPORT.md](TEST_REPORT.md)).
 
 ## How to verify it yourself
 
@@ -513,6 +712,7 @@ From the repository folder, with the virtual environment set up as in the README
 git diff afc3f0a a96e0f1 -- signalpost/    # version 2.0
 git diff a96e0f1 1f2ad26 -- signalpost/    # version 2.1
 git diff 1f2ad26 70cfcf0 -- signalpost/    # version 2.2
+git diff 70cfcf0 e7b04ad -- signalpost/ run.py    # version 2.3
 ```
 
 **2. Run the tests**
@@ -521,7 +721,7 @@ git diff 1f2ad26 70cfcf0 -- signalpost/    # version 2.2
 python tests/test_agent.py
 ```
 
-Expected: `56 passed`.
+Expected: `62 passed`.
 
 **3. Replay the audit and review cases against the current code**
 
@@ -567,5 +767,15 @@ Then open `out_check/report.html` and check:
 - Vålerenga Fotball Elite shows `vif-fotball.no` as its website but no description, social accounts or news from it. Its `official_website`
   claim in `envelopes.jsonl` gives the reason in `site_owner` (the site is shared with the club Vålerenga Fotball).
 
-**6. Check one claim by hand.** In `out_check/envelopes.jsonl`, each claim lists `evidence_ids`. The matching evidence record gives the source URL,
+**6. Check the registry fallback.** Download the frozen registry (or use the one passed with a batch) and run with it:
+
+```bash
+curl -L https://data.brreg.no/enhetsregisteret/api/enheter/lastned/csv -o brreg-enheter.csv
+python run.py --input audited.txt --output out_registry --registry brreg-enheter.csv
+```
+
+`out_registry/run-report.json` shows `registry_snapshot` (file, SHA-256, rows found). With the live API working the output is the same as
+without the file. The case where the live API fails is in `smoke/out-registry-fallback/` and in the three tests above.
+
+**7. Check one claim by hand.** In `out_check/envelopes.jsonl`, each claim lists `evidence_ids`. The matching evidence record gives the source URL,
 retrieval time, content hash and the exact text span behind the claim.

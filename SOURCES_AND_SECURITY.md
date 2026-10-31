@@ -4,6 +4,7 @@
 
 | Source | Access method | Used for | Licence / terms | Identity link | Requests |
 |---|---|---|---|---|---|
+| Frozen registry file passed with the batch (`--registry`; Brønnøysund bulk export `enheter/lastned/csv`) | Local file, read once; only this batch's rows kept | Identity fallback when the live entity call fails: the same fields as the live record | NLOD 2.0 | Exact organisation number (the row's) | 0 |
 | Brønnøysund Enhetsregisteret `api/enheter/{org}` | Open REST API, no key | Legal identity, form, status, addresses, industry, employees, founding date, registry website, phone, capital, historical names | [NLOD 2.0](https://data.norge.no/nlod/en/2.0) — attribution kept in every evidence record | Exact organisation number (response must echo it) | 1 / company |
 | Regnskapsregisteret `regnskap/{org}` | Open REST API, described by Brønnøysund as a temporary "preview" research API without service guarantees; outages are reported as `blocked`/`failed`, never as missing figures | Filed annual accounts: revenue, operating result, profit before tax, net result, assets, equity, debt, payroll, audit flags — per reporting period, currency and company/group statement | NLOD 2.0 | Exact organisation number | 1 / company |
 | Enhetsregisteret `enheter/{org}/roller` | Open REST API | Board, CEO, auditor and other registered roles | NLOD 2.0 | Exact organisation number | 1 / company |
@@ -73,7 +74,8 @@ This is an engineering description, not a legal opinion; a production deployment
 - **DNS-rebinding protection**: validation and connection use the *same* resolution. The custom HTTP(S) connection classes resolve once,
   check every returned address, and open the socket to that checked IP (TLS still verifies the real hostname via SNI), so a second DNS
   answer cannot steer the connection to an internal address.
-- **Response limits**: 2 MB per page (8 MB per NAV feed page), 15 s timeout, HTML only for site pages; scripts are never executed (static parsing).
+- **Response limits**: 2 MB per page (8 MB per NAV feed page), 15 s timeout per read and 60 s per response in total (never past the run deadline; a server
+  trickling bytes can't hold a request open), HTML only for site pages; scripts are never executed (static parsing).
 - **Prompt injection**: there is no LLM in the loop; fetched text is data, matched only by deterministic rules.
 - **Secrets**: none required. Optional `BRAVE_API_KEY` / `NAV_FEED_TOKEN` are read from environment variables only and never logged or written to output.
 - **Cost ceiling**: `--max-cost-usd` (default $10). Paid calls reserve their cost before the request and are refused past the ceiling (default spend is $0).

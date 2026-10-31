@@ -1,0 +1,11 @@
+[signalpost] frozen registry brreg-enheter.csv: 100/100 batch companies found, 1178489 rows scanned
+[signalpost] 100 companies, 0 invalid inputs, 0 previous snapshots
+[signalpost] phase identity: 100 companies, 100 requests used, 27s
+[signalpost] phase accounts: 100 companies, 201 requests used, 41s
+[signalpost] phase roles: 100 companies, 301 requests used, 55s
+[signalpost] phase subunits: 100 companies, 401 requests used, 68s
+[signalpost] phase registry_updates: 100 companies, 501 requests used, 82s
+[signalpost] NAV feed: 89 pages, 29019 entries, error=None
+[signalpost] phase jobs: 100 companies, 591 requests used, 327s
+[signalpost] phase website: 100 companies, 822 requests used, 448s
+{"envelopes": 100, "one_envelope_per_input": true, "envelope_states": {"available": 100}, "claims_total": 4347, "runtime_s": 448.1, "requests": 822}

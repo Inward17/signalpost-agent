@@ -7,8 +7,8 @@ and a refresh diff against the previous run.
 
 Registry-anchored and deterministic: no LLM. The default configuration uses no paid API and has an expected third-party cost of $0. The optional Brave Search integration (off unless `BRAVE_API_KEY` is set) costs about $0.005 per company when enabled, and its spend is capped by `--max-cost-usd`.
 
-**Version 2.2** (current) addresses Builderr's audit of version 1, a second review of version 2.0 and two residual risks raised after it
-(parent root domains, attributable social accounts): own-site proof for websites, company-named social handles, real dated
+**Version 2.3** (current) addresses Builderr's audit of version 1, a second review of version 2.0, two residual risks raised after it
+(parent root domains, attributable social accounts) and accepts the frozen registry file passed with a batch as identity fallback: own-site proof for websites, company-named social handles, real dated
 news posts and single job ads. What changed, why, and how to verify it: [CHANGES_V2.md](CHANGES_V2.md).
 
 ## Install and run (one command)
@@ -33,6 +33,19 @@ python -m venv .venv
 `--input` accepts a JSONL file (one object per line with `organisation_number`, e.g. rows of the public universe file), a JSON list,
 or a plain text file with one organisation number per line. Gzipped input is fine.
 
+Pass the frozen registry file that comes with a batch as well, so a failed live registry call never leaves a company without registry facts:
+
+```bash
+python run.py --input companies.jsonl --output out --registry brreg-enheter.csv
+```
+
+If the live entity call fails, identity comes from the **frozen registry file passed with the batch** (`--registry FILE`, alias
+`--bulk`): Brønnøysund's bulk export (`enheter/lastned/csv`, gzip-compressed whatever the file name), its JSON dump, or JSONL rows such
+as the public universe file. The company's row is turned into the live API's shape and goes through the same code as a live record, so it
+yields the same claims (name, form, status, addresses, industry, employees, phone, capital, website candidate, …). Each claim cites the
+file: source class `official_registry_snapshot`, the file's SHA-256 and the row. Without a registry file the snapshot fields in the input
+row are used, as before. A company missing from both stays `not_available`/`failed`; nothing is invented.
+
 Outputs:
 
 | File | Content |
@@ -43,9 +56,9 @@ Outputs:
 | `state/<org>.json`, `state/history/<org>.jsonl` | refresh baseline and append-only evidence/change log |
 
 Useful flags: `--state-dir` (refresh baseline, default `state/`), `--previous envelopes.jsonl` (explicit previous snapshot),
-`--max-requests 2000`, `--deadline-minutes 42`, `--max-cost-usd 10`, `--workers 16`, `--jobs-window-days 45`, `--no-domain-guessing`, `--run-id`.
+`--max-requests 2000`, `--deadline-minutes 42`, `--max-cost-usd 10`, `--workers 16`, `--jobs-window-days 45`, `--no-domain-guessing`, `--registry FILE` (alias `--bulk`), `--run-id`.
 
-Offline tests: `python tests/test_agent.py` (56 tests, no network needed; also runs under pytest). To check any run's output against the contract: `python tools/verify_run.py --input companies.jsonl --output out`. The 13-run test harness is kept outside this repository; its results are in [TEST_REPORT.md](TEST_REPORT.md). To replay Builderr's audit cases or scan a dataset for the four audit problems: `python tools/verify_v2_fixes.py` (add `--dataset profiles/profiles.jsonl.gz` to scan).
+Offline tests: `python tests/test_agent.py` (62 tests, no network needed; also runs under pytest). To check any run's output against the contract: `python tools/verify_run.py --input companies.jsonl --output out`. The 13-run test harness is kept outside this repository; its results are in [TEST_REPORT.md](TEST_REPORT.md). To replay Builderr's audit cases or scan a dataset for the four audit problems: `python tools/verify_v2_fixes.py` (add `--dataset profiles/profiles.jsonl.gz` to scan).
 
 ## Envelope
 
@@ -82,7 +95,8 @@ never zero-filled; a financial field absent from the filing is simply absent.
 
 Breadth-first phases so every company gets the high-value official baseline before optional enrichment spends budget:
 
-1. **Identity** — live Brønnøysund entity by exact organisation number (falls back to snapshot fields in the input row if the API fails).
+1. **Identity** — live Brønnøysund entity by exact organisation number. If the API fails: the company's row in the frozen registry file
+   (`--registry`), else the snapshot fields in the input row.
 2. **Accounts** — all filed periods from Regnskapsregisteret, company and group statements kept separate, each value with its period and currency.
 3. **Roles** and **registered workplaces**.
 4. **Official change log** — dated, field-level registry changes (address, name, website, employees, filings…).
@@ -112,11 +126,11 @@ pages + ~0–8 website requests per company. Measured: 100 companies use 775–9
 
 ## Smoke test, verification and 1,000 profiles
 
-- `smoke/`: 100-company smoke batch, envelopes, run report, HTML viewer, `verification.json`. 100/100 envelopes, 4,367 claims,
-  827 requests, 473 s, $0. `smoke/out-refresh/` (envelopes, run report, HTML viewer, `verification.json`) is a second run against the first run's output: 0 false changes.
-- `profiles/profiles.jsonl.gz`: **1,000 unique company profiles** (46,780 claims, each with evidence) merged from verified runs; see the manifest.
+- `smoke/`: 100-company smoke batch, envelopes, run report, HTML viewer, `verification.json`. 100/100 envelopes, 4,368 claims,
+  822 requests, 451 s, $0. `smoke/out-refresh/` (envelopes, run report, HTML viewer, `verification.json`) is a second run against the first run's output: 0 false changes. `smoke/out-registry-fallback/` is the same batch with the live entity API made to fail and `--registry` given: 100/100 envelopes, identity `available` for 100, 4,347 claims, 2,061 financial values re-fetched live and matching.
+- `profiles/profiles.jsonl.gz`: **1,000 unique company profiles** (46,791 claims, each with evidence) merged from verified runs; see the manifest.
 - 13 verification runs (input formats, duplicates and invalid numbers, employer-heavy batches, 300 never-seen companies, budget and deadline
-  stress, refresh) all pass the 14 contract rule groups in `tools/verify_run.py` at commit `70cfcf0`. See [TEST_REPORT.md](TEST_REPORT.md).
+  stress, refresh) all pass the 14 contract rule groups in `tools/verify_run.py` at commit `e7b04ad`. See [TEST_REPORT.md](TEST_REPORT.md).
 - Privacy operations: `python tools/purge.py --person "Name" | --org <number> | --older-than-days 365` (see SOURCES_AND_SECURITY.md).
 
 ## Limitations

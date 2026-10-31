@@ -1,0 +1,116 @@
+{
+  "run": {
+    "run_id": "registry-fallback",
+    "agent_version": "1.0.0",
+    "started_at": "2026-10-31T14:20:32Z",
+    "completed_at": "2026-10-31T14:28:00Z",
+    "terminal_status": "completed"
+  },
+  "input_rows": 100,
+  "envelopes": 100,
+  "one_envelope_per_input": true,
+  "envelope_states": {
+    "available": 100
+  },
+  "section_states": {
+    "identity": {
+      "available": 100
+    },
+    "financials": {
+      "available": 99,
+      "failed": 1
+    },
+    "leadership": {
+      "available": 100
+    },
+    "locations": {
+      "available": 100
+    },
+    "website": {
+      "not_available": 69,
+      "blocked": 2,
+      "ambiguous": 20,
+      "available": 8,
+      "failed": 1
+    },
+    "social_profiles": {
+      "not_available": 96,
+      "failed": 1,
+      "available": 3
+    },
+    "contact": {
+      "available": 28,
+      "not_available": 72
+    },
+    "jobs": {
+      "not_available": 100
+    },
+    "public_activity": {
+      "available": 100
+    }
+  },
+  "claims_total": 4347,
+  "changes_total": 0,
+  "runtime_s": 448.1,
+  "operations": {
+    "requests": 822,
+    "max_requests": 2000,
+    "bytes": 53605738,
+    "requests_by_host_top": {
+      "data.brreg.no": 501,
+      "pam-stilling-feed.nav.no": 90,
+      "www.pfve.com": 10,
+      "showdevida.no": 7,
+      "flexipod.no": 6,
+      "krimat.com": 6,
+      "www.cwsca.com": 5,
+      "www.tool.com": 5,
+      "www.nht-co.com": 5,
+      "thi-holding.com": 4,
+      "sollifjellet.no": 4,
+      "vora.no": 4,
+      "www.hugedomains.com": 4,
+      "www.lonepinecapital.com": 4,
+      "blueline.com": 4
+    },
+    "p50_ms": 1694,
+    "p95_ms": 4838,
+    "third_party_cost_usd": 0.0,
+    "nav_feed_pages": 89,
+    "nav_feed_entries": 29019
+  },
+  "source_yield": {
+    "brreg_registry": {
+      "requests": 501,
+      "claims": 4319,
+      "companies": 100,
+      "claims_per_request": 8.62
+    },
+    "company_websites": {
+      "requests": 231,
+      "claims": 28,
+      "companies": 8,
+      "claims_per_request": 0.12
+    },
+    "nav_job_feed": {
+      "requests": 90,
+      "claims": 0,
+      "companies": 0,
+      "claims_per_request": 0.0
+    },
+    "search_api": {
+      "requests": 0,
+      "claims": 0,
+      "companies": 0,
+      "claims_per_request": null
+    }
+  },
+  "registry_snapshot": {
+    "file": "brreg-enheter.csv",
+    "content_sha256": "4d1c45c02d8fbc7eb5b07bb3317b8f736aa38c25b6bb60e2923c1bbe934ce14e",
+    "rows_scanned": 1178489,
+    "batch_rows_found": 100,
+    "file_modified_at": "2026-10-31T09:36:30Z"
+  },
+  "per_company_requests": 5
+}

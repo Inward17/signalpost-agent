@@ -1,0 +1,80 @@
+{
+  "input_rows": 100,
+  "envelopes": 100,
+  "claims": 4347,
+  "evidence": 4347,
+  "websites_published": 8,
+  "jobs_published": 0,
+  "stale_claims": 0,
+  "changes": 0,
+  "requests": 822,
+  "runtime_s": 448.1,
+  "cost_usd": 0.0,
+  "spot_checked": 100,
+  "financial_values_checked": 2061,
+  "section_available": {
+    "identity": 100,
+    "financials": 99,
+    "leadership": 100,
+    "locations": 100,
+    "website": 8,
+    "social_profiles": 3,
+    "contact": 28,
+    "jobs": 0,
+    "public_activity": 100
+  },
+  "passed": true,
+  "failures": [],
+  "failure_count": 0,
+  "warnings": [],
+  "websites": [
+    [
+      "852829052",
+      "SOLLIFJELLET ALPINSENTER SA",
+      "https://sollifjellet.no/",
+      "site declared by official registry and its brand name plus the registry phone/address appear on page"
+    ],
+    [
+      "927287463",
+      "MARITIM MONTERING AS",
+      "https://www.maritimmontering.no/",
+      "organisation number in the site's own identity block (footer, contact/about page or structured data)"
+    ],
+    [
+      "924490896",
+      "NM HEST OG RYTTER AS",
+      "https://nmhestogrytter.no/",
+      "organisation number in the site's own identity block (footer, contact/about page or structured data)"
+    ],
+    [
+      "999536468",
+      "GJØVIK TANNLEGEKONTOR AS",
+      "https://www.gjoviktannlegekontor.no/",
+      "exact legal name plus registry phone/address on site"
+    ],
+    [
+      "913211510",
+      "OSLO ELEKTROINSTALLASJON AS",
+      "https://osloelektroinstallasjon.no/",
+      "organisation number on the site the company declared to an official source"
+    ],
+    [
+      "928176991",
+      "FAN PARKS INTERNATIONAL AS",
+      "https://www.fanparks.com/",
+      "organisation number in the site's own identity block (footer, contact/about page or structured data)"
+    ],
+    [
+      "919146222",
+      "VIZER AS",
+      "https://vizer.no/",
+      "exact legal name plus registry phone/address on site"
+    ],
+    [
+      "912417387",
+      "JAKOBSEN MARINE AS",
+      "https://jakobsenmarine.no/",
+      "exact legal name plus registry phone/address on site"
+    ]
+  ]
+}

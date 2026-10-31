@@ -38,8 +38,8 @@ signalpost/jobs.py         NAV vacancy feed index + orgnr-verified matching
 signalpost/website.py      website discovery, identity gate, company-owned extraction
 signalpost/envelope.py     envelope assembly, refresh diff, cited synthesis
 signalpost/report.py       self-contained HTML viewer
-smoke/                     100-company batch, first run (out/, with HTML viewer), refresh run (out-refresh/, with HTML viewer), logs
-tests/test_agent.py        56 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats)
+smoke/                     100-company batch, first run (out/, with HTML viewer), refresh run (out-refresh/, with HTML viewer), registry-fallback run (out-registry-fallback/), logs
+tests/test_agent.py        62 offline tests (identity gate, refresh, SSRF/redirects/rebinding, credentials, budgets, input formats)
                            (the 13-run harness is kept outside the repository; results in TEST_REPORT.md)
 README.md  SOURCES_AND_SECURITY.md  SUBMISSION.md  WALKTHROUGH.md
 ```
@@ -54,7 +54,10 @@ so no network call), plus their pinned transitive packages in `requirements.txt`
 ### 3.1 Input (`run.py: read_inputs`)
 The input can be a JSON list or object (compact or pretty-printed: the whole file is tried as JSON first), JSONL rows (the universe format), or a plain text list (one per line, or comma-separated), optionally gzipped. Each row is normalised to 9 digits.
 Duplicates collapse to one envelope, and invalid values get their own `failed` envelope, so no input row ever disappears.
-Snapshot fields in the input row (name, website, municipality) are kept as a fallback identity if the live registry fails.
+If the live registry call fails, identity comes from the company's row in the frozen registry file passed with the batch (`--registry`,
+alias `--bulk`; Brreg bulk CSV/JSON or JSONL, gzip auto-detected). `load_frozen_registry` streams the file once, keeps only this batch's rows
+and records the file's SHA-256; `_api_shape` turns a CSV row into the API's shape, and `_publish_entity` publishes it exactly like a live
+record, with evidence citing the file. Without a registry file, the snapshot fields in the input row (name, website, municipality) are used.
 
 ### 3.2 Breadth-first phases (`run.py: phase`)
 Each phase runs over **all** companies (16 worker threads) before the next one starts:
@@ -213,16 +216,19 @@ workplaces, verified website, linked profiles, hiring, latest news, and recent r
 | Website job accepted for a similar employer name | **second review of v2.0** | this org number or exact legal name including legal form |
 | Subsidiary declared with its parent's root domain got the parent's description, accounts, news and jobs | **residual-risk review** | site content only when the site is shown to be the company's own |
 | A full-name account linked only in article text or another organisation's `sameAs` was published | **residual-risk review** | only accounts the company presents as its own |
+| A failed live registry call left the company with at most the input row's name, municipality and website | **Builderr note (v2.2)** | `--registry`: full identity from the frozen registry file, cited to it |
+| Registry change dates moved by a day between runs (the update log alternated between UTC and local time) | 13-run suite | Norwegian calendar date whatever the offset |
+| A stalled connection held a run past its deadline (3.5 h in one suite run) | 13-run suite | each response time-capped; phases and exit never wait for a stuck request |
 
 Each of the identity-gate failures has a regression test. The version 2 changes are documented before/after, with verification steps, in
 [CHANGES_V2.md](CHANGES_V2.md).
 
 ## 5. Results
 
-**13 verification runs at `70cfcf0`** (see [TEST_REPORT.md](TEST_REPORT.md)): all pass the 14 contract rule groups; 137 unique published
+**13 verification runs at `e7b04ad`** (see [TEST_REPORT.md](TEST_REPORT.md)): all pass the 14 contract rule groups; 138 unique published
 websites manually audited by proof type; 1,400 financial values (65 companies) matched the live filing by exact field, statement, period and currency; 1,000-profile dataset in `profiles/`.
 
-**Smoke test** (`smoke/`, the final-code run R01 at `70cfcf0`): 100/100 envelopes, 4,367 claims, 827 of 2,000 requests, 473 s, $0.
+**Smoke test** (`smoke/`, the final-code run R01 at `e7b04ad`): 100/100 envelopes, 4,368 claims, 822 of 2,000 requests, 451 s, $0.
 The verifier re-fetched the financials of all 100 companies live: 2,061 values match. (The first code version's smoke test had 4,621 claims.)
 - Identity, financials, leadership, locations, public activity: available for 100/100.
 - Website: 8 verified, 20 withheld as ambiguous, 69 not available, 2 blocked by robots.txt, 1 failed. Every published site is proven by org
@@ -231,11 +237,13 @@ The verifier re-fetched the financials of all 100 companies live: 2,061 values m
 - Social profiles: 4 accounts for 3 companies. Contact points: 28 companies. Jobs: 0 in this sample. The matcher was verified separately on
   companies with live NAV ads, which got their ad matched by orgnr.
 
+**Registry-fallback run** (`smoke/out-registry-fallback/`, same companies, live entity API made to fail, `--registry` given): 100/100 envelopes, identity `available` for 100, 4,347 claims, 2,061 financial values re-fetched live and matching.
+
 **Refresh run** (`smoke/out-refresh/`, same companies, the first run's state as baseline): 0 changes, so no false changes, and all 4,367 claims
 unchanged. Offline tests also cover real change, removal, and stale-carry.
 
 **Reproducibility**: fresh clone at the pinned commit, empty venv, `pip install -r requirements.txt`, run command → 3/3 envelopes (including
-one deliberately invalid input) and all offline tests pass (56 in the current suite).
+one deliberately invalid input) and all offline tests pass (62 in the current suite).
 
 ## 6. Plan checklist status
 

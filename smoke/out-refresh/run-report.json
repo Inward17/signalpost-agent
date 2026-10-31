@@ -2,8 +2,8 @@
   "run": {
     "run_id": "R10",
     "agent_version": "1.0.0",
-    "started_at": "2026-10-23T09:17:43Z",
-    "completed_at": "2026-10-23T09:25:40Z",
+    "started_at": "2026-10-31T14:28:01Z",
+    "completed_at": "2026-10-31T14:35:14Z",
     "terminal_status": "completed"
   },
   "input_rows": 100,
@@ -49,18 +49,18 @@
       "available": 100
     }
   },
-  "claims_total": 4367,
+  "claims_total": 4368,
   "changes_total": 0,
-  "runtime_s": 477.1,
+  "runtime_s": 433.9,
   "operations": {
-    "requests": 829,
+    "requests": 822,
     "max_requests": 2000,
-    "bytes": 54311601,
+    "bytes": 53801211,
     "requests_by_host_top": {
       "data.brreg.no": 501,
-      "pam-stilling-feed.nav.no": 93,
+      "pam-stilling-feed.nav.no": 90,
       "www.pfve.com": 10,
-      "showdevida.no": 8,
+      "showdevida.no": 7,
       "flexipod.no": 6,
       "krimat.com": 6,
       "www.cwsca.com": 5,
@@ -73,27 +73,27 @@
       "www.lonepinecapital.com": 4,
       "blueline.com": 4
     },
-    "p50_ms": 1662,
-    "p95_ms": 6101,
+    "p50_ms": 1075,
+    "p95_ms": 6461,
     "third_party_cost_usd": 0.0,
-    "nav_feed_pages": 92,
-    "nav_feed_entries": 29332
+    "nav_feed_pages": 89,
+    "nav_feed_entries": 29018
   },
   "source_yield": {
     "brreg_registry": {
       "requests": 501,
-      "claims": 4339,
+      "claims": 4340,
       "companies": 100,
       "claims_per_request": 8.66
     },
     "company_websites": {
-      "requests": 235,
+      "requests": 231,
       "claims": 28,
       "companies": 8,
       "claims_per_request": 0.12
     },
     "nav_job_feed": {
-      "requests": 93,
+      "requests": 90,
       "claims": 0,
       "companies": 0,
       "claims_per_request": 0.0
@@ -105,5 +105,6 @@
       "claims_per_request": null
     }
   },
+  "registry_snapshot": null,
   "per_company_requests": 5
 }
