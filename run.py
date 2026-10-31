@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import os
 import sys
 import time
 import traceback
@@ -176,11 +177,10 @@ def main(argv: list[str] | None = None) -> int:
             finally:
                 client.local.dossier = None
 
-        with ThreadPoolExecutor(max_workers=args.workers) as pool:
-            futures = [pool.submit(one, d) for d in todo]
-            done, pending = wait(futures, timeout=max(1.0, client.time_left() + 15))  # +15s: in-flight requests finish or time out
-            for f in pending:
-                f.cancel()
+        pool = ThreadPoolExecutor(max_workers=args.workers)
+        futures = [pool.submit(one, d) for d in todo]
+        wait(futures, timeout=max(1.0, client.time_left() + 15))  # +15s: in-flight requests finish or time out
+        pool.shutdown(wait=False, cancel_futures=True)  # never block on a straggler (each request is time-capped; late writes after freezing are ignored)
         print(f"[signalpost] phase {name}: {len(todo)} companies, {client.requests} requests used, {time.monotonic() - t0:.0f}s", file=sys.stderr)
 
     identified = lambda d: bool(d.entity.get("navn"))  # noqa: E731
@@ -255,4 +255,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    code = main()
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(code)  # outputs are written atomically; don't let interpreter exit wait on a straggling request thread

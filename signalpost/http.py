@@ -151,6 +151,23 @@ def redirect_headers(headers: dict[str, str], current: str, target: str) -> dict
 _OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}), _PinnedHTTPHandler(), _PinnedHTTPSHandler(), _NoRedirect())
 
 
+def _read_bounded(resp: Any, limit: int, until: float) -> bytes:
+    """Read at most `limit` bytes before the wall-clock time `until`. The socket timeout only bounds each read, so a server
+    trickling bytes could otherwise hold a request (and the run's deadline) for hours."""
+    read = getattr(resp, "read1", resp.read)   # read1: whatever has arrived, after at most one socket read (read(n) waits for n)
+    chunks: list[bytes] = []
+    size = 0
+    while size < limit:
+        if time.monotonic() > until:
+            raise TimeoutError("response too slow: total read time limit reached")
+        part = read(min(65536, limit - size))
+        if not part:
+            break
+        chunks.append(part)
+        size += len(part)
+    return b"".join(chunks)
+
+
 class Client:
     """Every outbound request goes through here so budget and safety are enforced, not just reported."""
 
@@ -234,23 +251,27 @@ class Client:
             started = time.monotonic()
             request = urllib.request.Request(url, headers=headers)
             location = None
+            slot = self._host_slot(host)
+            if not slot.acquire(timeout=max(0.0, self.time_left())):   # never queue past the deadline behind a slow request
+                raise BudgetExhausted("run deadline reached")
             try:
-                with self._host_slot(host):
-                    timeout = max(1.0, min(self.timeout, self.time_left()))
-                    with _OPENER.open(request, timeout=timeout) as resp:
-                        body = resp.read(max_bytes + 1)
-                        last = Response(original, resp.geturl(), resp.status, body[:max_bytes], resp.headers.get("content-type", ""),
-                                        error="oversized" if len(body) > max_bytes else None,
-                                        elapsed_ms=int((time.monotonic() - started) * 1000),
-                                        headers={k.lower(): v for k, v in resp.headers.items()})
+                timeout = max(1.0, min(self.timeout, self.time_left()))
+                with _OPENER.open(request, timeout=timeout) as resp:
+                    body = _read_bounded(resp, max_bytes + 1, time.monotonic() + max(1.0, min(4 * self.timeout, self.time_left())))
+                    last = Response(original, resp.geturl(), resp.status, body[:max_bytes], resp.headers.get("content-type", ""),
+                                    error="oversized" if len(body) > max_bytes else None,
+                                    elapsed_ms=int((time.monotonic() - started) * 1000),
+                                    headers={k.lower(): v for k, v in resp.headers.items()})
             except urllib.error.HTTPError as exc:
                 location = exc.headers.get("Location") if exc.code in REDIRECT_CODES and exc.headers else None
                 last = Response(original, url, exc.code, error=None if location else f"HTTP {exc.code}",
                                 elapsed_ms=int((time.monotonic() - started) * 1000))
             except ValueError as exc:  # pinned connection refused a non-public address
                 return Response(original, url, 0, error=f"blocked_url: {exc}"), None
-            except Exception as exc:  # timeouts, TLS, connection resets
+            except Exception as exc:  # timeouts, TLS, connection resets, too-slow responses
                 last = Response(original, url, 0, error=f"{type(exc).__name__}: {str(exc)[:160]}", elapsed_ms=int((time.monotonic() - started) * 1000))
+            finally:
+                slot.release()
             with self._lock:
                 self.bytes += len(last.body)
                 self.latencies.append(last.elapsed_ms)

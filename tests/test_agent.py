@@ -405,9 +405,11 @@ class _FakeWeb:
         class R:
             def __init__(self):
                 self.status, self.headers = status, {"content-type": "text/html", **headers}
+                self.left = body
 
-            def read(self, n):
-                return body[:n]
+            def read(self, n):   # consumed like a socket stream
+                part, self.left = self.left[:n], self.left[n:]
+                return part
 
             def geturl(self):
                 return request.full_url
@@ -833,6 +835,80 @@ def test_registry_change_date_is_the_norwegian_date_whatever_the_offset():
     assert oslo_date("2026-02-12T23:07:45.995Z") == oslo_date("2026-02-13T00:07:45.995+01:00") == "2026-02-13"   # winter time
     assert oslo_date("2026-03-29T00:30:00Z") == "2026-03-29" and oslo_date("2026-10-24T22:30:00Z") == "2026-10-25"  # DST edges
     assert oslo_date("2025-09-13T15:19:15.161Z") == "2025-09-13" and oslo_date("2025-09-13") == "2025-09-13"
+
+
+def test_trickling_server_cannot_hold_a_request_past_its_time_cap():
+    # a socket timeout only bounds each read: a server sending a byte at a time once held one request (and the run) for hours
+    import socket
+    import time
+    from signalpost import http as h
+
+    class Trickle:
+        status, headers = 200, {"content-type": "text/html"}
+
+        def read1(self, n):              # like a real socket: one byte has arrived
+            time.sleep(0.02)
+            return b"x"
+
+        def read(self, n):               # like HTTPResponse.read(n): blocks until n bytes
+            return b"".join(self.read1(1) for _ in range(n))
+
+        def geturl(self):
+            return "https://slow.example/"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+    restore = [_patched(socket, "getaddrinfo", _resolver({})), _patched(h._OPENER, "open", lambda req, timeout=None: Trickle())]
+    try:
+        c = h.Client(timeout=0.1)                     # cap = 4 x timeout = 0.4 s per response
+        t = time.monotonic()
+        resp = c.get("https://slow.example/", retries=0)
+        assert time.monotonic() - t < 2 and resp.error and "too slow" in resp.error, resp.error
+    finally:
+        [r() for r in restore]
+
+
+def test_run_meets_its_deadline_when_every_server_trickles():
+    import socket
+    import tempfile
+    import time
+    import run
+    from signalpost import http as h
+
+    class Trickle:
+        status, headers = 200, {"content-type": "application/json"}
+
+        def read1(self, n):
+            time.sleep(0.05)
+            return b" "
+
+        def read(self, n):
+            return b"".join(self.read1(1) for _ in range(n))
+
+        def geturl(self):
+            return "https://slow.example/"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+    restore = [_patched(socket, "getaddrinfo", _resolver({})), _patched(h._OPENER, "open", lambda req, timeout=None: Trickle())]
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            (tmp / "in.txt").write_text("810034882\n923609016\n", encoding="utf-8")
+            t = time.monotonic()
+            run.main(["--input", str(tmp / "in.txt"), "--output", str(tmp / "out"), "--state-dir", str(tmp / "state"),
+                      "--deadline-minutes", "0.1", "--workers", "2"])          # 6 s limit
+            elapsed = time.monotonic() - t
+            envs = (tmp / "out" / "envelopes.jsonl").read_text(encoding="utf-8").splitlines()
+    finally:
+        [r() for r in restore]
+    assert elapsed < 6 and len(envs) == 2, elapsed
 
 
 def test_missing_financials_never_zero():
